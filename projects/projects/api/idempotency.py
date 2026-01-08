@@ -1,0 +1,2 @@
+def idempotent():
+    pass
