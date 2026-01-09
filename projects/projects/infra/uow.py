@@ -87,7 +87,27 @@ class ProjectUnitOfWork(IProjectUnitOfWork):
             raise ProjectNotFoundError
 
     async def get_all_projects(self, account_id: UUID) -> list[Project]:
-        raise NotImplementedError
+        stmt = text(
+            "SELECT id, name, description, pinned, created_at, updated_at "
+            "FROM projects.projects "
+            "WHERE account_id = :account_id AND deleted = false"
+        )
+        result = await self.connection.execute(stmt, {"account_id": account_id})
+        projects = list(
+            map(
+                lambda row: Project(
+                    id=row[0],
+                    account_id=account_id,
+                    name=row[1],
+                    description=row[2],
+                    pinned=row[3],
+                    created_at=row[4],
+                    updated_at=row[5],
+                ),
+                result.all(),
+            )
+        )
+        return projects
 
     async def pin_project(self, account_id: UUID, project_id: UUID) -> None:
         stmt = text(

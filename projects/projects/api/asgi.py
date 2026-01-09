@@ -52,7 +52,10 @@ class API:
                 projects = await self.project_service.get_all_projects(account_id)
                 return list(map(Project.from_core, projects))
             except ProjectsPerAccountLimitExceededError:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Projects limit exceeded",
+                )
 
         @app.get("/projects/{project_id}")
         async def get_project_by_id(

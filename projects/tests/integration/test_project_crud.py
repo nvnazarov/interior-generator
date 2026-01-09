@@ -58,3 +58,23 @@ async def test_project_crud(client: AsyncClient):
     resp = await client.get(f"/projects/{created_project_id}", headers=headers)
     assert resp.status_code == status.HTTP_404_NOT_FOUND
     assert resp.json() == {"detail": "Not Found"}
+
+
+@pytest.mark.asyncio
+async def test_get_all_projects(client: AsyncClient):
+    headers = {"x-account-id": "022f51f9-98bb-40af-9d30-0b3c03819212"}
+
+    resp = await client.post("/projects", headers=headers)
+    assert resp.status_code == status.HTTP_201_CREATED
+    project_1 = resp.json()
+
+    resp = await client.post("/projects", headers=headers)
+    assert resp.status_code == status.HTTP_201_CREATED
+    project_2 = resp.json()
+
+    resp = await client.get("/projects", headers=headers)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json() == [project_1, project_2] or resp.json() == [
+        project_2,
+        project_1,
+    ]
