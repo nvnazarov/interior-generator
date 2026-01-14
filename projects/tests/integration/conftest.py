@@ -1,17 +1,22 @@
 import os
 from pathlib import Path
 
-from httpx import AsyncClient, ASGITransport
 import pytest_asyncio
-from testcontainers.postgres import PostgresContainer
-from alembic.config import Config
 from alembic import command
+from alembic.config import Config
 from asgi_lifespan import LifespanManager
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import create_async_engine
+from testcontainers.postgres import PostgresContainer
 
-from projects.api import API
-from projects.core.service import ProjectService
-from projects.infra.uow import ProjectUnitOfWorkFactory
-
+from app.api import API
+from app.api.idempotency import IdempotencyProvider
+from app.core.plan.service import PlanService
+from app.core.project.service import ProjectService
+from app.core.shell.service import ShellService
+from app.infra.plan import PlansUnitOfWork
+from app.infra.project import ProjectsUnitOfWork
+from app.infra.shell import ShellsUnitOfWork
 
 PYPROJECT_TOML = Path(os.path.abspath(__file__)).parent.parent.parent / "pyproject.toml"
 
@@ -26,9 +31,23 @@ async def api():
         command.upgrade(config, "head")
 
         url = postgres.get_connection_url(driver="asyncpg")
-        uow_factory = ProjectUnitOfWorkFactory(url)
-        project_service = ProjectService(uow_factory, max_projects_per_account=20)
-        api = API(project_service, header_with_account_id="x-account-id")
+        engine = create_async_engine(url)
+        api = API(
+            plan_service=PlanService(
+                lambda: PlansUnitOfWork(engine),
+                max_plans_per_project=20,
+            ),
+            shell_service=ShellService(
+                lambda: ShellsUnitOfWork(engine),
+                max_shells_per_account=20,
+            ),
+            project_service=ProjectService(
+                lambda: ProjectsUnitOfWork(engine),
+                max_projects_per_account=20,
+            ),
+            idempotency_provider=IdempotencyProvider(),
+            header_with_account_id="x-account-id",
+        )
         yield api
 
 

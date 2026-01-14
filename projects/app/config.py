@@ -33,5 +33,6 @@ class Config(BaseSettings):
     port: int = 8080
     header_with_account_id: str = "x-account-id"
     max_projects_per_account: int = 20
+    max_shells_per_account: int = 20
     max_plans_per_project: int = 20
     postgres: PostgresConfig = Field(default_factory=PostgresConfig)

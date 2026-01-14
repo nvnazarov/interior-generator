@@ -1,7 +1,6 @@
 [project]
 name = "projects"
 version = "0.1.0"
-description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -26,7 +25,17 @@ dev = [
 [tool.pytest.ini_options]
 pythonpath = ["."]
 filterwarnings = "ignore:.*wait_container_is_ready decorator is deprecated.*:DeprecationWarning"
+markers = [
+    "unit: marks tests as unit tests (fast, lightweight)",
+    "integration: marks tests as integration tests (slow)",
+    "project: marks tests that test operations on projects",
+    "shell: marks tests that test operations on shells",
+    "plan: marks tests that test operations on plans",
+]
 
 [tool.alembic]
 script_location = "%(here)s/migrations"
 prepend_sys_path = ["."]
+
+[tool.isort]
+profile = "black"
