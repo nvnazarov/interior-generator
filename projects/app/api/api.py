@@ -4,11 +4,12 @@ from uuid import UUID
 from fastapi import Body, Depends, FastAPI, Header, HTTPException, status
 
 from app.api.idempotency import IdempotencyProvider
-from app.api.schema import PatchPlan, Plan
+from app.api.views import plan as plan_views
 from app.api.views import project as project_views
 from app.api.views import shell as shell_views
 from app.core.plan.errors import (
     PlanNotFoundError,
+    PlanPatchError,
     PlansPerProjectLimitExceededError,
     PlanVersionConflictError,
 )
@@ -221,41 +222,46 @@ class API:
                     detail="failed to apply the patch",
                 )
 
-        @app.post("/projects/{project_id}/plans")
+        @app.post("/projects/{project_id}/plans", status_code=status.HTTP_201_CREATED)
         async def create_plan(
             project_id: UUID,
+            shell_id: UUID,
             account_id: Annotated[UUID, Depends(get_account_id)],
-        ) -> Plan:
+        ) -> plan_views.Plan:
             try:
-                plan = await self.plan_service.create_plan(account_id, project_id)
-                return Plan.from_core(plan)
+                plan = await self.plan_service.create_plan(
+                    account_id, project_id, shell_id
+                )
+                return plan_views.Plan.from_model(plan)
             except PlansPerProjectLimitExceededError:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Plans limit exceeded",
+                    detail="plans limit exceeded",
                 )
             except ProjectNotFoundError:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="project not found"
+                )
 
         @app.get("/projects/{project_id}/plans")
         async def get_all_project_plans(
             project_id: UUID,
             account_id: Annotated[UUID, Depends(get_account_id)],
-        ) -> list[Plan]:
+        ) -> list[plan_views.PlanNoContent]:
             plans = await self.plan_service.get_all_project_plans(
                 account_id, project_id
             )
-            return list(map(Plan.from_core, plans))
+            return list(map(plan_views.PlanNoContent.from_model, plans))
 
         @app.get("/plans/{plan_id}")
         async def get_plan_by_id(
             plan_id: UUID,
             account_id: Annotated[UUID, Depends(get_account_id)],
-        ):
+        ) -> plan_views.Plan:
             plan = await self.plan_service.get_plan_by_id(account_id, plan_id)
             if plan is None:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-            return Plan.from_core(plan)
+            return plan_views.Plan.from_model(plan)
 
         @app.delete("/plans/{plan_id}", status_code=status.HTTP_204_NO_CONTENT)
         async def delete_plan(
@@ -263,23 +269,42 @@ class API:
         ):
             await self.plan_service.delete_plan(account_id, plan_id)
 
-        @app.patch("/plans/{plan_id}", status_code=status.HTTP_200_OK)
+        @app.patch("/plans/{plan_id}", status_code=status.HTTP_204_NO_CONTENT)
         async def patch_plan(
             plan_id: UUID,
             account_id: Annotated[UUID, Depends(get_account_id)],
-            patch: PatchPlan,
-        ):
+            name: Annotated[str, Body(embed=True)],
+        ) -> None:
+            await self.plan_service.rename_plan(account_id, plan_id, name)
+
+        @app.patch("/plans/{plan_id}/content")
+        async def patch_plan_content(
+            plan_id: UUID,
+            account_id: Annotated[UUID, Depends(get_account_id)],
+            patch: plan_views.Patch,
+        ) -> int:
             try:
-                kwargs = patch.model_dump(exclude_none=True)
-                await self.plan_service.patch_plan(account_id, plan_id, **kwargs)
+                version = await self.plan_service.patch_plan(
+                    account_id, plan_id, patch.to_model()
+                )
+                return version
             except PlanNotFoundError:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
             except PlanVersionConflictError:
                 raise HTTPException(status_code=status.HTTP_409_CONFLICT)
+            except PlanPatchError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="failed to apply the patch",
+                )
 
         return app
 
     def serve_http(self, host: str = "127.0.0.1", port: int = 8080):
         import uvicorn
+
+        uvicorn.run(self.asgi(), host=host, port=port)
+
+        uvicorn.run(self.asgi(), host=host, port=port)
 
         uvicorn.run(self.asgi(), host=host, port=port)

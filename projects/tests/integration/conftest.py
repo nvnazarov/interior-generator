@@ -1,10 +1,12 @@
 import os
 from pathlib import Path
 
+import pytest
 import pytest_asyncio
 from alembic import command
 from alembic.config import Config
 from asgi_lifespan import LifespanManager
+from fastapi import status
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import create_async_engine
 from testcontainers.postgres import PostgresContainer
@@ -12,6 +14,7 @@ from testcontainers.postgres import PostgresContainer
 from app.api import API
 from app.api.idempotency import IdempotencyProvider
 from app.core.plan.service import PlanService
+from app.core.project.models import Project
 from app.core.project.service import ProjectService
 from app.core.shell.service import ShellService
 from app.infra.plan import PlansUnitOfWork
@@ -58,3 +61,27 @@ async def client(api: API):
     async with LifespanManager(app):
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             yield client
+
+
+@pytest.fixture()
+def account_id() -> str:
+    return "022f51f9-98bb-40af-9d30-0b3c03819212"
+
+
+@pytest.fixture()
+def headers(account_id: str) -> dict[str, str]:
+    return {"x-account-id": account_id}
+
+
+@pytest_asyncio.fixture(scope="function")
+async def project_id(client: AsyncClient, headers: dict[str, str]) -> str:
+    resp = await client.post("/projects", headers=headers)
+    assert resp.status_code == status.HTTP_201_CREATED
+    return resp.json()["id"]
+
+
+@pytest_asyncio.fixture(scope="function")
+async def shell_id(client: AsyncClient, headers: dict[str, str]) -> str:
+    resp = await client.post("/shells", headers=headers)
+    assert resp.status_code == status.HTTP_201_CREATED
+    return resp.json()["id"]

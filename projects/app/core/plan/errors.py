@@ -12,3 +12,7 @@ class PlanVersionConflictError(RuntimeError):
 
 class PlanPatchError(RuntimeError):
     pass
+
+
+class ProjectNotFound(RuntimeError):
+    pass

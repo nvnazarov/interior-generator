@@ -11,26 +11,28 @@ from app.core.plan.service import IPlansRepository, IPlansUnitOfWork, IQuotaRepo
 class QuotaRepository(IQuotaRepository):
     _get_stmt = text(
         "SELECT current_plans_count, max_plans_count, version "
-        "FROM plans_per_project_quota "
+        "FROM projects.plans_per_project_quota "
         "WHERE project_id = :project_id"
     )
     _save_stmt = text(
-        "UPDATE plans_per_project_quota SET "
-        "current_plans_count = :current_plans_count, "
-        "max_plans_count = :max_plans_count, "
-        "version = version + 1 "
-        "WHERE project_id = :project_id AND version = :version"
+        "INSERT INTO projects.plans_per_project_quota(project_id, current_plans_count, max_plans_count, version) "
+        "VALUES (:project_id, :current_plans_count, :max_plans_count, :version) "
+        "ON CONFLICT (project_id) DO UPDATE SET "
+        "   max_plans_count = excluded.max_plans_count, "
+        "   current_plans_count = excluded.current_plans_count, "
+        "   version = excluded.version + 1 "
+        "WHERE projects.plans_per_project_quota.version = :version"
     )
 
     def __init__(self, connection: AsyncConnection):
         self._connection = connection
 
-    async def get(self, project_id: UUID) -> Quota:
+    async def get(self, project_id: UUID) -> Quota | None:
         cursor = await self._connection.execute(
             self._get_stmt, {"project_id": project_id}
         )
         if (row := cursor.one_or_none()) is None:
-            raise RuntimeError("db error: db returned null, expected a quota row")
+            return None
         else:
             return Quota(
                 project_id=project_id,
@@ -46,49 +48,64 @@ class QuotaRepository(IQuotaRepository):
 
 
 class PlansRepository(IPlansRepository):
-    _delete_stmt = text("UPDATE plans SET deleted = true WHERE id = :plan_id")
+    _delete_stmt = text("UPDATE projects.plans SET deleted = true WHERE id = :plan_id")
     _save_stmt = text(
-        "INSERT INTO plans(id, name, version, content, updated_at) VALUES "
-        "(:plan_id, :name, :version, :content, now()) "
+        "INSERT INTO projects.plans(id, project_id, shell_id, name, version, content, updated_at, created_at) "
+        "VALUES (:id, :project_id, :shell_id, :name, :version, :content, :updated_at, :created_at) "
         "ON CONFLICT (id) DO UPDATE SET "
-        "name = excluded.name, "
-        "version = excluded.version, "
-        "content = excluded.content, "
-        "updated_at = now()"
+        "   name = excluded.name, "
+        "   version = excluded.version, "
+        "   content = excluded.content, "
+        "   updated_at = excluded.updated_at, "
+        "   created_at = excluded.created_at"
     )
     _save_no_content_stmt = text(
-        "INSERT INTO plans(id, name, updated_at) VALUES "
-        "(:plan_id, :name, now()) "
+        "INSERT INTO projects.plans(id, project_id, shell_id, name, updated_at, created_at) "
+        "VALUES (:id, :project_id, :shell_id, :name, :updated_at, :created_at) "
         "ON CONFLICT (id) DO UPDATE SET "
-        "name = excluded.name, "
-        "updated_at = now()"
+        "   name = excluded.name, "
+        "   updated_at = excluded.updated_at, "
+        "   created_at = excluded.created_at"
+    )
+    _save_content_stmt = text(
+        "UPDATE projects.plans SET"
+        "   version = :version + 1, "
+        "   content = :content, "
+        "   updated_at = :updated_at, "
+        "   created_at = :created_at "
+        "WHERE id = :id AND version = :version"
     )
     _get_stmt = text(
-        "SELECT pl.id, pl.name, pl.version, pl.content, pl.created_at, pl.updated_at "
-        "FROM plans AS pl "
-        "INNER JOIN projects AS pr ON pr.id = pl.project_id "
+        "SELECT pl.project_id, pl.shell_id, pl.name, pl.version, pl.content, pl.created_at, pl.updated_at "
+        "FROM projects.plans AS pl "
+        "INNER JOIN projects.projects AS pr ON pr.id = pl.project_id "
         "WHERE "
-        "pl.id = :plan_id "
-        "AND pr.account_id = :account "
-        "AND pl.deleted = false"
+        "   pl.id = :plan_id "
+        "   AND pr.account_id = :account_id "
+        "   AND pl.deleted = false"
     )
     _get_no_content_stmt = text(
-        "SELECT pl.id, pl.name, pl.created_at, pl.updated_at "
-        "FROM plans AS pl "
-        "INNER JOIN projects AS pr ON pr.id = pl.project_id "
+        "SELECT pl.project_id, pl.shell_id, pl.name, pl.created_at, pl.updated_at "
+        "FROM projects.plans AS pl "
+        "INNER JOIN projects.projects AS pr ON pr.id = pl.project_id "
         "WHERE "
-        "pl.id = :plan_id "
-        "AND pr.account_id = :account "
-        "AND pl.deleted = false"
+        "   pl.id = :plan_id "
+        "   AND pr.account_id = :account_id "
+        "   AND pl.deleted = false"
     )
     _get_all_no_content_stmt = text(
-        "SELECT pl.id, pl.name, pl.created_at, pl.updated_at "
-        "FROM plans AS pl "
-        "INNER JOIN projects AS pr ON pr.id = :project_id "
+        "SELECT pl.id, pl.shell_id, pl.name, pl.created_at, pl.updated_at "
+        "FROM projects.plans AS pl "
+        "INNER JOIN projects.projects AS pr ON pr.id = :project_id "
         "WHERE "
-        "pl.project_id = :project_id "
-        "AND pr.account_id = :account "
-        "AND pl.deleted = false"
+        "   pl.project_id = :project_id "
+        "   AND pr.account_id = :account_id "
+        "   AND pl.deleted = false"
+    )
+    _is_project_owned_by_account = text(
+        "SELECT 1 "
+        "FROM projects.projects "
+        "WHERE id = :project_id AND account_id = :account_id"
     )
     _dummy_content = Content()
 
@@ -105,13 +122,12 @@ class PlansRepository(IPlansRepository):
             return Plan(
                 id=plan_id,
                 project_id=row[0],
-                content=Content(
-                    version=row[1],
-                    **row[2],
-                ),
-                name=row[3],
-                created_at=row[4],
-                updated_at=row[5],
+                shell_id=row[1],
+                name=row[2],
+                version=row[3],
+                content=Content(**row[4]),
+                created_at=row[5],
+                updated_at=row[6],
             )
 
     async def get_no_content(self, plan_id: UUID, account_id: UUID) -> Plan | None:
@@ -124,18 +140,42 @@ class PlansRepository(IPlansRepository):
             return Plan(
                 id=plan_id,
                 project_id=row[0],
+                shell_id=row[1],
+                version=0,
                 content=self._dummy_content,
-                name=row[3],
-                created_at=row[4],
-                updated_at=row[5],
+                name=row[2],
+                created_at=row[3],
+                updated_at=row[4],
             )
 
     async def save(self, plan: Plan) -> None:
-        _ = await self._connection.execute(self._save_stmt, plan.model_dump())
+        _ = await self._connection.execute(
+            self._save_stmt,
+            {
+                **plan.model_dump(exclude=set(["content"])),
+                "content": plan.content.model_dump_json(),
+            },
+        )
+
+    async def save_content(self, plan: Plan) -> None:
+        cursor = await self._connection.execute(
+            self._save_content_stmt,
+            {
+                "id": plan.id,
+                "version": plan.version,
+                "content": plan.content.model_dump_json(),
+                "updated_at": plan.updated_at,
+                "created_at": plan.created_at,
+            },
+        )
+        if cursor.rowcount == 0:
+            raise
+        plan.version += 1
 
     async def save_no_content(self, plan: Plan) -> None:
         _ = await self._connection.execute(
-            self._save_no_content_stmt, plan.model_dump()
+            self._save_no_content_stmt,
+            plan.model_dump(exclude=set(["content"])),
         )
 
     async def get_all_no_content(
@@ -150,10 +190,12 @@ class PlansRepository(IPlansRepository):
                 lambda row: Plan(
                     id=row[0],
                     project_id=project_id,
+                    shell_id=row[1],
+                    version=0,
                     content=self._dummy_content,
-                    name=row[1],
-                    created_at=row[2],
-                    updated_at=row[3],
+                    name=row[2],
+                    created_at=row[3],
+                    updated_at=row[4],
                 ),
                 cursor,
             )
@@ -161,6 +203,15 @@ class PlansRepository(IPlansRepository):
 
     async def delete(self, plan_id: UUID) -> None:
         await self._connection.execute(self._delete_stmt, {"plan_id": plan_id})
+
+    async def is_project_owned_by_account(
+        self, project_id: UUID, account_id: UUID
+    ) -> bool:
+        cursor = await self._connection.execute(
+            self._is_project_owned_by_account,
+            {"project_id": project_id, "account_id": account_id},
+        )
+        return cursor.scalar() is not None
 
 
 class PlansUnitOfWork(IPlansUnitOfWork):
@@ -173,6 +224,7 @@ class PlansUnitOfWork(IPlansUnitOfWork):
 
     async def __aenter__(self):
         self._connection = self._engine.connect()
+        await self._connection.start()
         self.quota = QuotaRepository(self._connection)
         self.plans = PlansRepository(self._connection)
         return self
