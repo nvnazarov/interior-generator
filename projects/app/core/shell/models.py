@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
-from typing import Any, Sequence
+from typing import Sequence
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, ValidationError, model_validator
 
 from app.core.shell.errors import (
     ShellPatchError,
@@ -36,18 +36,24 @@ class Quota(BaseModel):
             self.current_shells_count -= 1
 
 
-class Object(BaseModel):
-    object_id: UUID
-
-
-class Door(Object):
+class Door(BaseModel):
+    id: UUID
     wall_id: UUID
     x: int = Field(ge=0)
     w: int = Field(ge=0)
     h: int = Field(ge=0)
 
 
-class Window(Object):
+class DoorPatch(BaseModel):
+    id: UUID | None = None
+    wall_id: UUID | None = None
+    x: int | None = Field(None, ge=0)
+    w: int | None = Field(None, ge=0)
+    h: int | None = Field(None, ge=0)
+
+
+class Window(BaseModel):
+    id: UUID
     wall_id: UUID
     x: int = Field(ge=0)
     y: int = Field(ge=0)
@@ -55,7 +61,17 @@ class Window(Object):
     h: int = Field(ge=0)
 
 
-class Wall(Object):
+class WindowPatch(BaseModel):
+    id: UUID | None = None
+    wall_id: UUID | None = None
+    x: int | None = Field(None, ge=0)
+    y: int | None = Field(None, ge=0)
+    w: int | None = Field(None, ge=0)
+    h: int | None = Field(None, ge=0)
+
+
+class Wall(BaseModel):
+    id: UUID
     x1: int
     y1: int
     x2: int
@@ -71,34 +87,50 @@ class Wall(Object):
         return abs(self.x1 - self.x2) + abs(self.y1 - self.y2)
 
 
-class WetArea(Object):
+class WallPatch(BaseModel):
+    id: UUID | None = None
+    x1: int | None = None
+    y1: int | None = None
+    x2: int | None = None
+    y2: int | None = None
+
+
+class WetArea(BaseModel):
+    id: UUID
     x: int
     y: int
     w: int = Field(ge=0)
     h: int = Field(ge=0)
 
 
+class WetAreaPatch(BaseModel):
+    id: UUID | None = None
+    x: int | None = None
+    y: int | None = None
+    w: int | None = Field(None, ge=0)
+    h: int | None = Field(None, ge=0)
+
+
 class Patch(BaseModel):
     version: int = 0
-    walls: list[Wall] = []
-    doors: list[Door] = []
-    windows: list[Window] = []
-    wet_areas: list[WetArea] = []
-    delete_objects: list[UUID] = []
+    walls: dict[UUID, WallPatch | None] = {}
+    doors: dict[UUID, DoorPatch | None] = {}
+    windows: dict[UUID, WindowPatch | None] = {}
+    wet_areas: dict[UUID, WetAreaPatch | None] = {}
 
 
 class Content(BaseModel):
-    version: int = 0
-    walls: list[Wall] = []
-    doors: list[Door] = []
-    windows: list[Window] = []
-    wet_areas: list[WetArea] = []
+    walls: dict[UUID, Wall] = {}
+    doors: dict[UUID, Door] = {}
+    windows: dict[UUID, Window] = {}
+    wet_areas: dict[UUID, WetArea] = {}
 
 
 class Shell(BaseModel):
     id: UUID
     account_id: UUID
     name: str = Field(max_length=256)
+    version: int
     content: Content
     created_at: datetime
     updated_at: datetime
@@ -110,6 +142,7 @@ class Shell(BaseModel):
             id=uuid4(),
             account_id=account_id,
             name="",
+            version=0,
             content=Content(),
             created_at=dt,
             updated_at=dt,
@@ -120,99 +153,53 @@ class Shell(BaseModel):
         self.updated_at = datetime.now(tz=timezone.utc)
 
     def patch(self, patch: Patch):
-        if patch.version != self.content.version:
+        if patch.version != self.version:
             raise ShellVersionConflictError
 
-        print(patch)
+        attrs: Sequence[tuple[str, type[BaseModel]]] = [
+            ("walls", Wall),
+            ("doors", Door),
+            ("windows", Window),
+            ("wet_areas", WetArea),
+        ]
+        for attr, cls in attrs:
+            # fmt: off
+            entities_patches: dict[UUID, BaseModel | None] = patch.__getattribute__(attr)
+            for id, entity_patch in entities_patches.items():
+                entities: dict[UUID, BaseModel] = self.content.__getattribute__(attr)
+                if (entity := entities.get(id)) is None:
+                    if entity_patch is None:
+                        raise ShellPatchError("deleting non existing entity")
+                    try:
+                        entities[id] = cls(**entity_patch.model_dump())
+                    except ValidationError as e:
+                        raise ShellPatchError(f"invalid adding patch: {e}")
+                elif entity_patch is None:
+                    del entities[id]
+                else:
+                    model = entity.model_dump()
+                    for k, v in entity_patch.model_dump().items():
+                        if v is not None:
+                            model[k] = v
+                    entities[id] = cls(**model)
+            # fmt: on
 
-        new_content = Content(version=patch.version)
-        new_content.walls = list(
-            filter(
-                lambda wall: wall.object_id not in patch.delete_objects,
-                self.content.walls,
-            )
-        )
-        new_content.doors = list(
-            filter(
-                lambda door: door.object_id not in patch.delete_objects,
-                self.content.doors,
-            )
-        )
-        new_content.windows = list(
-            filter(
-                lambda window: window.object_id not in patch.delete_objects,
-                self.content.windows,
-            )
-        )
-        new_content.wet_areas = list(
-            filter(
-                lambda wet_area: wet_area.object_id not in patch.delete_objects,
-                self.content.wet_areas,
-            )
-        )
-        for wall in patch.walls:
-            result = self._one_or_none(new_content.walls, wall.object_id)
-            if result is None:
-                new_content.walls.append(wall)
-            else:
-                idx, _ = result
-                new_content.walls[idx] = wall
-        for door in patch.doors:
-            result = self._one_or_none(new_content.doors, door.object_id)
-            if result is None:
-                new_content.doors.append(door)
-            else:
-                idx, _ = result
-                new_content.doors[idx] = door
-        for window in patch.windows:
-            result = self._one_or_none(new_content.windows, window.object_id)
-            if result is None:
-                new_content.windows.append(window)
-            else:
-                idx, _ = result
-                new_content.windows[idx] = window
-        for wet_area in patch.wet_areas:
-            result = self._one_or_none(new_content.wet_areas, wet_area.object_id)
-            if result is None:
-                new_content.wet_areas.append(wet_area)
-            else:
-                idx, _ = result
-                new_content.wet_areas[idx] = wet_area
-
-        # Verify that doors and windows are correctly attached to walls.
-        for door in new_content.doors:
-            wall: Wall = self._get(new_content.walls, door.wall_id)
-            print(door, wall)
-            if door.x + door.w > wall.length():
-                raise ShellPatchError
-        for window in new_content.windows:
-            wall: Wall = self._get(new_content.walls, window.wall_id)
-            print(window, wall)
+        for id, window in self.content.windows.items():
+            wall = self.content.walls.get(window.wall_id)
+            if wall is None:
+                raise ShellPatchError(
+                    f"window[{id}] is attached to non existing wall[{window.wall_id}]"
+                )
             if window.x + window.w > wall.length():
-                raise ShellPatchError
+                raise ShellPatchError(f"window[{id}] is out of wall[{wall.id}] bounds")
 
-        self.content = new_content
+        for id, door in self.content.doors.items():
+            wall = self.content.walls.get(door.wall_id)
+            if wall is None:
+                raise ShellPatchError(
+                    f"door[{id}] is attached to non existing wall[{door.wall_id}]"
+                )
+            if door.x + door.w > wall.length():
+                raise ShellPatchError(f"door[{id}] is out of wall[{wall.id}] bounds")
+
         self.updated_at = datetime.now(tz=timezone.utc)
-
-    @staticmethod
-    def _get(seq: Sequence[Object], object_id: UUID, default: Any = None) -> Any:
-        objects = list(filter(lambda obj: obj.object_id == object_id, seq))
-        if len(objects) > 1:
-            raise ShellPatchError
-        if len(objects) == 0:
-            if default is None:
-                raise ShellPatchError
-            return default
-        return objects[0]
-
-    @staticmethod
-    def _one_or_none(seq: Sequence[Object], object_id: UUID) -> tuple[int, Any] | None:
-        seq_with_indices = enumerate(seq)
-        objects_with_indices = list(
-            filter(lambda x: x[1].object_id == object_id, seq_with_indices)
-        )
-        if len(objects_with_indices) > 1:
-            raise ShellPatchError
-        if len(objects_with_indices) == 0:
-            return None
-        return objects_with_indices[0]

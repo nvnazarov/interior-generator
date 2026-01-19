@@ -116,7 +116,7 @@ class ShellService:
                 raise ShellNotFoundError
             shell.patch(patch)
             await uow.shells.save_content(shell)
-            return shell.content.version
+            return shell.version
 
     async def get_all_shells(self, account_id: UUID) -> list[Shell]:
         async with self.uow_factory() as uow:

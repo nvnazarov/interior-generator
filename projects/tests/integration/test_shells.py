@@ -51,12 +51,12 @@ async def test_patch_shell(client: AsyncClient):
     resp = await client.post("/shells", headers=headers)
     assert resp.status_code == status.HTTP_201_CREATED
     created_shell: dict[str, Any] = resp.json()
+    assert created_shell["version"] == 0
     assert created_shell["content"] == {
-        "version": 0,
-        "walls": [],
-        "doors": [],
-        "windows": [],
-        "wet_areas": [],
+        "walls": {},
+        "doors": {},
+        "windows": {},
+        "wet_areas": {},
     }
     created_shell_id = created_shell["id"]
 
@@ -65,7 +65,7 @@ async def test_patch_shell(client: AsyncClient):
         headers=headers,
         json={
             "version": 1,
-            "walls": [],
+            "walls": {},
         },
     )
     assert resp.status_code == status.HTTP_409_CONFLICT
@@ -80,51 +80,43 @@ async def test_patch_shell(client: AsyncClient):
         headers=headers,
         json={
             "version": 0,
-            "walls": list[Any](
-                [
-                    {
-                        "object_id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
-                        "x1": 0,
-                        "y1": 0,
-                        "x2": 10,
-                        "y2": 0,
-                    },
-                ]
-            ),
-            "windows": list[Any](
-                [
-                    {
-                        "object_id": "af877d39-56e5-4332-b997-dd1a9da3b836",
-                        "wall_id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
-                        "x": 2,
-                        "y": 2,
-                        "w": 4,
-                        "h": 4,
-                    },
-                ]
-            ),
-            "doors": list[Any](
-                [
-                    {
-                        "object_id": "27242d2f-9d7c-4a75-ae15-c462c76f399e",
-                        "wall_id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
-                        "x": 7,
-                        "w": 2,
-                        "h": 4,
-                    }
-                ]
-            ),
-            "wet_areas": list[Any](
-                [
-                    {
-                        "object_id": "7e0360d3-1a66-4521-a8a7-d89dcb6309cf",
-                        "x": 0,
-                        "y": 0,
-                        "w": 4,
-                        "h": 4,
-                    }
-                ]
-            ),
+            "walls": {
+                "dc827c5a-633c-43c1-8816-8ff64eaaeb43": {
+                    "id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
+                    "x1": 0,
+                    "y1": 0,
+                    "x2": 10,
+                    "y2": 0,
+                },
+            },
+            "windows": {
+                "af877d39-56e5-4332-b997-dd1a9da3b836": {
+                    "id": "af877d39-56e5-4332-b997-dd1a9da3b836",
+                    "wall_id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
+                    "x": 2,
+                    "y": 2,
+                    "w": 4,
+                    "h": 4,
+                },
+            },
+            "doors": {
+                "27242d2f-9d7c-4a75-ae15-c462c76f399e": {
+                    "id": "27242d2f-9d7c-4a75-ae15-c462c76f399e",
+                    "wall_id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
+                    "x": 7,
+                    "w": 2,
+                    "h": 4,
+                }
+            },
+            "wet_areas": {
+                "7e0360d3-1a66-4521-a8a7-d89dcb6309cf": {
+                    "id": "7e0360d3-1a66-4521-a8a7-d89dcb6309cf",
+                    "x": 0,
+                    "y": 0,
+                    "w": 4,
+                    "h": 4,
+                }
+            },
         },
     )
     assert resp.status_code == status.HTTP_200_OK
@@ -132,53 +124,45 @@ async def test_patch_shell(client: AsyncClient):
 
     resp = await client.get(f"/shells/{created_shell_id}", headers=headers)
     assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["version"] == 1
     assert resp.json()["content"] == {
-        "version": 1,
-        "walls": list[Any](
-            [
-                {
-                    "object_id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
-                    "x1": 0,
-                    "y1": 0,
-                    "x2": 10,
-                    "y2": 0,
-                },
-            ]
-        ),
-        "windows": list[Any](
-            [
-                {
-                    "object_id": "af877d39-56e5-4332-b997-dd1a9da3b836",
-                    "wall_id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
-                    "x": 2,
-                    "y": 2,
-                    "w": 4,
-                    "h": 4,
-                },
-            ]
-        ),
-        "doors": list[Any](
-            [
-                {
-                    "object_id": "27242d2f-9d7c-4a75-ae15-c462c76f399e",
-                    "wall_id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
-                    "x": 7,
-                    "w": 2,
-                    "h": 4,
-                }
-            ]
-        ),
-        "wet_areas": list[Any](
-            [
-                {
-                    "object_id": "7e0360d3-1a66-4521-a8a7-d89dcb6309cf",
-                    "x": 0,
-                    "y": 0,
-                    "w": 4,
-                    "h": 4,
-                }
-            ]
-        ),
+        "walls": {
+            "dc827c5a-633c-43c1-8816-8ff64eaaeb43": {
+                "id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
+                "x1": 0,
+                "y1": 0,
+                "x2": 10,
+                "y2": 0,
+            },
+        },
+        "windows": {
+            "af877d39-56e5-4332-b997-dd1a9da3b836": {
+                "id": "af877d39-56e5-4332-b997-dd1a9da3b836",
+                "wall_id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
+                "x": 2,
+                "y": 2,
+                "w": 4,
+                "h": 4,
+            },
+        },
+        "doors": {
+            "27242d2f-9d7c-4a75-ae15-c462c76f399e": {
+                "id": "27242d2f-9d7c-4a75-ae15-c462c76f399e",
+                "wall_id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
+                "x": 7,
+                "w": 2,
+                "h": 4,
+            }
+        },
+        "wet_areas": {
+            "7e0360d3-1a66-4521-a8a7-d89dcb6309cf": {
+                "id": "7e0360d3-1a66-4521-a8a7-d89dcb6309cf",
+                "x": 0,
+                "y": 0,
+                "w": 4,
+                "h": 4,
+            }
+        },
     }
 
     resp = await client.patch(
@@ -186,18 +170,11 @@ async def test_patch_shell(client: AsyncClient):
         headers=headers,
         json={
             "version": 1,
-            "windows": list[Any](
-                [
-                    {
-                        "object_id": "af877d39-56e5-4332-b997-dd1a9da3b836",
-                        "wall_id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
-                        "x": 2,
-                        "y": 2,
-                        "w": 9,
-                        "h": 4,
-                    },
-                ]
-            ),
+            "windows": {
+                "af877d39-56e5-4332-b997-dd1a9da3b836": {
+                    "w": 9,
+                },
+            },
         },
     )
     assert resp.status_code == status.HTTP_400_BAD_REQUEST
@@ -208,30 +185,24 @@ async def test_patch_shell(client: AsyncClient):
         headers=headers,
         json={
             "version": 1,
-            "windows": list[Any](
-                [
-                    {
-                        "object_id": "af877d39-56e5-4332-b997-dd1a9da3b836",
-                        "wall_id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
-                        "x": 2,
-                        "y": 1,
-                        "w": 3,
-                        "h": 4,
-                    },
-                ]
-            ),
-            "doors": list[Any](
-                [
-                    {
-                        "object_id": "27242d2f-9d7c-4a75-ae15-c462c76f399e",
-                        "wall_id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
-                        "x": 5,
-                        "w": 2,
-                        "h": 7,
-                    }
-                ]
-            ),
-            "delete_objects": ["7e0360d3-1a66-4521-a8a7-d89dcb6309cf"],
+            "windows": {
+                "af877d39-56e5-4332-b997-dd1a9da3b836": {
+                    "x": 2,
+                    "y": 1,
+                    "w": 3,
+                    "h": 4,
+                },
+            },
+            "doors": {
+                "27242d2f-9d7c-4a75-ae15-c462c76f399e": {
+                    "x": 5,
+                    "w": 2,
+                    "h": 7,
+                }
+            },
+            "wet_areas": {
+                "7e0360d3-1a66-4521-a8a7-d89dcb6309cf": None,
+            },
         },
     )
     assert resp.status_code == status.HTTP_200_OK
@@ -239,43 +210,37 @@ async def test_patch_shell(client: AsyncClient):
 
     resp = await client.get(f"/shells/{created_shell_id}", headers=headers)
     assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["version"] == 2
     assert resp.json()["content"] == {
-        "version": 2,
-        "walls": list[Any](
-            [
-                {
-                    "object_id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
-                    "x1": 0,
-                    "y1": 0,
-                    "x2": 10,
-                    "y2": 0,
-                },
-            ]
-        ),
-        "windows": list[Any](
-            [
-                {
-                    "object_id": "af877d39-56e5-4332-b997-dd1a9da3b836",
-                    "wall_id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
-                    "x": 2,
-                    "y": 1,
-                    "w": 3,
-                    "h": 4,
-                },
-            ]
-        ),
-        "doors": list[Any](
-            [
-                {
-                    "object_id": "27242d2f-9d7c-4a75-ae15-c462c76f399e",
-                    "wall_id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
-                    "x": 5,
-                    "w": 2,
-                    "h": 7,
-                }
-            ]
-        ),
-        "wet_areas": [],
+        "walls": {
+            "dc827c5a-633c-43c1-8816-8ff64eaaeb43": {
+                "id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
+                "x1": 0,
+                "y1": 0,
+                "x2": 10,
+                "y2": 0,
+            },
+        },
+        "windows": {
+            "af877d39-56e5-4332-b997-dd1a9da3b836": {
+                "id": "af877d39-56e5-4332-b997-dd1a9da3b836",
+                "wall_id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
+                "x": 2,
+                "y": 1,
+                "w": 3,
+                "h": 4,
+            },
+        },
+        "doors": {
+            "27242d2f-9d7c-4a75-ae15-c462c76f399e": {
+                "id": "27242d2f-9d7c-4a75-ae15-c462c76f399e",
+                "wall_id": "dc827c5a-633c-43c1-8816-8ff64eaaeb43",
+                "x": 5,
+                "w": 2,
+                "h": 7,
+            }
+        },
+        "wet_areas": {},
     }
 
 
@@ -317,7 +282,9 @@ async def test_get_all_shells(client: AsyncClient):
     assert resp.status_code == status.HTTP_201_CREATED
     shell_2 = resp.json()
 
+    del shell_1["version"]
     del shell_1["content"]
+    del shell_2["version"]
     del shell_2["content"]
 
     resp = await client.get("/shells", headers=headers)

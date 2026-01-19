@@ -115,12 +115,8 @@ class ShellsRepository(IShellsRepository):
                 id=shell_id,
                 account_id=row[0],
                 name=row[1],
-                content=Content.model_validate(
-                    {
-                        "version": row[2],
-                        **row[3],
-                    }
-                ),
+                version=row[2],
+                content=Content.model_validate(row[3]),
                 created_at=row[4],
                 updated_at=row[5],
             )
@@ -138,12 +134,8 @@ class ShellsRepository(IShellsRepository):
                 id=shell_id,
                 account_id=row[0],
                 name=row[1],
-                content=Content.model_validate(
-                    {
-                        "version": row[2],
-                        **row[3],
-                    }
-                ),
+                version=row[2],
+                content=Content.model_validate(row[3]),
                 created_at=row[4],
                 updated_at=row[5],
             )
@@ -159,6 +151,7 @@ class ShellsRepository(IShellsRepository):
                 id=shell_id,
                 account_id=row[0],
                 name=row[1],
+                version=0,
                 content=self._dummy_content,
                 created_at=row[2],
                 updated_at=row[3],
@@ -174,6 +167,7 @@ class ShellsRepository(IShellsRepository):
                     id=row[0],
                     account_id=account_id,
                     name=row[1],
+                    version=0,
                     content=self._dummy_content,
                     created_at=row[2],
                     updated_at=row[3],
@@ -187,8 +181,7 @@ class ShellsRepository(IShellsRepository):
             self._save_stmt,
             {
                 **shell.model_dump(exclude=set(["content"])),
-                "version": shell.content.version,
-                "content": shell.content.model_dump_json(exclude=set(["version"])),
+                "content": shell.content.model_dump_json(),
             },
         )
 
@@ -197,11 +190,10 @@ class ShellsRepository(IShellsRepository):
             self._save_content_stmt,
             {
                 **shell.model_dump(exclude=set(["content"])),
-                "version": shell.content.version,
-                "content": shell.content.model_dump_json(exclude=set(["version"])),
+                "content": shell.content.model_dump_json(),
             },
         )
-        shell.content.version += 1
+        shell.version += 1
 
     async def save_no_content(self, shell: Shell) -> None:
         await self._connection.execute(
