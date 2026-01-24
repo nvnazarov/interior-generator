@@ -1,0 +1,96 @@
+services:
+  gateway:
+    image: "nginx:1.29"
+    volumes:
+      - "./nginx.conf:/etc/nginx/nginx.conf"
+    ports:
+      - "8080:80"
+    networks:
+      - "private"
+  
+  postgres:
+    image: "postgres"
+    volumes:
+      - "postgres:/opt/postgresql/data"
+    environment:
+      - "POSTGRES_DB=postgres"
+      - "POSTGRES_USER=postgres"
+      - "POSTGRES_PASSWORD=postgres"
+    networks:
+      - "private"
+  
+  minio:
+    image: "quay.io/minio/minio"
+    command: ["minio", "server", "/data", "--console-address", ":9001"]
+    environment:
+      - "MINIO_ROOT_USER=user"
+      - "MINIO_ROOT_PASSWORD=password"
+    ports:
+      - "127.0.0.1:9000:9000"  # API
+      - "127.0.0.1:9001:9001"  # Web UI
+    volumes:
+      - "minio:/data"
+    networks:
+      - "private"
+  
+  catalog:
+    build:
+      context: "../catalog"
+      target: "dev"
+    environment:
+      - "APP_HOST=0.0.0.0"
+      - "APP_PORT=80"
+      - "APP_POSTGRES__HOST=postgres"
+      - "APP_POSTGRES__PORT=5432"
+      - "APP_POSTGRES__DB=postgres"
+      - "APP_POSTGRES__USER=postgres"
+      - "APP_POSTGRES__PASSWORD=postgres"
+    networks:
+      - "private"
+  
+  generator:
+    build:
+      context: "../exporter"
+      target: "dev"
+    networks:
+      - "private"
+
+  exporter:
+    build:
+      context: "../exporter"
+      target: "dev"
+    networks:
+      - "private"
+  
+  projects:
+    build:
+      context: "../projects"
+      target: "dev"
+    environment:
+      - "APP_HOST=0.0.0.0"
+      - "APP_PORT=80"
+      - "APP_HEADER_WITH_ACCOUNT_ID=x-account-id"
+      - "APP_POSTGRES__HOST=postgres"
+      - "APP_POSTGRES__PORT=5432"
+      - "APP_POSTGRES__DB=postgres"
+      - "APP_POSTGRES__USER=postgres"
+      - "APP_POSTGRES__PASSWORD=postgres"
+    networks:
+      - "private"
+      
+  ui:
+    build:
+      context: "../ui"
+      target: "dev"
+    networks:
+      - "private"
+
+
+networks:
+  private: {}
+
+volumes:
+  postgres: {}
+  minio: {}
+
+
