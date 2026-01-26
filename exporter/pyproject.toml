@@ -3,6 +3,7 @@ name = "exporter"
 version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
+    "ezdxf>=1.4.3",
     "fastapi>=0.128.0",
     "httpx>=0.28.1",
     "pydantic-settings>=2.12.0",
