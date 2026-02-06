@@ -1,87 +1,69 @@
 import os
 from pathlib import Path
 
+import alembic.command
+import alembic.config
+import httpx
 import pytest
 import pytest_asyncio
-from alembic import command
-from alembic.config import Config
 from asgi_lifespan import LifespanManager
-from fastapi import status
-from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import create_async_engine
-from testcontainers.postgres import PostgresContainer
+from testcontainers.postgres import PostgresContainer  # type: ignore
 
-from app.api import API
-from app.api.idempotency import IdempotencyProvider
-from app.core.plan.service import PlanService
-from app.core.project.models import Project
-from app.core.project.service import ProjectService
-from app.core.shell.service import ShellService
-from app.infra.plan import PlansUnitOfWork
-from app.infra.project import ProjectsUnitOfWork
-from app.infra.shell import ShellsUnitOfWork
+from app.adapters.postgres import PostgresUnitOfWork
+from app.api.asgi import ASGI
+from app.core.service import Service
 
-PYPROJECT_TOML = Path(os.path.abspath(__file__)).parent.parent.parent / "pyproject.toml"
+os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
 
 
-@pytest_asyncio.fixture(scope="function")
-async def api():
+@pytest.fixture
+def pyproject_toml():
+    return Path(os.path.abspath(__file__)).parent.parent.parent / "pyproject.toml"
+
+
+@pytest.fixture
+def db_container():
     with PostgresContainer("postgres:17.5-alpine") as postgres:
-        config = Config(toml_file=PYPROJECT_TOML)
-        config.set_main_option(
-            "sqlalchemy.url", postgres.get_connection_url(driver="psycopg")
-        )
-        command.upgrade(config, "head")
-
-        url = postgres.get_connection_url(driver="asyncpg")
-        engine = create_async_engine(url)
-        api = API(
-            plan_service=PlanService(
-                lambda: PlansUnitOfWork(engine),
-                max_plans_per_project=20,
-            ),
-            shell_service=ShellService(
-                lambda: ShellsUnitOfWork(engine),
-                max_shells_per_account=20,
-            ),
-            project_service=ProjectService(
-                lambda: ProjectsUnitOfWork(engine),
-                max_projects_per_account=20,
-            ),
-            idempotency_provider=IdempotencyProvider(),
-            header_with_account_id="x-account-id",
-        )
-        yield api
+        yield postgres
 
 
-@pytest_asyncio.fixture(scope="function")
-async def client(api: API):
-    app = api.asgi()
-    transport = ASGITransport(app)
-    async with LifespanManager(app):
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
+@pytest.fixture
+def db_url(db_container: PostgresContainer):
+    return db_container.get_connection_url(driver="psycopg")
+
+
+@pytest.fixture
+def run_migration(pyproject_toml: Path, db_url: str):
+    revision = "head"
+    config = alembic.config.Config(toml_file=pyproject_toml)
+    config.set_main_option("sqlalchemy.url", db_url)
+    alembic.command.upgrade(config, revision)
+    yield
+    alembic.command.downgrade(config, "base")
+
+
+@pytest.fixture
+def uow(db_url: str, run_migration: None):
+    engine = create_async_engine(db_url)
+    return PostgresUnitOfWork(engine)
+
+
+@pytest.fixture
+def service(uow: PostgresUnitOfWork):
+    return Service(uow)
+
+
+@pytest.fixture
+def asgi(service: Service):
+    return ASGI(service, header_for_account_id="x-account-id")
+
+
+@pytest_asyncio.fixture
+async def client(asgi: ASGI):
+    transport = httpx.ASGITransport(asgi)
+    async with LifespanManager(asgi):
+        async with httpx.AsyncClient(
+            transport=transport, base_url="http://test"
+        ) as client:
             yield client
-
-
-@pytest.fixture()
-def account_id() -> str:
-    return "022f51f9-98bb-40af-9d30-0b3c03819212"
-
-
-@pytest.fixture()
-def headers(account_id: str) -> dict[str, str]:
-    return {"x-account-id": account_id}
-
-
-@pytest_asyncio.fixture(scope="function")
-async def project_id(client: AsyncClient, headers: dict[str, str]) -> str:
-    resp = await client.post("/projects", headers=headers)
-    assert resp.status_code == status.HTTP_201_CREATED
-    return resp.json()["id"]
-
-
-@pytest_asyncio.fixture(scope="function")
-async def shell_id(client: AsyncClient, headers: dict[str, str]) -> str:
-    resp = await client.post("/shells", headers=headers)
-    assert resp.status_code == status.HTTP_201_CREATED
-    return resp.json()["id"]

@@ -3,7 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-import app.core.plan.models as models
+from app.core.plan import Patch as CorePatch
+from app.core.plan import Plan as CorePlan
 
 
 class Furniture(BaseModel):
@@ -45,34 +46,27 @@ class AreaPatch(BaseModel):
     h: int | None = None
 
 
+class ContentPatch(BaseModel):
+    furniture: dict[UUID, FurniturePatch | None] = {}
+    areas: dict[UUID, AreaPatch | None] = {}
+
+
+class Patch(BaseModel):
+    name: str | None = None
+    content: ContentPatch | None = None
+
+    def to_core(self) -> CorePatch:
+        return CorePatch(**self.model_dump())
+
+
 class Plan(BaseModel):
     id: UUID
     name: str = Field(max_length=256)
-    version: int
+    revision: int
     content: Content
     created_at: datetime
     updated_at: datetime
 
     @staticmethod
-    def from_model(plan: models.Plan) -> "Plan":
+    def from_core(plan: CorePlan) -> "Plan":
         return Plan(**plan.model_dump())
-
-
-class PlanNoContent(BaseModel):
-    id: UUID
-    name: str = Field(max_length=256)
-    created_at: datetime
-    updated_at: datetime
-
-    @staticmethod
-    def from_model(plan: models.Plan) -> "PlanNoContent":
-        return PlanNoContent(**plan.model_dump())
-
-
-class Patch(BaseModel):
-    version: int = 0
-    furniture: dict[UUID, FurniturePatch | None] = {}
-    areas: dict[UUID, AreaPatch | None] = {}
-
-    def to_model(self) -> models.Patch:
-        return models.Patch(**self.model_dump())

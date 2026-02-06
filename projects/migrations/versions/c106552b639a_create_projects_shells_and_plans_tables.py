@@ -32,67 +32,42 @@ def upgrade() -> None:
     op.execute("CREATE SCHEMA projects")
     op.create_table(
         "projects",
-        Column("id", UUID(), primary_key=True, server_default=text("gen_random_uuid()")),
+        Column("id", UUID(), primary_key=True),
         Column("account_id", UUID(), nullable=False),
-        Column("name", VARCHAR(256), nullable=False, server_default=""),
-        Column("description", VARCHAR(2048), nullable=False, server_default=""),
-        Column("pinned", BOOLEAN, nullable=False, server_default=text("false")),
+        Column("name", VARCHAR(256), nullable=False),
+        Column("description", VARCHAR(2048), nullable=False),
+        Column("revision", INTEGER, nullable=False),
+        Column("content", JSONB(), nullable=False),
+        Column("plans_count", INTEGER, nullable=False),
+        Column("plans_limit", INTEGER, nullable=False),
         Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=func.now()),
         Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=func.now()),
         Column("deleted", BOOLEAN, nullable=False, server_default=text("false")),
-        schema="projects",
-    )
-    op.create_table(
-        "shells",
-        Column("id", UUID(), primary_key=True, server_default=text("gen_random_uuid()")),
-        Column("account_id", UUID(), nullable=False),
-        Column("name", VARCHAR(256), nullable=False, server_default=""),
-        Column("content", JSONB, nullable=False),
-        Column("version", INTEGER, nullable=False, server_default="0"),
-        Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=func.now()),
-        Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=func.now()),
-        Column("deleted", BOOLEAN, nullable=False, server_default=text("false")),
+        Column("version", INTEGER, nullable=False),
         schema="projects",
     )
     op.create_table(
         "plans",
-        Column("id", UUID(), primary_key=True, server_default=text("gen_random_uuid()")),
+        Column("id", UUID(), primary_key=True),
         Column("project_id", UUID(), ForeignKey("projects.projects.id", ondelete="CASCADE"), nullable=False),
-        Column("shell_id", UUID(), ForeignKey("projects.shells.id", ondelete="CASCADE"), nullable=False),
-        Column("name", VARCHAR(256), nullable=False, server_default=""),
+        Column("name", VARCHAR(256), nullable=False),
+        Column("revision", INTEGER, nullable=False),
         Column("content", JSONB(), nullable=False),
-        Column("version", INTEGER, nullable=False, server_default="0"),
         Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=func.now()),
         Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=func.now()),
         Column("deleted", BOOLEAN, nullable=False, server_default=text("false")),
+        Column("version", INTEGER, nullable=False),
         schema="projects",
     )
     op.create_table(
-        "plans_per_project_quota",
-        Column("project_id", UUID(), ForeignKey("projects.projects.id", ondelete="CASCADE"), primary_key=True),
-        Column("current_plans_count", INTEGER, server_default="0"),
-        Column("max_plans_count", INTEGER, nullable=False),
-        Column("version", INTEGER, nullable=False, server_default="0"),
-        schema="projects",
-    )
-    op.create_table(
-        "projects_quota",
+        "accounts",
         Column("account_id", UUID(), primary_key=True),
-        Column("current_projects_count", INTEGER, server_default="0"),
-        Column("max_projects_count", INTEGER, nullable=False),
-        Column("version", INTEGER, nullable=False, server_default="0"),
-        schema="projects",
-    )
-    op.create_table(
-        "shells_quota",
-        Column("account_id", UUID(), primary_key=True),
-        Column("current_shells_count", INTEGER, server_default="0"),
-        Column("max_shells_count", INTEGER, nullable=False),
-        Column("version", INTEGER, nullable=False, server_default="0"),
+        Column("projects_count", INTEGER, nullable=False),
+        Column("projects_limit", INTEGER, nullable=False),
+        Column("version", INTEGER, nullable=False),
         schema="projects",
     )
     op.create_index("idx_projects_account_id", "projects", ["account_id"], schema="projects")
-    op.create_index("idx_shells_account_id", "shells", ["account_id"], schema="projects")
     op.create_index("idx_plans_project_id", "plans", ["project_id"], schema="projects")
     op.execute(
         "CREATE OR REPLACE FUNCTION sync_project_update_time() "
@@ -115,15 +90,11 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.execute("DROP TRIGGER sync_project_update_time_trigger ON plans")
+    op.execute("DROP TRIGGER sync_project_update_time_trigger ON projects.plans")
     op.execute("DROP FUNCTION sync_project_update_time() CASCADE")
-    op.drop_index("idx_plans_project_id", "plans")
-    op.drop_index("idx_shells_account_id", "shells")
-    op.drop_index("idx_projects_account_id", "projects")
-    op.drop_table("shells_quota")
-    op.drop_table("projects_quota")
-    op.drop_table("plans_per_project_quota")
-    op.drop_table("plans")
-    op.drop_table("shells")
-    op.drop_table("projects")
+    op.drop_index("idx_plans_project_id", "plans", schema="projects")
+    op.drop_index("idx_projects_account_id", "projects", schema="projects")
+    op.drop_table("accounts", schema="projects")
+    op.drop_table("plans", schema="projects")
+    op.drop_table("projects", schema="projects")
     op.execute("DROP SCHEMA projects")
