@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: "postgres:17.5-alpine"
+    environment:
+      - "POSTGRES_USER=test"
+      - "POSTGRES_PASSWORD=test"
+      - "POSTGRES_DB=test"
+
+  projects:
+    build:
+      dockerfile: "./docker/Dockerfile.${mod:-dev}"
+    environment:
+      - "app_host=${app_host:-0.0.0.0}"
+      - "app_port=${app_port:-80}"
+      - "app_header_for_account_id=${app_header_for_account_id}"
+      - "app_plans_limit=${app_plans_limit}"
+      - "app_projects_limit=${app_projects_limit}"
+      - "app_postgres__host=postgres"
+      - "app_postgres__port=5432"
+      - "app_postgres__user=test"
+      - "app_postgres__password=test"
+      - "app_postgres__db=test"
+    ports:
+      - "127.0.0.1:${port:-8000}:${app_port:-80}"
+
+networks:
+  default:
+    driver: "bridge"

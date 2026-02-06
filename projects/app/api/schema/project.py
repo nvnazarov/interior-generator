@@ -3,7 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.core.shell import models
+from app.core.project import Patch as CorePatch
+from app.core.project import Project as CoreProject
 
 
 class Door(BaseModel):
@@ -88,36 +89,30 @@ class Content(BaseModel):
     wet_areas: dict[UUID, WetArea] = {}
 
 
-class Shell(BaseModel):
-    id: UUID
-    name: str = Field(max_length=256)
-    version: int
-    content: Content
-    created_at: datetime
-    updated_at: datetime
-
-    @staticmethod
-    def from_model(shell: models.Shell) -> "Shell":
-        return Shell(**shell.model_dump())
-
-
-class ShellNoContent(BaseModel):
-    id: UUID
-    name: str = Field(max_length=256)
-    created_at: datetime
-    updated_at: datetime
-
-    @staticmethod
-    def from_model(shell: models.Shell) -> "ShellNoContent":
-        return ShellNoContent(**shell.model_dump())
-
-
-class Patch(BaseModel):
-    version: int = 0
+class ContentPatch(BaseModel):
     walls: dict[UUID, WallPatch | None] = {}
     doors: dict[UUID, DoorPatch | None] = {}
     windows: dict[UUID, WindowPatch | None] = {}
     wet_areas: dict[UUID, WetAreaPatch | None] = {}
 
-    def to_model(self) -> models.Patch:
-        return models.Patch(**self.model_dump())
+
+class Patch(BaseModel):
+    name: str | None = Field(None, max_length=256)
+    description: str | None = Field(None, max_length=2048)
+    content: ContentPatch | None = None
+
+    def to_core(self):
+        return CorePatch(**self.model_dump())
+
+
+class Project(BaseModel):
+    id: UUID
+    name: str = Field(max_length=256)
+    description: str = Field(max_length=2048)
+    content: Content | None = None
+    created_at: datetime
+    updated_at: datetime
+
+    @staticmethod
+    def from_core(project: CoreProject) -> "Project":
+        return Project(**project.model_dump())
