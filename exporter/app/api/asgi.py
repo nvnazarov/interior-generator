@@ -1,30 +1,48 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Header, HTTPException, status
 from fastapi.responses import StreamingResponse
 
 from app.api.constants import MIME_DXF, MIME_PDF
 from app.api.schema import DXFExportOptions, PDFExportOptions
 from app.core.exporter import Exporter
 
+DEFAULT_HEADER = "x-account-id"
 
-class API(FastAPI):
-    def __init__(self, exporter: Exporter):
+
+class ASGI(FastAPI):
+    def __init__(
+        self,
+        exporter: Exporter,
+        *,
+        header_for_account_id: str = DEFAULT_HEADER,
+    ):
         self.exporter = exporter
 
-        def get_account_id():
-            pass
+        super().__init__(
+            title="Exporter",
+            summary="Exports projects and plans into various formats",
+        )
 
-        @self.post("/projects/{project_id}/export/pdf")
+        def get_account_id(
+            account_id: Annotated[
+                str,
+                Header(alias=header_for_account_id),
+            ] = "",
+        ) -> UUID:
+            try:
+                return UUID(account_id)
+            except ValueError:
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+        @self.post("/export/{project_id}/pdf")
         async def export_project_pdf(
             project_id: UUID,
             account_id: Annotated[UUID, Depends(get_account_id)],
             opts: PDFExportOptions,
         ):
-            buffer = await self.exporter.export_project_pdf(
-                project_id, account_id, opts
-            )
+            buffer = await self.exporter.export_pdf(project_id, account_id)
             return StreamingResponse(
                 buffer,
                 media_type=MIME_PDF,
@@ -33,8 +51,8 @@ class API(FastAPI):
                 },
             )
 
-        @self.post("/plans/{plan_id}/export/dxf")
-        async def export_plan_dxf(
+        @self.post("/export/{project_id}/dxf")
+        async def export_project_dxf(
             project_id: UUID,
             account_id: Annotated[UUID, Depends(get_account_id)],
             opts: DXFExportOptions,

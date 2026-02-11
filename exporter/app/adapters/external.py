@@ -3,11 +3,11 @@ from uuid import UUID
 
 from httpx import AsyncClient
 
-from app.core.exporter import IProjectsRepository
+from app.core.exporter import IPlansRepository
 from app.core.models import Plan
 
 
-class ProjectsServiceAdapter(IProjectsRepository):
+class ExternalPlansRepository:
     def __init__(self, client: AsyncClient):
         self.client = client
 

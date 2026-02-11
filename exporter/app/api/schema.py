@@ -1,9 +1,6 @@
-from uuid import UUID
-
-
 class PDFExportOptions:
-    plans: list[UUID] = []
+    pass
 
 
 class DXFExportOptions:
-    plans: list[UUID] = []
+    pass

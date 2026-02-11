@@ -1,8 +1,8 @@
 from httpx import AsyncClient
 
+from app.adapters.external import ExternalPlansRepository
 from app.api.api import API
 from app.core.exporter import Exporter
-from app.infra.projects_service import ProjectsServiceAdapter
 
 
 def main():
