@@ -119,6 +119,7 @@ class Project(BaseModel):
     name: str = Field(max_length=256)
     description: str = Field(max_length=2048)
     revision: int = 0
+    published: bool = False
     content: Content = Field(default_factory=lambda: Content())
     created_at: datetime = Field(default_factory=now)
     updated_at: datetime = Field(default_factory=now)
@@ -133,6 +134,20 @@ class Project(BaseModel):
 
     def delete_plan(self, plan_id: UUID):
         self.plans_count = max(0, self.plans_count - 1)
+
+    def publish(self):
+        self.published = True
+        self.updated_at = now()
+
+    def unpublish(self):
+        self.published = False
+        self.updated_at = now()
+
+    def is_owned_by(self, account_id: UUID):
+        return self.account_id == account_id
+
+    def can_be_read_by(self, account_id: UUID):
+        return self.account_id == account_id or self.published
 
     def patch(self, patch: Patch, revision: int):
         if revision != self.revision:

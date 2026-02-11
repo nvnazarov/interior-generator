@@ -50,6 +50,7 @@ STMT_GET_PROJECT_WITHOUT_CONTENT = text(
     "   updated_at, "
     "   plans_count, "
     "   plans_limit, "
+    "   published, "
     "   version "
     "FROM "
     "   projects.projects "
@@ -68,6 +69,7 @@ STMT_GET_PROJECT = text(
     "   updated_at, "
     "   plans_count, "
     "   plans_limit, "
+    "   published, "
     "   version "
     "FROM "
     "   projects.projects "
@@ -87,6 +89,7 @@ STMT_SAVE_PROJECT = text(
     "   updated_at, "
     "   plans_count, "
     "   plans_limit, "
+    "   published, "
     "   version "
     ") "
     "VALUES ( "
@@ -100,6 +103,7 @@ STMT_SAVE_PROJECT = text(
     "   :updated_at, "
     "   :plans_count, "
     "   :plans_limit, "
+    "   :published, "
     "   :version "
     ") "
     "ON CONFLICT (id) DO UPDATE SET "
@@ -112,6 +116,7 @@ STMT_SAVE_PROJECT = text(
     "   updated_at = excluded.updated_at, "
     "   plans_count = :plans_count, "
     "   plans_limit = :plans_limit, "
+    "   published = :published, "
     "   version = excluded.version + 1 "
     "WHERE "
     "   projects.projects.version = :version"
@@ -127,6 +132,7 @@ STMT_SAVE_PROJECT_WITHOUT_CONTENT = text(
     "   updated_at = :updated_at, "
     "   plans_count = :plans_count, "
     "   plans_limit = :plans_limit, "
+    "   published = :published, "
     "   version = :version + 1 "
     "WHERE "
     "   id = :id "
@@ -148,6 +154,7 @@ STMT_GET_ALL_PROJECTS_OWNED_BY_ACCOUNT = text(
     "   revision, "
     "   created_at, "
     "   updated_at, "
+    "   published, "
     "   version "
     "FROM "
     "   projects.projects "
@@ -314,8 +321,9 @@ class PostgresProjectRepository(ProjectRepository):
                 updated_at=row[6],
                 plans_count=row[7],
                 plans_limit=row[8],
+                published=row[9],
             )
-            set_version(project, int(row[9]))
+            set_version(project, int(row[10]))
             return project
 
     async def save(self, project: Project) -> None:
@@ -346,8 +354,9 @@ class PostgresProjectRepository(ProjectRepository):
                 updated_at=row[5],
                 plans_count=row[6],
                 plans_limit=row[7],
+                published=row[8],
             )
-            set_version(project, int(row[8]))
+            set_version(project, int(row[9]))
             return project
 
     async def save_without_content(self, project: Project) -> None:
@@ -377,6 +386,7 @@ class PostgresProjectRepository(ProjectRepository):
                 revision=row[3],
                 created_at=row[4],
                 updated_at=row[5],
+                published=row[6],
             )
             for row in cursor.all()
         ]

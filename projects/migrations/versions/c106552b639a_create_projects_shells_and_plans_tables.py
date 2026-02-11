@@ -42,6 +42,7 @@ def upgrade() -> None:
         Column("plans_limit", INTEGER, nullable=False),
         Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=func.now()),
         Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=func.now()),
+        Column("published", BOOLEAN, nullable=False, server_default=text("false")),
         Column("deleted", BOOLEAN, nullable=False, server_default=text("false")),
         Column("version", INTEGER, nullable=False),
         schema="projects",
