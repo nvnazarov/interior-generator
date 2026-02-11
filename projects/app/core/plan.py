@@ -16,6 +16,7 @@ class PatchError(Exception): ...
 
 class Furniture(BaseModel):
     id: UUID
+    furniture_id: UUID
     x: int
     y: int
     z: int

@@ -107,6 +107,32 @@ class ASGI(FastAPI):
             except ProjectNotFoundError:
                 raise HTTPProjectNotFound
 
+        @self.post(
+            "/projects/{project_id}/publish",
+            status_code=status.HTTP_204_NO_CONTENT,
+            tags=["projects"],
+        )
+        async def publish_project(
+            project_id: UUID, account_id: Annotated[UUID, Depends(get_account_id)]
+        ) -> None:
+            try:
+                await self.service.publish_project(project_id, account_id)
+            except ProjectNotFoundError:
+                raise HTTPProjectNotFound
+
+        @self.post(
+            "/projects/{project_id}/unpublish",
+            status_code=status.HTTP_204_NO_CONTENT,
+            tags=["projects"],
+        )
+        async def unpublish_project(
+            project_id: UUID, account_id: Annotated[UUID, Depends(get_account_id)]
+        ) -> None:
+            try:
+                await self.service.unublish_project(project_id, account_id)
+            except ProjectNotFoundError:
+                raise HTTPProjectNotFound
+
         @self.delete(
             "/projects/{project_id}",
             status_code=status.HTTP_204_NO_CONTENT,
