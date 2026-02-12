@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: "postgres:17.5-alpine"
+    environment:
+      - "POSTGRES_DB=postgres"
+      - "POSTGRES_USER=postgres"
+      - "POSTGRES_PASSWORD=postgres"
+
+  auth:
+    build:
+      dockerfile: "./docker/Dockerfile.${MOD:-dev}"
+    environment:
+      - "APP_PORT=${APP_PORT:-80}"
+      - "APP_POSTGRES__HOST=postgres"
+      - "APP_POSTGRES__PORT=5432"
+      - "APP_POSTGRES__DB=postgres"
+      - "APP_POSTGRES__USER=postgres"
+      - "APP_POSTGRES__PASSWORD=postgres"
+      - "BETTER_AUTH_BASE_URL=${BETTER_AUTH_BASE_URL}"
+    ports:
+      - "127.0.0.1:${PORT:-8080}:${APP_PORT:-80}"

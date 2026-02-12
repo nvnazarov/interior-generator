@@ -3,3 +3,5 @@
 .vscode
 .pytest_cache
 __pycache__
+
+alembic.ini
