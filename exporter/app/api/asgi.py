@@ -6,9 +6,11 @@ from fastapi.responses import StreamingResponse
 
 from app.api.constants import MIME_DXF, MIME_PDF
 from app.api.schema import DXFExportOptions, PDFExportOptions
-from app.core.exporter import Exporter
+from app.core.exporter import Exporter, PlanNotFoundError, ProjectNotFoundError
 
-DEFAULT_HEADER = "x-account-id"
+DEFAULT_HEADER_FOR_ACCOUNT_ID = "x-account-id"
+DEFAULT_HOST = "127.0.0.1"
+DEFAULT_PORT = 8080
 
 
 class ASGI(FastAPI):
@@ -16,7 +18,7 @@ class ASGI(FastAPI):
         self,
         exporter: Exporter,
         *,
-        header_for_account_id: str = DEFAULT_HEADER,
+        header_for_account_id: str = DEFAULT_HEADER_FOR_ACCOUNT_ID,
     ):
         self.exporter = exporter
 
@@ -34,39 +36,51 @@ class ASGI(FastAPI):
             try:
                 return UUID(account_id)
             except ValueError:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+                raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
-        @self.post("/export/{project_id}/pdf")
+        @self.post("/projects/{project_id}/export/pdf")
         async def export_project_pdf(
             project_id: UUID,
             account_id: Annotated[UUID, Depends(get_account_id)],
             opts: PDFExportOptions,
         ):
-            buffer = await self.exporter.export_pdf(project_id, account_id)
-            return StreamingResponse(
-                buffer,
-                media_type=MIME_PDF,
-                headers={
-                    "Content-Disposition": f"attachment; filename=project-{project_id.hex}.pdf"
-                },
-            )
+            try:
+                buffer = await self.exporter.export_project_pdf(project_id, account_id)
+            except ProjectNotFoundError:
+                raise HTTPException(
+                    status.HTTP_404_NOT_FOUND, detail={"project not found"}
+                )
+            else:
+                return StreamingResponse(
+                    buffer,
+                    media_type=MIME_PDF,
+                    headers={
+                        "Content-Disposition": f"attachment; filename=project-{project_id.hex}.pdf"
+                    },
+                )
 
-        @self.post("/export/{project_id}/dxf")
-        async def export_project_dxf(
-            project_id: UUID,
+        @self.post("/plans/{plan_id}/export/dxf")
+        async def export_plan_dxf(
+            plan_id: UUID,
             account_id: Annotated[UUID, Depends(get_account_id)],
             opts: DXFExportOptions,
         ):
-            buffer = await self.exporter.export_dxf(project_id, account_id)
-            return StreamingResponse(
-                buffer,
-                media_type=MIME_DXF,
-                headers={
-                    "Content-Disposition": f"attachment; filename=project-{project_id.hex}.dxf"
-                },
-            )
+            try:
+                buffer = await self.exporter.export_plan_dxf(plan_id, account_id)
+            except PlanNotFoundError:
+                raise HTTPException(
+                    status.HTTP_404_NOT_FOUND, detail={"plan not found"}
+                )
+            else:
+                return StreamingResponse(
+                    buffer,
+                    media_type=MIME_DXF,
+                    headers={
+                        "Content-Disposition": f"attachment; filename=plans-{plan_id.hex}.dxf"
+                    },
+                )
 
-    def run(self, host: str = "127.0.0.1", port: int = 8080):
+    def run(self, host: str = DEFAULT_HOST, port: int = DEFAULT_PORT):
         import uvicorn
 
         uvicorn.run(self, host=host, port=port)

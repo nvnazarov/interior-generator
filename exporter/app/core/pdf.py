@@ -1,20 +1,18 @@
-import math
 from io import BytesIO
-from typing import Iterable, NamedTuple
+from typing import AsyncIterable, Iterable, NamedTuple
 
-from reportlab.lib.colors import Color, black, blue, brown, green, red, white, yellow
+from reportlab.lib.colors import Color, black, brown, green, red, yellow
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import cm, mm
 from reportlab.pdfgen import canvas
 
-from app.core.models import Area, AreaType, Plan, Vec4, Wall, Window
+from app.core.models import Area, AreaType, Plan, Project, Wall, Window
 
 AREA_COLORS = {
     AreaType.KITCHEN: red,
     AreaType.BATHROOM: yellow,
     AreaType.BEDROOM: green,
     AreaType.LIVINGROOM: brown,
-    AreaType.WET_AREA: blue,
 }
 
 
@@ -30,16 +28,16 @@ class PDFRenderer:
         self.c = canvas.Canvas(buffer, pagesize=pagesize)
         self.width, self.height = pagesize
         self.padding = cm
-        self.plan_box = Vec4(cm, cm, self.width - 11 * cm, self.height - 2 * cm)
+        # self.plan_box = Vec4(cm, cm, self.width - 11 * cm, self.height - 2 * cm)
 
     def draw_plan(self, plan: Plan):
         # Calculate the plans scale to fit the page.
-        boundary = plan.boundary()
-        scale = max(
-            1,
-            math.ceil(boundary.w * cm / self.plan_box.w),
-            math.ceil(boundary.h * cm / self.plan_box.h),
-        )
+        # boundary = plan.boundary()
+        # scale = max(
+        #     1,
+        #     math.ceil(boundary.w * cm / self.plan_box.w),
+        #     math.ceil(boundary.h * cm / self.plan_box.h),
+        # )
 
         # Draw aside information.
         self.c.saveState()
@@ -54,25 +52,25 @@ class PDFRenderer:
         )
         self.c.restoreState()
         self.draw_name(plan.name)
-        self.draw_scale(scale)
+        # self.draw_scale(scale)
         legend_records: list[LegendRecord] = []
-        for area in plan.areas:
-            if area.type != AreaType.WET_AREA:
-                legend_records.append(
-                    LegendRecord(
-                        area.type, area.area_sqm(), AREA_COLORS.get(area.type, white)
-                    )
-                )
+        # for area in plan.areas:
+        #     if area.type != AreaType.WET_AREA:
+        #         legend_records.append(
+        #             LegendRecord(
+        #                 area.type, area.area_sqm(), AREA_COLORS.get(area.type, white)
+        #             )
+        #         )
         self.draw_legend(legend_records)
 
         # Draw the plan itself.
-        plan.translate(-boundary.x, -boundary.y)
-        plan.scale(cm / scale)
+        # plan.translate(-boundary.x, -boundary.y)
+        # plan.scale(cm / scale)
         self.c.saveState()
-        self.c.translate(self.padding, self.padding)
-        for area in plan.areas:
-            self.draw_area(area, AREA_COLORS.get(area.type, white))
-        self.draw_walls(plan.walls.values(), scale)
+        # self.c.translate(self.padding, self.padding)
+        # for area in plan.areas:
+        #     self.draw_area(area, AREA_COLORS.get(area.type, white))
+        # self.draw_walls(plan.walls.values(), scale)
         self.c.restoreState()
 
         self.next()
@@ -159,3 +157,13 @@ class PDFRenderer:
 
     def close(self):
         self.c.save()
+
+
+async def export_pdf(project: Project, plans: AsyncIterable[Plan]) -> BytesIO:
+    buffer = BytesIO()
+    renderer = PDFRenderer(buffer)
+    async for plan in plans:
+        renderer.draw_plan(plan)
+    renderer.close()
+    buffer.seek(0)
+    return buffer

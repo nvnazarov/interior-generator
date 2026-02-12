@@ -34,11 +34,8 @@ class Area(BaseModel):
     type: AreaType
     x: float
     y: float
-    w: float
-    h: float
-
-    def area_sqm(self) -> float:
-        return self.w * self.h
+    w: float = Field(ge=0)
+    h: float = Field(ge=0)
 
 
 class Wall(BaseModel):
@@ -53,9 +50,6 @@ class Wall(BaseModel):
         if self.x1 != self.x2 and self.y1 != self.y2:
             raise ValueError("wall is not parallel to axes")
         return self
-
-    def length(self):
-        return abs(self.x1 - self.x2) + abs(self.y1 - self.y2)
 
 
 class Door(BaseModel):
@@ -75,7 +69,7 @@ class Window(BaseModel):
     h: int = Field(ge=0)
 
 
-class Content(BaseModel):
+class ProjectContent(BaseModel):
     walls: dict[UUID, Wall] = {}
     doors: dict[UUID, Door] = {}
     windows: dict[UUID, Window] = {}
@@ -83,19 +77,21 @@ class Content(BaseModel):
 
 
 class Project(BaseModel):
+    id: UUID
     name: str
-    description: str
-    walls: dict[UUID, Wall] = {}
-    windows: list[Window] = []
-    doors: list[Door] = []
-    wet_areas: list[WetArea] = []
+    content: ProjectContent
+
+
+class PlanContent(BaseModel):
+    furniture: dict[UUID, Furniture] = {}
+    areas: dict[UUID, Area] = {}
 
 
 class Plan(BaseModel):
+    id: UUID
     project_id: UUID
     name: str
-    furniture: list[Furniture] = []
-    areas: list[Area] = []
+    content: PlanContent
 
     # def translate(self, dx: float, dy: float):
     #     for area in self.areas:
