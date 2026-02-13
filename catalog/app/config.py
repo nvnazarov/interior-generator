@@ -16,7 +16,7 @@ class PostgresConfig(BaseSettings):
         super().__init__(*args, **kwargs)
 
     def url(self):
-        return f"postgres+psycopg://{self.user}:{self.password}@{self.host}:{self.port}/{self.db}"
+        return f"postgresql+psycopg://{self.user}:{self.password}@{self.host}:{self.port}/{self.db}"
 
     def model_post_init(self, context: Any) -> None:
         if self.password_file is not None:
