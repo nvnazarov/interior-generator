@@ -18,3 +18,6 @@ format:
 
 format-check:
 	npm run format:check
+
+migration:
+	npx tsx ./migrations/generate.ts

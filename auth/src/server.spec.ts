@@ -11,13 +11,13 @@ import { getMigrations } from "better-auth/db";
 import { Auth } from "better-auth";
 import { Express } from "express";
 
-const POSTGRES_START_TIMEOUT_MS = 60 * 1000
+const POSTGRES_START_TIMEOUT_MS = 60 * 1000;
 
 describe("server", () => {
-  let config: Config
-  let container: StartedPostgreSqlContainer
-  let auth: Auth
-  let server: Express
+  let config: Config;
+  let container: StartedPostgreSqlContainer;
+  let auth: Auth;
+  let server: Express;
 
   beforeAll(async () => {
     container = await new PostgreSqlContainer("postgres:17.5-alpine")
@@ -32,24 +32,25 @@ describe("server", () => {
         container.getPort().toString(),
         container.getDatabase(),
         container.getUsername(),
-        container.getPassword()
+        container.getPassword(),
       ),
       betterAuth: {
         baseURL: "http://localhost:8080",
+        trustedOrigins: [],
       },
-    }
-    auth = createAuth(config)
-    const migrations = await getMigrations(auth.options)
-    await migrations.runMigrations()
+    };
+    auth = createAuth(config);
+    const migrations = await getMigrations(auth.options);
+    await migrations.runMigrations();
     server = createServer(auth);
-  }, POSTGRES_START_TIMEOUT_MS)
+  }, POSTGRES_START_TIMEOUT_MS);
 
   afterAll(async () => {
     // TODO(nvnazarov@edu.hse.ru): fix a strange bug when stopping a container
     // if (container) {
     //   await container.stop();
     // }
-  })
+  });
 
   it("registers a user", async () => {
     const resp = await request(server).post("/api/auth/sign-up/email").send({
@@ -60,16 +61,14 @@ describe("server", () => {
 
     expect(resp.status).toBe(200);
     expect(resp.body.user.email).toBe("test@test.com");
-  })
+  });
   it("authenticates a user", async () => {
-    const res = await request(server)
-      .post("/api/auth/sign-in/email")
-      .send({
-        email: "test@test.com",
-        password: "password123",
-      });
+    const res = await request(server).post("/api/auth/sign-in/email").send({
+      email: "test@test.com",
+      password: "password123",
+    });
 
     expect(res.status).toBe(200);
     expect(res.body.user.email).toBe("test@test.com");
-  })
-})
+  });
+});

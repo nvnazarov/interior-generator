@@ -8,6 +8,7 @@ export function createAuth(config: Config): Auth {
       enabled: true,
     },
     baseURL: config.betterAuth.baseURL,
+    trustedOrigins: config.betterAuth.trustedOrigins,
     database: new Pool({
       connectionString: config.postgres.uri(),
     }),

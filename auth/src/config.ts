@@ -14,6 +14,7 @@ export class PostgresConfig {
 
 export type BetterAuthConfig = {
   baseURL: string;
+  trustedOrigins: string[];
 };
 
 export type Config = {
@@ -42,6 +43,7 @@ export function loadConfigFromEnv(): Config {
     ),
     betterAuth: {
       baseURL: r("BETTER_AUTH_BASE_URL"),
+      trustedOrigins: r("BETTER_AUTH_TRUSTED_ORIGINS").split(","),
     },
   };
 }

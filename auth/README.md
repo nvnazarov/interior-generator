@@ -15,7 +15,7 @@ The service defines API for managing accounts, such as:
 
 ## Tech Stack
 
-- Node 18
+- Node 20
 - Typescript
 - express.js
 - better-auth
@@ -25,6 +25,8 @@ The service defines API for managing accounts, such as:
 Install Make and Docker.
 
 ```sh
-make test   # run all tests
-make up     # start docker compose
+make test       # run all tests
+make up         # start docker compose
+make format     # format the code
+make migration  # shows a db migration script 
 ```
