@@ -1,6 +1,9 @@
-class PDFExportOptions:
+from pydantic import BaseModel
+
+
+class PDFExportOptions(BaseModel):
     pass
 
 
-class DXFExportOptions:
+class DXFExportOptions(BaseModel):
     pass
