@@ -139,12 +139,7 @@ STMT_SAVE_PROJECT_WITHOUT_CONTENT = text(
     "   AND version = :version"
 )
 STMT_DELETE_PROJECT = text(
-    "UPDATE "
-    "   projects.projects "
-    "SET "
-    "   deleted = true "
-    "WHERE "
-    "   id = :project_id"
+    "UPDATE    projects.projects SET    deleted = true WHERE    id = :project_id"
 )
 STMT_GET_ALL_PROJECTS_OWNED_BY_ACCOUNT = text(
     "SELECT "

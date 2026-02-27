@@ -8,20 +8,20 @@ services:
 
   projects:
     build:
-      dockerfile: "./docker/Dockerfile.${mod:-dev}"
+      dockerfile: "./docker/Dockerfile.${MOD:-dev}"
     environment:
-      - "app_host=${app_host:-0.0.0.0}"
-      - "app_port=${app_port:-80}"
-      - "app_header_for_account_id=${app_header_for_account_id}"
-      - "app_plans_limit=${app_plans_limit}"
-      - "app_projects_limit=${app_projects_limit}"
-      - "app_postgres__host=postgres"
-      - "app_postgres__port=5432"
-      - "app_postgres__user=test"
-      - "app_postgres__password=test"
-      - "app_postgres__db=test"
+      - "PROJECTS__API__HOST=0.0.0.0"
+      - "PROJECTS__API__PORT=80"
+      - "PROJECTS__API__HEADER_FOR_ACCOUNT_ID=x-account-id"
+      - "PROJECTS__GENERAL__PLANS_LIMIT=20"
+      - "PROJECTS__GENERAL__PROJECTS_LIMIT=20"
+      - "PROJECTS__POSTGRES__HOST=postgres"
+      - "PROJECTS__POSTGRES__PORT=5432"
+      - "PROJECTS__POSTGRES__USER=test"
+      - "PROJECTS__POSTGRES__PASSWORD=test"
+      - "PROJECTS__POSTGRES__DB=test"
     ports:
-      - "127.0.0.1:${port:-8000}:${app_port:-80}"
+      - "127.0.0.1:${PORT:-8080}:80"
 
 networks:
   default:

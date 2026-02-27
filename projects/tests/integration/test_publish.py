@@ -56,6 +56,7 @@ async def test_publish_project(client: AsyncClient):
     )
     assert resp.status_code == status.HTTP_204_NO_CONTENT
     assert resp.text == ""
+    project["published"] = True
 
     resp = await client.get(
         f"/projects/{project_id.hex}",
@@ -77,6 +78,7 @@ async def test_publish_project(client: AsyncClient):
     )
     assert resp.status_code == status.HTTP_204_NO_CONTENT
     assert resp.text == ""
+    project["published"] = False
 
     resp = await client.get(
         f"/projects/{project_id.hex}",

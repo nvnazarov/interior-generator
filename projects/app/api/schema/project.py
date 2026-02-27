@@ -110,6 +110,7 @@ class Project(BaseModel):
     name: str = Field(max_length=256)
     description: str = Field(max_length=2048)
     content: Content | None = None
+    published: bool = False
     created_at: datetime
     updated_at: datetime
 
