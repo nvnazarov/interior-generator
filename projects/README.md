@@ -44,7 +44,7 @@ make migration          # get migration script
 
 Environment:
 
-```toml
+```dotenv
 mod=dev
 port=8080
 projects__api__host=0.0.0.0
