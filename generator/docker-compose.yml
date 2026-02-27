@@ -1,0 +1,17 @@
+services:
+  generator:
+    build:
+      dockerfile: "./docker/Dockerfile.${MOD:-dev}"
+    environment:
+      - "GENERATOR__API__HOST=0.0.0.0"
+      - "GENERATOR__API__PORT=80"
+      - "GENERATOR__API__HEADER_FOR_ACCOUNT_ID=x-account-id"
+      - "GENERATOR__OPENAI__API_KEY=${GENERATOR__OPENAI__API_KEY}"
+      - "GENERATOR__OPENAI__BASE_URL=${GENERATOR__OPENAI__BASE_URL}"
+      - "GENERATOR__LOGGING__LEVEL=INFO"
+    ports:
+      - "127.0.0.1:${PORT:-8080}:80"
+
+networks:
+  default:
+    driver: "bridge"

@@ -1,0 +1,26 @@
+[project]
+name = "generator"
+version = "0.1.0"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.133.1",
+    "openai>=2.24.0",
+    "pydantic-settings>=2.13.1",
+    "python-json-logger>=4.0.0",
+    "uvicorn>=0.41.0",
+]
+
+[dependency-groups]
+dev = ["isort>=8.0.0", "pytest>=9.0.2", "ruff>=0.15.4"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+filterwarnings = "ignore:.*wait_container_is_ready decorator is deprecated.*:DeprecationWarning"
+markers = [
+    "unit: marks tests as unit tests (fast, lightweight)",
+    "integration: marks tests as integration tests (slow)",
+]
+
+[tool.isort]
+profile = "black"

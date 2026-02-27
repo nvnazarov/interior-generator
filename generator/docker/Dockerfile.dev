@@ -1,0 +1,10 @@
+FROM ghcr.io/astral-sh/uv:python3.12-alpine AS base
+WORKDIR /service
+COPY pyproject.toml uv.lock ./
+RUN uv sync --no-dev --locked
+
+FROM base
+WORKDIR /service
+COPY ./app ./app
+ENV PATH="/service/.venv/bin:$PATH"
+CMD ["python", "-m", "app.main"]
