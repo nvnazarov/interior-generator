@@ -58,4 +58,5 @@ projects__postgres__db=postgres
 projects__postgres__user=postgres
 projects__postgres__password=***
 # projects__postgres__password_file=/path/to/password/file
+projects__logging__level=INFO
 ```

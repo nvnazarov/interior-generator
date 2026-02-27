@@ -20,6 +20,7 @@ services:
       - "PROJECTS__POSTGRES__USER=test"
       - "PROJECTS__POSTGRES__PASSWORD=test"
       - "PROJECTS__POSTGRES__DB=test"
+      - "PROJECTS__LOGGING__LEVEL=INFO"
     ports:
       - "127.0.0.1:${PORT:-8080}:80"
 

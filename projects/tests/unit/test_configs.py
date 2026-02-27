@@ -28,6 +28,9 @@ def test_default_root_config():
             "projects_limit": 20,
             "plans_limit": 20,
         },
+        "logging": {
+            "level": "INFO",
+        },
     }
 
 
@@ -46,6 +49,7 @@ def test_root_config():
             "PROJECTS__POSTGRES__DB": "test",
             "PROJECTS__POSTGRES__USER": "test",
             "PROJECTS__POSTGRES__PASSWORD": "test",
+            "PROJECTS__LOGGING__LEVEL": "ERROR",
         }
     )
     config = RootConfig()
@@ -66,6 +70,9 @@ def test_root_config():
         "general": {
             "projects_limit": 15,
             "plans_limit": 10,
+        },
+        "logging": {
+            "level": "ERROR",
         },
     }
 

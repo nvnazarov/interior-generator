@@ -5,7 +5,7 @@ test-unit:
 	@uv run pytest -m "unit" -vv
 
 test-integration:
-	@uv run pytest -m "integration"
+	@uv run pytest -m "integration" -vv
 
 local:
 	@uv run python -m app.main
