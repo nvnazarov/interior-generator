@@ -8,7 +8,7 @@ from app.core.exporter import Repository
 from app.core.models import Plan, Project
 
 
-class ExternalRepository(Repository):
+class APIGatewayAdapter(Repository):
     def __init__(self, client: AsyncClient):
         self.client = client
 

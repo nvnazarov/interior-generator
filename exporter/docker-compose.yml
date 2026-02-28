@@ -1,1 +1,16 @@
-# TODO
+services:
+  exporter:
+    build:
+      dockerfile: "./docker/Dockerfile.${MOD:-dev}"
+    environment:
+      - "EXPORTER__API__HOST=0.0.0.0"
+      - "EXPORTER__API__PORT=80"
+      - "EXPORTER__API__HEADER_FOR_ACCOUNT_ID=x-account-id"
+      - "EXPORTER__API_GATEWAY__BASE_URL="
+      - "EXPORTER__LOGGING__LEVEL=INFO"
+    ports:
+      - "127.0.0.1:${PORT:-8080}:80"
+
+networks:
+  default:
+    driver: "bridge"

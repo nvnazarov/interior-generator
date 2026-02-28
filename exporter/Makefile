@@ -1,8 +1,23 @@
 test:
-	uv run pytest
+	@uv run pytest ./tests
+
+test-unit:
+	@uv run pytest -m "unit" ./tests -vv
+
+test-integration:
+	@uv run pytest -m "integration" ./tests -vv
+
+local:
+	@uv run python -m app.main
 
 up:
-	docker compose -f docker-compose.yml up --build
+	@docker compose up --build
 
-down:
-	docker compose -f docker-compose.yml down
+format:
+	@uv run ruff format
+	@uv run isort app/ tests/
+
+lint:
+	@uv run ruff check
+
+qa: lint format

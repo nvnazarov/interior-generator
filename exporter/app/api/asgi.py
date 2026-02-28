@@ -1,6 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
+import uvicorn
 from fastapi import Depends, FastAPI, Header, HTTPException, status
 from fastapi.responses import StreamingResponse
 
@@ -80,7 +81,5 @@ class ASGI(FastAPI):
                     },
                 )
 
-    def run(self, host: str = DEFAULT_HOST, port: int = DEFAULT_PORT):
-        import uvicorn
-
-        uvicorn.run(self, host=host, port=port)
+    def listen_and_serve(self, host: str = DEFAULT_HOST, port: int = DEFAULT_PORT):
+        uvicorn.run(self, host=host, port=port, log_config=None)

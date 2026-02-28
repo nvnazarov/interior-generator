@@ -141,7 +141,10 @@ class PDFRenderer:
             self.c.drawString(1.2 * cm, h * i + mm, records[i - 1].name)
             self.c.drawCentredString(6.5 * cm, h * i + mm, str(records[i - 1].area_sqm))
         self.c.setStrokeColor(black)
-        self.c.grid([0, 1 * cm, 5 * cm, 8 * cm], [i * h for i in range(n + 2)] + [(n + 1) * h + 1 * cm])  # type: ignore
+        self.c.grid(
+            [0, 1 * cm, 5 * cm, 8 * cm],
+            [i * h for i in range(n + 2)] + [(n + 1) * h + 1 * cm],
+        )  # type: ignore
         self.c.drawCentredString(0.5 * cm, h * (n + 1) + 3 * mm, "№")
         self.c.drawCentredString(3 * cm, h * (n + 1) + 3 * mm, "Наименование")
         self.c.drawCentredString(6.5 * cm, h * (n + 1) + 3 * mm, "Площадь")
