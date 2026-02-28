@@ -1,6 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
+import uvicorn
 from fastapi import FastAPI, HTTPException, Query, status
 from pydantic import BaseModel
 
@@ -17,23 +18,21 @@ class SearchResult(BaseModel):
     meta: Meta
 
 
-class API:
+class ASGI(FastAPI):
     def __init__(self, catalog: Catalog):
-        self.catalog = catalog
-
-    def asgi(self) -> FastAPI:
-        app = FastAPI(
-            title="Catalog API", summary="Furniture & other interior elements catalog"
+        super().__init__(
+            title="Catalog API",
+            summary="Furniture & other interior elements catalog",
         )
 
-        @app.get("/furniture/{furniture_id}")
+        @self.get("/furniture/{furniture_id}")
         async def get_furniture_by_id(furniture_id: UUID) -> Furniture:
             try:
-                return await self.catalog.get_furniture_by_id(furniture_id)
+                return await catalog.get_furniture_by_id(furniture_id)
             except FurnitureNotFoundError:
                 raise HTTPException(status.HTTP_404_NOT_FOUND, "furniture not found")
 
-        @app.get("/search")
+        @self.get("/search")
         async def search_furniture(
             cursor: Annotated[str | None, Query(max_length=256)] = None,
             area: Annotated[Furniture.Area | None, Query(max_length=32)] = None,
@@ -42,22 +41,19 @@ class API:
         ) -> SearchResult:
             try:
                 if cursor is None:
-                    furniture, next_cursor = await self.catalog.search_furniture(
+                    furniture, next_cursor = await catalog.search_furniture(
                         name, area, limit
                     )
                 else:
-                    furniture, next_cursor = (
-                        await self.catalog.search_furniture_with_cursor(cursor, limit)
-                    )
+                    (
+                        furniture,
+                        next_cursor,
+                    ) = await catalog.search_furniture_with_cursor(cursor, limit)
             except InvalidCursorError:
                 raise HTTPException(status.HTTP_400_BAD_REQUEST, "invalid cursor")
             return SearchResult(
                 furniture=furniture, meta=SearchResult.Meta(cursor=next_cursor)
             )
 
-        return app
-
-    def serve_http(self, host: str = "127.0.0.1", port: int = 8080):
-        import uvicorn
-
-        uvicorn.run(self.asgi(), host=host, port=port)
+    def listen_and_serve(self, host: str = "127.0.0.1", port: int = 8080):
+        uvicorn.run(self, host=host, port=port, log_config=None)

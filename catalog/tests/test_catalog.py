@@ -8,6 +8,7 @@ from app.core.catalog import Catalog
 from app.core.models import Furniture
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_get_furniture_by_id(client: AsyncClient, catalog: Catalog):
     resp = await client.get("/furniture/1")
@@ -39,6 +40,7 @@ async def test_get_furniture_by_id(client: AsyncClient, catalog: Catalog):
     assert resp.json() == furniture.model_dump(mode="json")
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_search_furniture(client: AsyncClient, catalog: Catalog):
     chair = Furniture(
@@ -95,6 +97,7 @@ async def test_search_furniture(client: AsyncClient, catalog: Catalog):
     assert resp.json()["furniture"] == [chair.model_dump(mode="json")]
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_search_furniture_with_cursor(client: AsyncClient, catalog: Catalog):
     for _ in range(10):

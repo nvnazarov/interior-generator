@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: "postgres:17.5-alpine"
+    environment:
+      - "POSTGRES_USER=test"
+      - "POSTGRES_PASSWORD=test"
+      - "POSTGRES_DB=test"
+
+  catalog:
+    build:
+      dockerfile: "./docker/Dockerfile.${MOD:-dev}"
+    environment:
+      - "CATALOG__API__HOST=0.0.0.0"
+      - "CATALOG__API__PORT=80"
+      - "CATALOG__POSTGRES__HOST=postgres"
+      - "CATALOG__POSTGRES__PORT=5432"
+      - "CATALOG__POSTGRES__USER=test"
+      - "CATALOG__POSTGRES__PASSWORD=test"
+      - "CATALOG__POSTGRES__DB=test"
+      - "CATALOG__LOGGING__LEVEL=INFO"
+    ports:
+      - "127.0.0.1:${PORT:-8080}:80"
+
+networks:
+  default:
+    driver: "bridge"

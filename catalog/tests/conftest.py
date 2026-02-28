@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from testcontainers.postgres import PostgresContainer  # type: ignore
 
 from app.adapters.postgres import PostgresFurnitureRepository
-from app.api import API
+from app.api.asgi import ASGI
 from app.core.catalog import Catalog, IFurnitureRepository
 from app.core.models import Furniture
 
@@ -55,15 +55,14 @@ def catalog(repository: IFurnitureRepository):
 
 
 @pytest.fixture
-def api(catalog: Catalog):
-    return API(catalog)
+def asgi(catalog: Catalog):
+    return ASGI(catalog)
 
 
 @pytest_asyncio.fixture
-async def client(api: API):
-    app = api.asgi()
-    transport = httpx.ASGITransport(app)
-    async with LifespanManager(app):
+async def client(asgi: ASGI):
+    transport = httpx.ASGITransport(asgi)
+    async with LifespanManager(asgi):
         async with httpx.AsyncClient(
             transport=transport, base_url="http://test"
         ) as client:

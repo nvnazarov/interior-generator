@@ -1,18 +1,18 @@
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.adapters.postgres import PostgresFurnitureRepository
-from app.api import API
-from app.config import Config
+from app.api.asgi import ASGI
+from app.configs.root import RootConfig
 from app.core.catalog import Catalog
 
 
 def main():
-    config = Config()
+    config = RootConfig()
     engine = create_async_engine(config.postgres.url())
     repository = PostgresFurnitureRepository(engine)
     catalog = Catalog(repository)
-    api = API(catalog)
-    api.serve_http(config.host, config.port)
+    asgi = ASGI(catalog)
+    asgi.listen_and_serve(config.api.host, config.api.port)
 
 
 if __name__ == "__main__":
