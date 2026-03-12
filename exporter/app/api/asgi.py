@@ -3,7 +3,7 @@ from uuid import UUID
 
 import uvicorn
 from fastapi import Depends, FastAPI, Header, HTTPException, status
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, Response
 
 from app.api.constants import MIME_DXF, MIME_PDF
 from app.api.schema import DXFExportOptions, PDFExportOptions

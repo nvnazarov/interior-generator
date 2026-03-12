@@ -7,18 +7,18 @@ services:
       - "8080:80"
     networks:
       - "private"
-  
+
   postgres:
     image: "postgres"
     volumes:
-      - "postgres:/opt/postgresql/data"
+      - "postgres:/var/lib/postgresql"
     environment:
       - "POSTGRES_DB=postgres"
       - "POSTGRES_USER=postgres"
       - "POSTGRES_PASSWORD=postgres"
     networks:
       - "private"
-  
+
   minio:
     image: "quay.io/minio/minio"
     command: ["minio", "server", "/data", "--console-address", ":9001"]
@@ -26,65 +26,103 @@ services:
       - "MINIO_ROOT_USER=user"
       - "MINIO_ROOT_PASSWORD=password"
     ports:
-      - "127.0.0.1:9000:9000"  # API
-      - "127.0.0.1:9001:9001"  # Web UI
+      - "127.0.0.1:9000:9000" # API
+      - "127.0.0.1:9001:9001" # Web UI
     volumes:
       - "minio:/data"
     networks:
       - "private"
-  
-  catalog:
+
+  auth:
     build:
-      context: "../catalog"
-      target: "dev"
+      context: "../auth"
+      dockerfile: "../auth/docker/Dockerfile.${MOD:-dev}"
     environment:
-      - "APP_HOST=0.0.0.0"
       - "APP_PORT=80"
       - "APP_POSTGRES__HOST=postgres"
       - "APP_POSTGRES__PORT=5432"
       - "APP_POSTGRES__DB=postgres"
       - "APP_POSTGRES__USER=postgres"
       - "APP_POSTGRES__PASSWORD=postgres"
+      - "BETTER_AUTH_BASE_URL=http://localhost:8080"
+      - "BETTER_AUTH_TRUSTED_ORIGINS=http://localhost:3000,http://localhost:8080"
     networks:
       - "private"
-  
+
+  catalog:
+    build:
+      context: "../catalog"
+      dockerfile: "../catalog/docker/Dockerfile.${MOD:-dev}"
+    environment:
+      - "CATALOG__API__HOST=0.0.0.0"
+      - "CATALOG__API__PORT=80"
+      - "CATALOG__POSTGRES__HOST=postgres"
+      - "CATALOG__POSTGRES__PORT=5432"
+      - "CATALOG__POSTGRES__USER=postgres"
+      - "CATALOG__POSTGRES__PASSWORD=postgres"
+      - "CATALOG__POSTGRES__DB=postgres"
+      - "CATALOG__LOGGING__LEVEL=INFO"
+    networks:
+      - "private"
+
   generator:
     build:
-      context: "../exporter"
-      target: "dev"
+      context: "../generator"
+      dockerfile: "../generator/docker/Dockerfile.${MOD:-dev}"
+    environment:
+      - "GENERATOR__API__HOST=0.0.0.0"
+      - "GENERATOR__API__PORT=80"
+      - "GENERATOR__API__HEADER_FOR_ACCOUNT_ID=x-account-id"
+      - "GENERATOR__OPENAI__API_KEY=${GENERATOR__OPENAI__API_KEY}"
+      - "GENERATOR__OPENAI__BASE_URL=${GENERATOR__OPENAI__BASE_URL}"
+      - "GENERATOR__LOGGING__LEVEL=INFO"
     networks:
       - "private"
 
   exporter:
     build:
       context: "../exporter"
-      target: "dev"
-    networks:
-      - "private"
-  
-  projects:
-    build:
-      context: "../projects"
-      target: "dev"
+      dockerfile: "../exporter/docker/Dockerfile.${MOD:-dev}"
     environment:
-      - "APP_HOST=0.0.0.0"
-      - "APP_PORT=80"
-      - "APP_HEADER_WITH_ACCOUNT_ID=x-account-id"
-      - "APP_POSTGRES__HOST=postgres"
-      - "APP_POSTGRES__PORT=5432"
-      - "APP_POSTGRES__DB=postgres"
-      - "APP_POSTGRES__USER=postgres"
-      - "APP_POSTGRES__PASSWORD=postgres"
-    networks:
-      - "private"
-      
-  ui:
-    build:
-      context: "../ui"
-      target: "dev"
+      - "EXPORTER__API__HOST=0.0.0.0"
+      - "EXPORTER__API__PORT=80"
+      - "EXPORTER__API__HEADER_FOR_ACCOUNT_ID=x-account-id"
+      - "EXPORTER__API_GATEWAY__BASE_URL=http://projects"
+      - "EXPORTER__LOGGING__LEVEL=INFO"
     networks:
       - "private"
 
+  projects:
+    build:
+      context: "../projects"
+      dockerfile: "../projects/docker/Dockerfile.${MOD:-dev}"
+    environment:
+      - "PROJECTS__API__HOST=0.0.0.0"
+      - "PROJECTS__API__PORT=80"
+      - "PROJECTS__API__HEADER_FOR_ACCOUNT_ID=x-account-id"
+      - "PROJECTS__GENERAL__PLANS_LIMIT=20"
+      - "PROJECTS__GENERAL__PROJECTS_LIMIT=20"
+      - "PROJECTS__POSTGRES__HOST=postgres"
+      - "PROJECTS__POSTGRES__PORT=5432"
+      - "PROJECTS__POSTGRES__USER=postgres"
+      - "PROJECTS__POSTGRES__PASSWORD=postgres"
+      - "PROJECTS__POSTGRES__DB=postgres"
+    networks:
+      - "private"
+
+  frontend:
+    build:
+      context: "../frontend"
+      dockerfile: "../frontend/docker/Dockerfile.${MOD:-dev}"
+    volumes:
+      - "../frontend/src:/app/src"
+    environment:
+      - "FRONTEND__API__HOST=0.0.0.0"
+      - "FRONTEND__API__PORT=80"
+      - "FRONTEND__API_GATEWAY__BASE_URL=http://localhost:8080/api"
+      - "FRONTEND__PROXY__BASE_PATH=/app/"
+    networks:
+      - "private"
 
 networks:
   private: {}
@@ -92,5 +130,3 @@ networks:
 volumes:
   postgres: {}
   minio: {}
-
-

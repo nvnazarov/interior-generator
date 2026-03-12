@@ -1,0 +1,24 @@
+{
+  "ProjectSharer": {
+    "Title": "Поделиться проектом",
+    "Description": "Вы создадите публичный URL, через который другие пользователи смогут получить доступ к вашему проекту.",
+    "CreateURL": "Создать URL"
+  },
+  "Legend": {
+    "Title": "Эскпликация помещений",
+    "Columns": {
+      "Index": "№",
+      "Name": "Наименование",
+      "Area": "Площадь, кв.м."
+    }
+  },
+  "ProjectCard": {
+    "Plans": "план(-ов)"
+  },
+  "ProjectsPage": {
+    "SearchPlaceholder": "Поиск"
+  },
+  "ProjectPage": {
+    "Export": "Экспорт"
+  }
+}

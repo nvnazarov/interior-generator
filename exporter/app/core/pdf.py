@@ -30,6 +30,23 @@ class PDFRenderer:
         self.padding = cm
         # self.plan_box = Vec4(cm, cm, self.width - 11 * cm, self.height - 2 * cm)
 
+    def draw_project(self, project: Project):
+        self.c.saveState()
+        self.c.rect(
+            self.padding,
+            self.padding,
+            self.width - 2 * self.padding,
+            self.height - 2 * self.padding,
+        )
+        self.c.setFont("main", 14)
+        self.c.drawString(
+            self.padding + 2,
+            self.height - self.padding - 16,
+            project.name or "Untitled Project",
+        )
+        self.c.restoreState()
+        self.c.showPage()
+
     def draw_plan(self, plan: Plan):
         # Calculate the plans scale to fit the page.
         # boundary = plan.boundary()
@@ -165,6 +182,7 @@ class PDFRenderer:
 async def export_pdf(project: Project, plans: AsyncIterable[Plan]) -> BytesIO:
     buffer = BytesIO()
     renderer = PDFRenderer(buffer)
+    renderer.draw_project(project)
     async for plan in plans:
         renderer.draw_plan(plan)
     renderer.close()
