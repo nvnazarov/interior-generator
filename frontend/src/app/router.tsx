@@ -5,7 +5,7 @@ import { SignUp } from "../pages/sign-up";
 import { Projects } from "../pages/projects";
 import { Project } from "../pages/project";
 import { CONFIG } from "../shared/config";
-import { withoutTrailingSlash } from "../shared/util";
+import { withoutTrailingSlash } from "../shared/util/url";
 
 export const router = createBrowserRouter(
   [

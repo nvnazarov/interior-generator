@@ -1,13 +1,19 @@
 import type { Action, ThunkAction } from "@reduxjs/toolkit";
 import { configureStore } from "@reduxjs/toolkit";
 import accountReducer from "../features/account/accountSlice";
-import projectsReducer from "../features/project/projectSlice";
-import furnitureReducer from "../features/furniture/furnitureSlice";
+import {
+  projectsReducer,
+  projectEditorReducer,
+} from "../features/project/slice";
+import furnitureReducer from "../features/furniture/slice";
+import plansReducer from "../features/plan/slice";
 
 export const store = configureStore({
   reducer: {
     account: accountReducer,
+    plans: plansReducer,
     projects: projectsReducer,
+    projectEditor: projectEditorReducer,
     furniture: furnitureReducer,
   },
 });

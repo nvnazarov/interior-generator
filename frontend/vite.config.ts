@@ -6,7 +6,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: process.env.FRONTEND__API__HOST,
-    port: (process.env.FRONTEND__API__PORT && Number(process.env.FRONTEND__API__PORT)) || undefined,
+    port:
+      (process.env.FRONTEND__API__PORT &&
+        Number(process.env.FRONTEND__API__PORT)) ||
+      undefined,
     allowedHosts: ["frontend"],
   },
   envPrefix: "FRONTEND__",

@@ -107,6 +107,7 @@ class Patch(BaseModel):
 
 class Project(BaseModel):
     id: UUID
+    account_id: UUID
     name: str = Field(max_length=256)
     description: str = Field(max_length=2048)
     content: Content | None = None

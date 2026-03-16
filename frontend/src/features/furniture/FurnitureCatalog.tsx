@@ -1,10 +1,6 @@
-import React, { useEffect, useState, type ChangeEvent } from "react";
+import React, { useEffect, useRef, useState, type ChangeEvent } from "react";
 import "./FurnitureCatalog.scss";
-import {
-  fetchFurniture,
-  selectAllFurniture,
-  type Furniture,
-} from "./furnitureSlice";
+import { fetchFurniture, selectAllFurniture, type Furniture } from "./slice";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { useDebounce } from "../../shared/hooks/debounce";
 
@@ -19,7 +15,7 @@ export function FurnitureCatalogItem({ furniture }: { furniture: Furniture }) {
       onDragStart={handleDragStart}
       draggable={true}
     >
-      <img src={furniture.thumbnail_path || undefined}></img>
+      <img src={furniture.thumbnailPath || undefined}></img>
       <div>{furniture.name}</div>
       <div>
         {furniture.width}x{furniture.height}x{furniture.depth}
@@ -33,14 +29,53 @@ export function FurnitureCatalog() {
   const furniture = useAppSelector(selectAllFurniture);
   const [name, setName] = useState("");
   const [area, setArea] = useState("");
+  const cursorRef = useRef<string | null>(null);
+  const itemsContainerRef = useRef<HTMLDivElement>(null);
   const debouncedName = useDebounce(name, 500);
   useEffect(() => {
-    dispatch(fetchFurniture({ name, area }));
+    dispatch(
+      fetchFurniture({ name, area, limit: 10, cursor: cursorRef.current }),
+    ).then((v: any) => {
+      cursorRef.current = v.payload.meta.cursor;
+    });
   }, [debouncedName, area]);
+  useEffect(() => {
+    if (itemsContainerRef.current) {
+      const loadItemsOnScroll = () => {
+        if (itemsContainerRef.current === null) {
+          return;
+        }
+        const { scrollTop, scrollHeight, clientHeight } =
+          itemsContainerRef.current;
+        if (scrollHeight - scrollTop <= clientHeight + 1) {
+          dispatch(
+            fetchFurniture({
+              name,
+              area,
+              limit: 10,
+              cursor: cursorRef.current,
+            }),
+          ).then((v: any) => {
+            cursorRef.current = v.payload.meta.cursor;
+          });
+        }
+      };
+      itemsContainerRef.current.addEventListener("scroll", loadItemsOnScroll);
+      loadItemsOnScroll();
+      return () => {
+        itemsContainerRef.current?.removeEventListener(
+          "scroll",
+          loadItemsOnScroll,
+        );
+      };
+    }
+  }, [itemsContainerRef]);
   function handleNameChange(e: ChangeEvent<HTMLInputElement>) {
+    cursorRef.current = null;
     setName(e.target.value);
   }
   function handleAreaChange(e: ChangeEvent<HTMLSelectElement>) {
+    cursorRef.current = null;
     setArea(e.target.value);
   }
   return (
@@ -62,10 +97,19 @@ export function FurnitureCatalog() {
           <option value="hall">Hall</option>
         </select>
       </div>
-      <div className="furniture-catalog__items-container">
-        {furniture.map((furniture, idx) => (
-          <FurnitureCatalogItem key={idx} furniture={furniture} />
-        ))}
+      <div
+        className="furniture-catalog__items-container"
+        ref={itemsContainerRef}
+      >
+        {furniture
+          .filter((f) => {
+            if (!f.name.includes(name)) return false;
+            if (area !== "" && f.meta.area !== area) return false;
+            return true;
+          })
+          .map((furniture, idx) => (
+            <FurnitureCatalogItem key={idx} furniture={furniture} />
+          ))}
       </div>
     </div>
   );

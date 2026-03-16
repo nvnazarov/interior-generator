@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 
-import "./i18n";
+// import "./i18n";
 import "./app.style.default.scss";
 import { store } from "./store";
 import { router } from "./router";

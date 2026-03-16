@@ -1,0 +1,33 @@
+.undo-button {
+  background-color: transparent;
+  outline: none;
+  border: none;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 40px;
+  height: 40px;
+  transition-duration: 0.2s;
+
+  &:hover {
+    background-color: #eee;
+  }
+
+  &:active {
+    background-color: #ddd;
+  }
+
+  &__disabled {
+    background-color: transparent;
+    outline: none;
+    border: none;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    width: 40px;
+    height: 40px;
+    opacity: 0.2;
+  }
+}

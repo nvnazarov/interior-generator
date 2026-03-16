@@ -31,10 +31,10 @@ export interface SignUpPayload {
 
 export interface SignUpError {
   code:
-  | "VALIDATION_ERROR"
-  | "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL"
-  | "PASSWORD_TOO_SHORT"
-  | "OTHER";
+    | "VALIDATION_ERROR"
+    | "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL"
+    | "PASSWORD_TOO_SHORT"
+    | "OTHER";
 }
 
 export const authClient = createAuthClient({

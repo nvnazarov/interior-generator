@@ -1,7 +1,7 @@
 import "./Projects.scss";
 
 import { ProjectsList } from "../../features/project";
-import { CreateProjectButton } from "../../features/project/CreateProjectButton";
+import { CreateProjectButton } from "../../features/project/components/CreateProjectButton";
 import { Link } from "react-router";
 
 export function Projects() {
