@@ -16,6 +16,8 @@ export function EditorSelector({ projectId }: { projectId: string }) {
     }
   }
 
+  console.log(plans);
+
   return (
     <select onChange={handleChange}>
       <option value="">Select Plan</option>

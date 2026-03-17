@@ -15,7 +15,11 @@ export const ProjectsClient = {
       throw new Error("create project: response is not ok");
     }
     const json = await resp.json();
-    return mapProject(ProjectSchema.parse(json));
+    const etag = resp.headers.get("etag");
+    if (!etag) {
+      throw new Error("create project: etag is empty");
+    }
+    return mapProject(ProjectSchema.parse(json), etag);
   },
   getById: async (projectId: string): Promise<Project> => {
     const resp = await fetch(`${CONFIG.gateway.baseURL}/projects/${projectId}`);
@@ -23,7 +27,11 @@ export const ProjectsClient = {
       throw new Error("get project by id: response is not ok");
     }
     const json = await resp.json();
-    return mapProject(ProjectSchema.parse(json));
+    const etag = resp.headers.get("etag");
+    if (!etag) {
+      throw new Error("get project by id: etag is empty");
+    }
+    return mapProject(ProjectSchema.parse(json), etag);
   },
   patch: async (
     projectId: string,
@@ -36,6 +44,7 @@ export const ProjectsClient = {
         method: "PATCH",
         headers: {
           "if-match": etag,
+          "content-type": "application/json",
         },
         body: JSON.stringify(patch),
       },
@@ -84,6 +93,6 @@ export const ProjectsClient = {
       throw new Error("get all owned projects: response is not ok");
     }
     const json = await resp.json();
-    return ProjectsSchema.parse(json).map((project) => mapProject(project));
+    return ProjectsSchema.parse(json).map((project) => mapProject(project, ""));
   },
 };

@@ -6,11 +6,13 @@ import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import {
   fetchProject,
   selectProjectById,
-  selectProjectEditor,
+  selectProjectEditorProject,
+  setEditorProject,
+  syncProjectEditorChanges,
 } from "../../features/project/slice";
-import { FurnitureCatalog } from "../../features/furniture";
 import {
   RedoButton,
+  SyncButton,
   ToolsContainer,
   ToolSelector,
   UndoButton,
@@ -19,21 +21,31 @@ import {
 import { EditorSelector } from "../../features/project/components/EditorSelector";
 import { AddPlanButton } from "../../features/plan/components/AddPlanButton";
 import { useEffect } from "react";
+import { SyncAge } from "../../features/project/components/SyncAge";
+import { fetchAllPlansInProject } from "../../features/plan/thunks";
 
 export function Project() {
   const dispatch = useAppDispatch();
-  const { id } = useParams();
-  if (!id) {
+  const { projectId } = useParams();
+  if (!projectId) {
     throw new Error("bug");
   }
-  const project = useAppSelector(selectProjectById(id));
-  const editor = useAppSelector(selectProjectEditor);
+  const project = useAppSelector(selectProjectById(projectId));
 
   useEffect(() => {
-    if (!project) {
+    if (!project || project.etag === "") {
       // TODO: handle errors
-      dispatch(fetchProject(id));
+      dispatch(fetchProject(projectId));
+      dispatch(fetchAllPlansInProject(projectId));
+      return;
     }
+    dispatch(setEditorProject(project));
+    const intervalId = setInterval(() => {
+      dispatch(syncProjectEditorChanges());
+    }, 10000);
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [project]);
 
   if (!project) {
@@ -44,9 +56,9 @@ export function Project() {
     <div className="page__project">
       <div className="page__project__toolbar">
         <ToolsContainer>
-          <ProjectInfo projectId={id} />
-          <EditorSelector projectId={id} />
-          <AddPlanButton projectId={id} />
+          <ProjectInfo />
+          <EditorSelector projectId={projectId} />
+          <AddPlanButton projectId={projectId} />
         </ToolsContainer>
         <ToolsContainer>
           <ViewModeSwitch />
@@ -61,15 +73,14 @@ export function Project() {
           <UndoButton />
           <RedoButton />
         </ToolsContainer>
+        <ToolsContainer>
+          <SyncAge />
+          <SyncButton />
+        </ToolsContainer>
       </div>
       <div className="page__project__editor">
-        <ProjectEditor id={id} />
+        <ProjectEditor />
       </div>
-      {editor.isCatalogOpen && (
-        <div className="page__project__catalog">
-          <FurnitureCatalog />
-        </div>
-      )}
     </div>
   );
 }

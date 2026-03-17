@@ -124,7 +124,7 @@ function mapDict<A, B>(
   return b;
 }
 
-export function mapProject(project: ServerProject): Project {
+export function mapProject(project: ServerProject, etag: string): Project {
   return {
     id: project.id,
     accountId: project.account_id,
@@ -156,6 +156,7 @@ export function mapProject(project: ServerProject): Project {
       }),
       wetAreas: project.content.wet_areas,
     },
+    etag: etag,
   };
 }
 

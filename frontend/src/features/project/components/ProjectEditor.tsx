@@ -3,8 +3,14 @@ import React, { useState } from "react";
 import "./ProjectEditor.scss";
 import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import { type Wall } from "../project";
-import { selectProjectEditor } from "../slice";
-import { useAppSelector } from "../../../app/hooks";
+import { v4 as uuidv4 } from "uuid";
+import {
+  recordProjectChange,
+  selectProjectById,
+  selectProjectEditor,
+  selectProjectEditorProject,
+} from "../slice";
+import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import {
   CameraControls,
   OrbitControls,
@@ -54,19 +60,21 @@ export function WallObject({ wall }: { wall: Wall }) {
 }
 
 export function Walls() {
+  const dispatch = useAppDispatch();
   const editor = useAppSelector(selectProjectEditor);
+  const project = useAppSelector(selectProjectEditorProject);
   const isMode2D = editor.viewMode === "2d";
   const isWallTool = editor.activeTool === "wall";
+
+  if (!project) {
+    throw new Error("BUG");
+  }
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPoint, setStartPoint] = useState<[number, number] | null>(null);
   const [previewEndPoint, setPreviewEndPoint] = useState<
     [number, number] | null
   >(null);
-  const [walls, setWalls] = useState<Wall[]>([
-    { id: "1", x1: 0, y1: 0, x2: 200, y2: 200 },
-    { id: "2", x1: 200, y1: 200, x2: 400, y2: 0 },
-  ]);
 
   const { camera, raycaster } = useThree();
 
@@ -79,7 +87,7 @@ export function Walls() {
     const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
     const target = new THREE.Vector3();
     if (raycaster.ray.intersectPlane(plane, target)) {
-      return [target.x, target.z];
+      return [Math.floor(target.x), Math.floor(target.z)];
     }
     return null;
   }
@@ -111,14 +119,18 @@ export function Walls() {
       const dy = endPoint[1] - startPoint[1];
       if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
         const newWall = {
-          id: Math.random().toString(36).substr(2, 9),
+          id: uuidv4(),
           x1: startPoint[0],
           y1: startPoint[1],
           x2: endPoint[0],
           y2: endPoint[1],
         };
-
-        setWalls((prev) => [...prev, newWall]);
+        dispatch(
+          recordProjectChange({
+            patch: { content: { walls: { [newWall.id]: newWall } } },
+            inversePatch: { content: { walls: { [newWall.id]: null } } },
+          }),
+        );
       }
     }
     setIsDrawing(false);
@@ -140,8 +152,8 @@ export function Walls() {
         {/* <meshBasicMaterial color="white" /> */}
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
-      {walls.map((wall) => (
-        <WallObject key={wall.id} wall={wall} />
+      {Object.entries(project.content.walls).map(([key, wall]) => (
+        <WallObject key={key} wall={wall} />
       ))}
       {isDrawing && startPoint && previewEndPoint && (
         <WallObject
@@ -158,7 +170,7 @@ export function Walls() {
   );
 }
 
-export function ProjectEditor({ id }: { id: string }) {
+export function ProjectEditor() {
   const editor = useAppSelector(selectProjectEditor);
   const isMode2D = editor.viewMode === "2d";
 
@@ -174,7 +186,14 @@ export function ProjectEditor({ id }: { id: string }) {
         makeDefault
       />
       {isMode2D ? (
-        <OrbitControls maxPolarAngle={0} makeDefault />
+        <OrbitControls
+          maxPolarAngle={0}
+          mouseButtons={{
+            MIDDLE: THREE.MOUSE.DOLLY,
+            RIGHT: THREE.MOUSE.DOLLY,
+          }}
+          makeDefault
+        />
       ) : (
         <CameraControls
           mouseButtons={{

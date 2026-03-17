@@ -10,6 +10,10 @@ from app.core.plan import Plan, PlanRepository
 from app.core.project import Project, ProjectRepository
 from app.core.uow import UnitOfWork
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def set_version(obj: Any, version: int):
     setattr(obj, "_pg_version", version)
@@ -477,11 +481,15 @@ class PostgresUnitOfWork(UnitOfWork):
         self._connection: AsyncConnection | None = None
 
     async def __aenter__(self):
-        self._connection = self._engine.connect()
-        await self._connection.start()
-        self.accounts = PostgresAccountRepository(self._connection)
-        self.projects = PostgresProjectRepository(self._connection)
-        self.plans = PostgresPlanRepository(self._connection)
+        self._connection = await self._engine.connect()
+        try:
+            self.accounts = PostgresAccountRepository(self._connection)
+            self.projects = PostgresProjectRepository(self._connection)
+            self.plans = PostgresPlanRepository(self._connection)
+        except Exception as e:
+            logger.error({"msg": "unit of work __aenter__ error", "error": str(e)})
+            await self._connection.close()
+            raise
         return self
 
     async def __aexit__(self, exc_type: Any, exc: Any, traceback: Any):
@@ -491,7 +499,7 @@ class PostgresUnitOfWork(UnitOfWork):
             else:
                 await self.commit()
         finally:
-            if self._connection:
+            if self._connection and not self._connection.closed:
                 await self._connection.close()
 
     async def commit(self) -> None:
@@ -499,7 +507,5 @@ class PostgresUnitOfWork(UnitOfWork):
             await self._connection.commit()
 
     async def rollback(self) -> None:
-        if self._connection:
-            await self._connection.rollback()
         if self._connection:
             await self._connection.rollback()

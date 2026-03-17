@@ -1,31 +1,31 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 from app.core.project import Patch as CorePatch
 from app.core.project import Project as CoreProject
 
 
 class Door(BaseModel):
-    id: UUID
-    wall_id: UUID
+    id: str
+    wall_id: str
     x: int = Field(ge=0)
     w: int = Field(ge=0)
     h: int = Field(ge=0)
 
 
 class DoorPatch(BaseModel):
-    id: UUID | None = None
-    wall_id: UUID | None = None
+    id: str | None = None
+    wall_id: str | None = None
     x: int | None = Field(None, ge=0)
     w: int | None = Field(None, ge=0)
     h: int | None = Field(None, ge=0)
 
 
 class Window(BaseModel):
-    id: UUID
-    wall_id: UUID
+    id: str
+    wall_id: str
     x: int = Field(ge=0)
     y: int = Field(ge=0)
     w: int = Field(ge=0)
@@ -33,8 +33,8 @@ class Window(BaseModel):
 
 
 class WindowPatch(BaseModel):
-    id: UUID | None = None
-    wall_id: UUID | None = None
+    id: str | None = None
+    wall_id: str | None = None
     x: int | None = Field(None, ge=0)
     y: int | None = Field(None, ge=0)
     w: int | None = Field(None, ge=0)
@@ -42,24 +42,18 @@ class WindowPatch(BaseModel):
 
 
 class Wall(BaseModel):
-    id: UUID
+    id: str
     x1: int
     y1: int
     x2: int
     y2: int
-
-    @model_validator(mode="after")
-    def validate_wall_is_parallel_to_axes(self) -> "Wall":
-        if self.x1 != self.x2 and self.y1 != self.y2:
-            raise ValueError("wall is not parallel to axes")
-        return self
 
     def length(self):
         return abs(self.x1 - self.x2) + abs(self.y1 - self.y2)
 
 
 class WallPatch(BaseModel):
-    id: UUID | None = None
+    id: str | None = None
     x1: int | None = None
     y1: int | None = None
     x2: int | None = None
@@ -67,7 +61,7 @@ class WallPatch(BaseModel):
 
 
 class WetArea(BaseModel):
-    id: UUID
+    id: str
     x: int
     y: int
     w: int = Field(ge=0)
@@ -75,7 +69,7 @@ class WetArea(BaseModel):
 
 
 class WetAreaPatch(BaseModel):
-    id: UUID | None = None
+    id: str | None = None
     x: int | None = None
     y: int | None = None
     w: int | None = Field(None, ge=0)
@@ -83,17 +77,17 @@ class WetAreaPatch(BaseModel):
 
 
 class Content(BaseModel):
-    walls: dict[UUID, Wall] = {}
-    doors: dict[UUID, Door] = {}
-    windows: dict[UUID, Window] = {}
-    wet_areas: dict[UUID, WetArea] = {}
+    walls: dict[str, Wall] = {}
+    doors: dict[str, Door] = {}
+    windows: dict[str, Window] = {}
+    wet_areas: dict[str, WetArea] = {}
 
 
 class ContentPatch(BaseModel):
-    walls: dict[UUID, WallPatch | None] = {}
-    doors: dict[UUID, DoorPatch | None] = {}
-    windows: dict[UUID, WindowPatch | None] = {}
-    wet_areas: dict[UUID, WetAreaPatch | None] = {}
+    walls: dict[str, WallPatch | None] = {}
+    doors: dict[str, DoorPatch | None] = {}
+    windows: dict[str, WindowPatch | None] = {}
+    wet_areas: dict[str, WetAreaPatch | None] = {}
 
 
 class Patch(BaseModel):

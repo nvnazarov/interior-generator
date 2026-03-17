@@ -61,6 +61,7 @@ class Patch(BaseModel):
 
 class Plan(BaseModel):
     id: UUID
+    project_id: UUID
     name: str = Field(max_length=256)
     revision: int
     content: Content

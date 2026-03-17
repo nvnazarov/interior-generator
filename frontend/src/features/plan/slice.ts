@@ -52,7 +52,6 @@ const plansSlice = createSlice({
         plansAdapter.addOne(state, action.payload);
       })
       .addCase(fetchAllPlansInProject.fulfilled, (state, action) => {
-        plansAdapter.addMany(state, action.payload);
         const newPlans = action.payload.filter(
           plan => !state.entities[plan.id]
         );

@@ -1,15 +1,11 @@
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import "./ProjectInfo.scss";
-import { optimisticPatchProject, selectProjectById } from "../slice";
+import { recordProjectChange, selectProjectEditorProject } from "../slice";
 import { useEffect, useState, type ChangeEvent } from "react";
 
-export interface Props {
-  projectId: string;
-}
-
-export function ProjectInfo({ projectId }: Props) {
+export function ProjectInfo() {
   const dispatch = useAppDispatch();
-  const project = useAppSelector(selectProjectById(projectId));
+  const project = useAppSelector(selectProjectEditorProject);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -38,10 +34,18 @@ export function ProjectInfo({ projectId }: Props) {
   }
 
   function handleSaveClick() {
-    dispatch(
-      optimisticPatchProject({ id: projectId, patch: { name, description } }),
-    );
-    setIsDialogOpen(false);
+    if (project) {
+      dispatch(
+        recordProjectChange({
+          patch: { name, description },
+          inversePatch: {
+            name: project.name,
+            description: project?.description,
+          },
+        }),
+      );
+      setIsDialogOpen(false);
+    }
   }
 
   return (
