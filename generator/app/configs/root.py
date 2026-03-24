@@ -1,9 +1,9 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.configs.api import APIConfig
 from app.configs.logging import LoggingConfig
 from app.configs.openai import OpenAIConfig
-from app.configs.api import APIConfig
 
 
 class RootConfig(BaseSettings):

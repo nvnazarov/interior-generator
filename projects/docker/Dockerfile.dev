@@ -1,4 +1,4 @@
-FROM ghcr.io/astral-sh/uv:python3.12-alpine AS base
+FROM ghcr.io/astral-sh/uv:python3.12-trixie AS base
 WORKDIR /service
 COPY pyproject.toml uv.lock ./
 RUN uv sync --no-dev --locked

@@ -28,5 +28,5 @@ Install Make and Docker.
 make test       # run all tests
 make up         # start docker compose
 make format     # format the code
-make migration  # shows a db migration script 
+make migration  # shows a db migration script
 ```

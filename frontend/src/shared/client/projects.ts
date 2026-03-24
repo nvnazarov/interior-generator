@@ -2,7 +2,7 @@ import z from "zod";
 import type { ProjectPatch } from "../../features/project/project";
 import { CONFIG } from "../config";
 import type { Project } from "../../features/project/project";
-import { mapProject, ProjectSchema } from "./schema";
+import { mapProject, mapProjectPatch, ProjectSchema } from "./schema";
 
 export const ProjectsSchema = z.array(ProjectSchema);
 
@@ -46,7 +46,7 @@ export const ProjectsClient = {
           "if-match": etag,
           "content-type": "application/json",
         },
-        body: JSON.stringify(patch),
+        body: JSON.stringify(mapProjectPatch(patch)),
       },
     );
     if (!resp.ok) {

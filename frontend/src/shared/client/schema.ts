@@ -1,5 +1,5 @@
 import z from "zod/v4";
-import type { Project } from "../../features/project/project";
+import type { Project, ProjectPatch } from "../../features/project/project";
 import type { Furniture } from "../../features/furniture/slice";
 import type { Plan } from "../../features/plan/entities";
 
@@ -197,4 +197,34 @@ export function mapFurniture(furniture: ServerFurniture): Furniture {
     iconPath: furniture.icon_path,
     meta: furniture.meta,
   };
+}
+
+export function mapProjectPatch(patch: ProjectPatch): any {
+  const windows: any = {};
+  if (patch.content?.windows) {
+    for (const [key, window] of Object.entries(patch.content.windows)) {
+      if (!window) {
+        windows[key] = window;
+      } else {
+        windows[key] = {
+          id: key,
+          wall_id: window.wallId,
+          x: window.x,
+          y: window.y,
+          w: window.w,
+          h: window.h,
+        }
+      }
+    }
+  }
+  return {
+    name: patch.name,
+    description: patch.description,
+    content: {
+      windows: windows,
+      walls: patch.content?.walls || {},
+      doors: {},
+      wet_areas: {},
+    }
+  }
 }

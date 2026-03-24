@@ -35,5 +35,9 @@ class ASGI(FastAPI):
             plans = await server.generate_plans(account_id, project_id, base_plan_id, n)
             return [plan.id for plan in plans]
 
+        @self.get("/health", status_code=204)
+        async def healthcheck():
+            pass
+
     def listen_and_serve(self, host: str = "127.0.0.1", port: int = 8080):
         uvicorn.run(self, host=host, port=port, log_config=None)

@@ -1,0 +1,49 @@
+.account__profile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+  border-radius: 10px;
+  width: 400px;
+  height: 200px;
+  background-color: #faa;
+
+  &__data {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+  }
+
+  &__title {
+    text-align: center;
+    font-weight: bold;
+    font-family: "Courier New", Courier, monospace;
+  }
+
+  &__attr {
+    &__name {
+      font-weight: bold;
+      color: blue;
+      padding-right: 10px;
+      font-family: "Courier New", Courier, monospace;
+    }
+    &__value {
+      font-weight: bold;
+      text-transform: uppercase;
+      color: black;
+      font-family: "Courier New", Courier, monospace;
+
+      input {
+        color: black;
+        font-family: "Courier New", Courier, monospace;
+        border: none;
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: end;
+    gap: 10px;
+  }
+}

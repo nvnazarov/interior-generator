@@ -3,8 +3,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.configs.api import APIConfig
 from app.configs.general import GeneralConfig
-from app.configs.postgres import PostgresConfig
 from app.configs.logging import LoggingConfig
+from app.configs.postgres import PostgresConfig
 
 
 class RootConfig(BaseSettings):

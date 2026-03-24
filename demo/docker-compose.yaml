@@ -7,6 +7,21 @@ services:
       - "8080:80"
     networks:
       - "private"
+    depends_on:
+      auth:
+        condition: "service_healthy"
+      catalog:
+        condition: "service_healthy"
+      generator:
+        condition: "service_healthy"
+      exporter:
+        condition: "service_healthy"
+      projects:
+        condition: "service_healthy"
+      assets:
+        condition: "service_healthy"
+      # frontend:
+      #   condition: "service_healthy"
 
   postgres:
     image: "postgres"
@@ -18,6 +33,11 @@ services:
       - "POSTGRES_PASSWORD=postgres"
     networks:
       - "private"
+    healthcheck:
+      test: "pg_isready -U postgres"
+      interval: "10s"
+      timeout: "5s"
+      retries: 3
 
   minio:
     image: "quay.io/minio/minio"
@@ -32,6 +52,11 @@ services:
       - "minio:/data"
     networks:
       - "private"
+    healthcheck:
+      test: "curl -fsS http://localhost:9000/minio/health/live >/dev/null"
+      interval: "10s"
+      timeout: "5s"
+      retries: 3
 
   auth:
     build:
@@ -48,6 +73,11 @@ services:
       - "BETTER_AUTH_TRUSTED_ORIGINS=http://localhost:3000,http://localhost:8080"
     networks:
       - "private"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
   catalog:
     build:
@@ -64,6 +94,14 @@ services:
       - "CATALOG__LOGGING__LEVEL=INFO"
     networks:
       - "private"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      postgres:
+        condition: "service_healthy"
 
   generator:
     build:
@@ -78,6 +116,11 @@ services:
       - "GENERATOR__LOGGING__LEVEL=INFO"
     networks:
       - "private"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
   exporter:
     build:
@@ -91,6 +134,11 @@ services:
       - "EXPORTER__LOGGING__LEVEL=INFO"
     networks:
       - "private"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
   projects:
     build:
@@ -109,6 +157,36 @@ services:
       - "PROJECTS__POSTGRES__DB=postgres"
     networks:
       - "private"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      postgres:
+        condition: "service_healthy"
+
+  assets:
+    build:
+      context: "../assets"
+      dockerfile: "../assets/docker/Dockerfile.${MOD:-dev}"
+    environment:
+      - "ASSETS__API__HOST=0.0.0.0"
+      - "ASSETS__API__PORT=80"
+      - "ASSETS__MINIO__HOST=minio"
+      - "ASSETS__MINIO__PORT=9000"
+      - "ASSETS__MINIO__ACCESS_KEY=user"
+      - "ASSETS__MINIO__SECRET_KEY=password"
+    networks:
+      - "private"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      minio:
+        condition: "service_healthy"
 
   frontend:
     build:
@@ -119,8 +197,8 @@ services:
     environment:
       - "FRONTEND__API__HOST=0.0.0.0"
       - "FRONTEND__API__PORT=80"
-      - "FRONTEND__API_GATEWAY__BASE_URL=http://localhost:8080/api"
-      - "FRONTEND__PROXY__BASE_PATH=/app/"
+      - "FRONTEND__API_GATEWAY__BASE_URL=http://localhost:8080"
+      - "FRONTEND__PROXY__BASE_PATH=/app"
     networks:
       - "private"
 

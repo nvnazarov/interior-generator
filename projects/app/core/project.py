@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Sequence
@@ -7,6 +8,8 @@ from pydantic import BaseModel, Field, ValidationError
 
 from app.core.plan import Plan
 from app.core.util import now
+
+logger = logging.getLogger(__name__)
 
 
 class RevisionError(Exception): ...
@@ -165,11 +168,15 @@ class Project(BaseModel):
                     entities: dict[str, BaseModel] = self.content.__getattribute__(attr)
                     if (entity := entities.get(id)) is None:
                         if entity_patch is None:
+                            msg = "deleting non existing entity"
+                            logger.error({"msg": msg})
                             raise PatchError("deleting non existing entity")
                         try:
                             entities[id] = cls(**entity_patch.model_dump())
                         except ValidationError as e:
-                            raise PatchError(f"invalid adding patch: {e}")
+                            msg = f"invalid adding patch: {e}"
+                            logger.error({"msg": msg})
+                            raise PatchError(msg)
                     elif entity_patch is None:
                         del entities[id]
                     else:
@@ -183,19 +190,23 @@ class Project(BaseModel):
             for id, window in self.content.windows.items():
                 wall = self.content.walls.get(window.wall_id)
                 if wall is None:
-                    raise PatchError(
-                        f"window[{id}] is attached to non existing wall[{window.wall_id}]"
-                    )
+                    msg = f"window[{id}] is attached to non existing wall[{window.wall_id}]"
+                    logger.error({"msg": msg})
+                    raise PatchError(msg)
                 if window.x + window.w > wall.length():
-                    raise PatchError(f"window[{id}] is out of wall[{wall.id}] bounds")
+                    msg = f"window[{id}] is out of wall[{wall.id}] bounds"
+                    logger.error({"msg": msg})
+                    raise PatchError(msg)
 
             for id, door in self.content.doors.items():
                 wall = self.content.walls.get(door.wall_id)
                 if wall is None:
-                    raise PatchError(
-                        f"door[{id}] is attached to non existing wall[{door.wall_id}]"
-                    )
+                    msg = f"door[{id}] is attached to non existing wall[{door.wall_id}]"
+                    logger.error({"msg": msg})
+                    raise PatchError(msg)
                 if door.x + door.w > wall.length():
+                    msg = f"door[{id}] is out of wall[{wall.id}] bounds"
+                    logger.error({"msg": msg})
                     raise PatchError(f"door[{id}] is out of wall[{wall.id}] bounds")
 
         self.revision += 1

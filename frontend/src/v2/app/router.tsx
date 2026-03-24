@@ -1,0 +1,70 @@
+import { createBrowserRouter, Navigate, useNavigation } from "react-router";
+import { Config } from "../shared/config";
+import { UrlUtil } from "../shared/util";
+import { HomePage, ProfilePage, SignInPage, SignUpPage } from "../pages";
+import { authClient } from "../shared/betterAuth";
+import { Outlet } from "react-router";
+import { store } from "../slices/store";
+import { accountRestored } from "../slices/account/slice";
+
+async function loadSessionIfExists() {
+  const { data } = await authClient.getSession();
+  if (data) {
+    store.dispatch(
+      accountRestored({
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        avatarUrl: data.user.image || null,
+        dtCreated: data.user.createdAt.toISOString(),
+      }),
+    );
+  }
+}
+
+function SessionLoader() {
+  const navigation = useNavigation();
+  const isNavigating = Boolean(navigation.location);
+  return <>{isNavigating ? <>Loading</> : <Outlet />}</>;
+}
+
+export const router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      Component: SessionLoader,
+      loader: loadSessionIfExists,
+      children: [
+        {
+          path: "/",
+          element: <HomePage />,
+        },
+        {
+          path: "/profile",
+          element: <ProfilePage />,
+        },
+        // {
+        //   path: "/projects/:projectId",
+        //   element: <Project />,
+        // },
+        // {
+        //   path: "/projects/:projectId/plans/:planId",
+        //   element: <Project />,
+        // },
+      ],
+    },
+    {
+      path: "/sign-in",
+      element: <SignInPage />,
+    },
+    {
+      path: "/sign-up",
+      element: <SignUpPage />,
+    },
+    {
+      path: "*",
+      element: <Navigate to="/" />,
+    },
+  ],
+  { basename: UrlUtil.noRightSlash(Config.proxy.basePath) },
+);

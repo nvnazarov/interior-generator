@@ -1,4 +1,5 @@
 from uuid import UUID
+
 from app.core.plan import Plan
 
 DEFAULT_PLANS_COUNT = 5

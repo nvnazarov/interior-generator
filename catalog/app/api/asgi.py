@@ -55,5 +55,9 @@ class ASGI(FastAPI):
                 furniture=furniture, meta=SearchResult.Meta(cursor=next_cursor)
             )
 
+        @self.get("/health", status_code=204)
+        async def healthcheck():
+            pass
+
     def listen_and_serve(self, host: str = "127.0.0.1", port: int = 8080):
         uvicorn.run(self, host=host, port=port, log_config=None)

@@ -3,7 +3,7 @@ from uuid import UUID
 
 import uvicorn
 from fastapi import Depends, FastAPI, Header, HTTPException, status
-from fastapi.responses import StreamingResponse, Response
+from fastapi.responses import StreamingResponse
 
 from app.api.constants import MIME_DXF, MIME_PDF
 from app.api.schema import DXFExportOptions, PDFExportOptions
@@ -80,6 +80,10 @@ class ASGI(FastAPI):
                         "Content-Disposition": f"attachment; filename=plans-{plan_id.hex}.dxf"
                     },
                 )
+
+        @self.get("/health", status_code=204)
+        async def healthcheck():
+            pass
 
     def listen_and_serve(self, host: str = DEFAULT_HOST, port: int = DEFAULT_PORT):
         uvicorn.run(self, host=host, port=port, log_config=None)

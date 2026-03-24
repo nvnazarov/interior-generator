@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 from uuid import UUID
 
@@ -9,8 +10,6 @@ from app.core.account import Account, AccountRepository
 from app.core.plan import Plan, PlanRepository
 from app.core.project import Project, ProjectRepository
 from app.core.uow import UnitOfWork
-
-import logging
 
 logger = logging.getLogger(__name__)
 

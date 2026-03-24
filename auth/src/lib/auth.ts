@@ -7,6 +7,11 @@ export function createAuth(config: Config): Auth {
     emailAndPassword: {
       enabled: true,
     },
+    user: {
+      deleteUser: {
+        enabled: true,
+      },
+    },
     baseURL: config.betterAuth.baseURL,
     trustedOrigins: config.betterAuth.trustedOrigins,
     database: new Pool({
