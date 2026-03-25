@@ -221,8 +221,8 @@ async def test_get_projects_owned_by_account(client: AsyncClient):
         "/projects", headers={"x-account-id": "022f51f9-98bb-40af-9d30-0b3c03819212"}
     )
     assert resp.status_code == status.HTTP_200_OK
-    assert resp.json()[0]["id"] == project_1["id"]
-    assert resp.json()[1]["id"] == project_2["id"]
+    assert resp.json()[0]["id"] == project_2["id"]
+    assert resp.json()[1]["id"] == project_1["id"]
 
 
 @pytest.mark.asyncio

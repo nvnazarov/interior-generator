@@ -160,7 +160,7 @@ STMT_GET_ALL_PROJECTS_OWNED_BY_ACCOUNT = text(
     "   account_id = :account_id "
     "   AND NOT deleted "
     "ORDER BY "
-    "   updated_at DESC"
+    "   created_at DESC"
 )
 STMT_GET_PLAN = text(
     "SELECT "
