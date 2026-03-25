@@ -1,17 +1,19 @@
 import { NavLink } from "react-router";
-import { ProjectsList, CreateProjectButton } from "../slices/projects";
+import { ProjectsGrid } from "../slices/projects";
 import { SignOutButton } from "../slices/account";
+import { Center, Page } from "../shared/components";
 
 export function HomePage() {
   return (
-    <div>
+    <Page>
       <div>
         <SignOutButton />
         <NavLink to="/profile">profile</NavLink>
         <NavLink to="/">home</NavLink>
       </div>
-      <CreateProjectButton />
-      <ProjectsList />
-    </div>
+      <Center>
+        <ProjectsGrid />
+      </Center>
+    </Page>
   );
 }

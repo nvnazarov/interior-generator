@@ -4,6 +4,7 @@ import {
   usePublishProjectMutation,
   useUnpublishProjectMutation,
 } from "../api/slice";
+import { Button } from "../../shared/components";
 
 export function ShareProjectButton({ projectId }: { projectId: string }) {
   const { project } = useGetAllOwnedProjectsQuery(undefined, {
@@ -33,9 +34,5 @@ export function ShareProjectButton({ projectId }: { projectId: string }) {
     }
   }, [project]);
 
-  return (
-    <button onClick={handleClick} disabled={isBusy}>
-      {project?.published ? "Unpublish" : "Publish"}
-    </button>
-  );
+  return <Button onClick={handleClick} disabled={isBusy} icon="share.png" />;
 }

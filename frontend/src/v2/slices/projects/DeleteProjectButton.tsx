@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { useDeleteProjectMutation } from "../api/slice";
+import { Button } from "../../shared/components";
 
 export function DeleteProjectButton({ projectId }: { projectId: string }) {
   const [deleteProject] = useDeleteProjectMutation();
@@ -17,8 +18,6 @@ export function DeleteProjectButton({ projectId }: { projectId: string }) {
   }, [projectId]);
 
   return (
-    <button onClick={handleClick} disabled={isDeleting}>
-      Delete Project
-    </button>
+    <Button onClick={handleClick} disabled={isDeleting} icon="trash.png" />
   );
 }

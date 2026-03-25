@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { useCreateProjectMutation } from "../api/slice";
 import { useNavigate } from "react-router";
+import { Button } from "../../shared/components";
 
 export function CreateProjectButton() {
   const navigate = useNavigate();
@@ -20,8 +21,10 @@ export function CreateProjectButton() {
   }, []);
 
   return (
-    <button onClick={handleClick} disabled={isCreating}>
-      Create Project
-    </button>
+    <Button
+      onClick={handleClick}
+      disabled={isCreating}
+      title="Create project"
+    />
   );
 }
