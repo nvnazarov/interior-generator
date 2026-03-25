@@ -8,6 +8,9 @@ import { store } from "../slices/store";
 import { accountRestored } from "../slices/account/slice";
 
 async function loadSessionIfExists() {
+  if (store.getState().account) {
+    return;
+  }
   const { data } = await authClient.getSession();
   if (data) {
     store.dispatch(
