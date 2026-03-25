@@ -1,5 +1,5 @@
 import { NavLink } from "react-router";
-import { ProjectsList } from "../slices/projects/ProjectsList";
+import { ProjectsList, CreateProjectButton } from "../slices/projects";
 import { SignOutButton } from "../slices/account";
 
 export function HomePage() {
@@ -10,6 +10,7 @@ export function HomePage() {
         <NavLink to="/profile">profile</NavLink>
         <NavLink to="/">home</NavLink>
       </div>
+      <CreateProjectButton />
       <ProjectsList />
     </div>
   );

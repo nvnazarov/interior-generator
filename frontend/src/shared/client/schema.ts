@@ -213,7 +213,7 @@ export function mapProjectPatch(patch: ProjectPatch): any {
           y: window.y,
           w: window.w,
           h: window.h,
-        }
+        };
       }
     }
   }
@@ -225,6 +225,6 @@ export function mapProjectPatch(patch: ProjectPatch): any {
       walls: patch.content?.walls || {},
       doors: {},
       wet_areas: {},
-    }
-  }
+    },
+  };
 }

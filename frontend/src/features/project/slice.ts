@@ -65,8 +65,7 @@ const projectAdapter = createEntityAdapter<Project, string>({
 const projectSlice = createSlice({
   name: "projects",
   initialState: projectAdapter.getInitialState(),
-  reducers: {
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchAllOwnedProjects.fulfilled, (state, action) => {
@@ -90,7 +89,7 @@ const projectSlice = createSlice({
           changes: { published: false },
         });
       })
-      .addCase(unpublishProject.rejected, () => { })
+      .addCase(unpublishProject.rejected, () => {})
       .addCase(fetchProject.fulfilled, (state, action) => {
         projectAdapter.setOne(state, action.payload);
       });
@@ -126,7 +125,7 @@ const projectEditorSlice = createSlice({
     },
     setEditorProjectEtag(state, action: PayloadAction<string>) {
       if (!state.project) {
-        throw new Error("BUG")
+        throw new Error("BUG");
       }
       state.project.etag = action.payload;
     },
@@ -147,11 +146,11 @@ const projectEditorSlice = createSlice({
       if (!project) {
         throw new Error("BUG");
       }
-      const change = state.undo.pop()
+      const change = state.undo.pop();
       if (!change) {
-        throw new Error("BUG")
+        throw new Error("BUG");
       }
-      state.project = ProjectUtils.applyPatch(project, change.inversePatch)
+      state.project = ProjectUtils.applyPatch(project, change.inversePatch);
       state.redo.push(change);
       state.sync.push(change.inversePatch);
     },
@@ -160,11 +159,11 @@ const projectEditorSlice = createSlice({
       if (!project) {
         throw new Error("BUG");
       }
-      const change = state.redo.pop()
+      const change = state.redo.pop();
       if (!change) {
-        throw new Error("BUG")
+        throw new Error("BUG");
       }
-      state.project = ProjectUtils.applyPatch(project, change.patch)
+      state.project = ProjectUtils.applyPatch(project, change.patch);
       state.undo.push(change);
       state.sync.push(change.patch);
     },
@@ -174,16 +173,17 @@ const projectEditorSlice = createSlice({
         throw new Error("BUG");
       }
       const change = action.payload;
-      state.project = ProjectUtils.applyPatch(project, change.patch)
-      state.undo.push(change)
-      state.sync.push(change.patch)
+      state.project = ProjectUtils.applyPatch(project, change.patch);
+      state.undo.push(change);
+      state.sync.push(change.patch);
       state.redo = [];
     },
   },
 });
 
 export const {
-  recordProjectChange, setEditorProject,
+  recordProjectChange,
+  setEditorProject,
   switchViewMode,
   selectTool,
   undo,
@@ -193,14 +193,16 @@ export const {
   savedNow,
 } = projectEditorSlice.actions;
 export const selectProjectEditor = (state: RootState) => state.projectEditor;
-export const selectProjectEditorProject = (state: RootState) => state.projectEditor.project;
+export const selectProjectEditorProject = (state: RootState) =>
+  state.projectEditor.project;
 export const selectActiveTool = (state: RootState) =>
   state.projectEditor.activeTool;
 export const selectCanUndo = (state: RootState) =>
   state.projectEditor.undo.length !== 0;
 export const selectCanRedo = (state: RootState) =>
   state.projectEditor.redo.length !== 0;
-export const selectCanSync = (state: RootState) => state.projectEditor.sync.length !== 0
+export const selectCanSync = (state: RootState) =>
+  state.projectEditor.sync.length !== 0;
 
 export const projectEditorReducer = projectEditorSlice.reducer;
 export const projectsReducer = projectSlice.reducer;
@@ -208,7 +210,7 @@ export const projectsReducer = projectSlice.reducer;
 export const syncProjectEditorChanges = createAppAsyncThunk(
   "projectEditor/syncChanges",
   async (_, api) => {
-    const state = api.getState()
+    const state = api.getState();
     const project = state.projectEditor.project;
     if (!project) {
       throw new Error("BUG");
@@ -220,9 +222,13 @@ export const syncProjectEditorChanges = createAppAsyncThunk(
       return;
     }
     try {
-      const newEtag = await Client.projects.patch(project.id, patch, project.etag);
-      api.dispatch(setEditorProjectEtag(newEtag))
-      api.dispatch(savedNow())
+      const newEtag = await Client.projects.patch(
+        project.id,
+        patch,
+        project.etag,
+      );
+      api.dispatch(setEditorProjectEtag(newEtag));
+      api.dispatch(savedNow());
     } catch {
       api.dispatch(setSync([...oldSync, ...state.projectEditor.sync]));
     }

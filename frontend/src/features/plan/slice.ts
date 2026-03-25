@@ -53,7 +53,7 @@ const plansSlice = createSlice({
       })
       .addCase(fetchAllPlansInProject.fulfilled, (state, action) => {
         const newPlans = action.payload.filter(
-          plan => !state.entities[plan.id]
+          (plan) => !state.entities[plan.id],
         );
         plansAdapter.addMany(state, newPlans);
       });

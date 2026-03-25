@@ -1,4 +1,4 @@
-import { z } from "zod/v4"
+import { z } from "zod/v4";
 
 export const RawProjectSchema = z.object({
   id: z.string(),
@@ -55,4 +55,4 @@ export const RawProjectSchema = z.object({
 
 export const RawProjectsArraySchema = z.array(RawProjectSchema);
 
-export type RawProject = z.infer<typeof RawProjectSchema>
+export type RawProject = z.infer<typeof RawProjectSchema>;

@@ -1,5 +1,7 @@
 import "./ProjectsList.scss";
 import { useGetAllOwnedProjectsQuery } from "../api/slice";
+import { DeleteProjectButton } from "./DeleteProjectButton";
+import { ShareProjectButton } from "./ShareProjectButton";
 
 export function ProjectsList() {
   const { data, isLoading } = useGetAllOwnedProjectsQuery();
@@ -16,6 +18,7 @@ export function ProjectsList() {
           <th>Name</th>
           <th>Created At</th>
           <th>Updated At</th>
+          <th>Fast Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -24,6 +27,10 @@ export function ProjectsList() {
             <td>{project.name}</td>
             <td>{project.dtCreated}</td>
             <td>{project.dtUpdated}</td>
+            <td>
+              <DeleteProjectButton projectId={project.id} />
+              <ShareProjectButton projectId={project.id} />
+            </td>
           </tr>
         ))}
       </tbody>
