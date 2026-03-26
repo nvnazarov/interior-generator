@@ -7,11 +7,19 @@ import { CreateProjectButton } from "./CreateProjectButton";
 import moment from "moment";
 import type { Project } from "../api/entities";
 import { useCallback, useState } from "react";
+import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 
 function Item({ project }: { project: Project }) {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isMouseOver, setIsMouseOver] = useState(false);
 
   const handleMouseEnter = useCallback(() => {
+    setIsMouseOver(true);
+  }, []);
+
+  const handleMouseOver = useCallback(() => {
     setIsMouseOver(true);
   }, []);
 
@@ -19,20 +27,43 @@ function Item({ project }: { project: Project }) {
     setIsMouseOver(false);
   }, []);
 
+  const handleClick = useCallback(() => {
+    navigate(`/editor/${project.id}`);
+  }, [project.id]);
+
   return (
     <div
       className="projects__projects-grid__item"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onMouseOver={handleMouseOver}
+      onClick={handleClick}
     >
       <div>
-        <h1>{project.name || "Untitled Project"}</h1>
-        <p>{project.description || "No description"}</p>
+        <h1>
+          {project.name ||
+            t("Projects.ProjectsGrid.Item.Name.Default", "Untitled Project")}
+        </h1>
+        <p>
+          {project.description ||
+            t(
+              "Projects.ProjectsGrid.Item.Description.Default",
+              "No description",
+            )}
+        </p>
         <span>
-          {moment(project.dtCreated).format("DD.MM.YYYY \\a\\t hh:mm")}
+          {moment(project.dtCreated).format(
+            t(
+              "Projects.ProjectsGrid.Item.Date.Format",
+              "DD.MM.YYYY \\a\\t hh:mm",
+            ),
+          )}
         </span>
       </div>
-      <div style={{ opacity: isMouseOver ? 1 : 0 }}>
+      <div
+        style={{ opacity: isMouseOver ? 1 : 0 }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <DeleteProjectButton projectId={project.id} />
         <ShareProjectButton projectId={project.id} />
         <ExportProjectToPdfButton projectId={project.id} />

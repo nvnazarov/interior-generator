@@ -7,6 +7,8 @@ import { store } from "../slices/store";
 import { router } from "./router";
 import { RouterProvider } from "react-router";
 
+import "../shared/i18n";
+
 const container = document.getElementById("root")!;
 const root = createRoot(container);
 

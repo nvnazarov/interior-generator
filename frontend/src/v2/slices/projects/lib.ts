@@ -1,7 +1,10 @@
 import { Config } from "../../shared/config";
 import { UrlUtil } from "../../shared/util";
 
-export async function exportAndDownloadProjectPdf(projectId: string, title: string) {
+export async function exportAndDownloadProjectPdf(
+  projectId: string,
+  title: string,
+) {
   const resp = await fetch(
     `${UrlUtil.noRightSlash(Config.gateway.baseUrl)}/api/projects/${projectId}/export/pdf`,
     {

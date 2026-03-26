@@ -1,7 +1,13 @@
 import { createBrowserRouter, Navigate, useNavigation } from "react-router";
 import { Config } from "../shared/config";
 import { UrlUtil } from "../shared/util";
-import { HomePage, ProfilePage, SignInPage, SignUpPage } from "../pages";
+import {
+  EditorPage,
+  HomePage,
+  ProfilePage,
+  SignInPage,
+  SignUpPage,
+} from "../pages";
 import { authClient } from "../shared/betterAuth";
 import { Outlet } from "react-router";
 import { store } from "../slices/store";
@@ -46,14 +52,10 @@ export const router = createBrowserRouter(
           path: "/profile",
           element: <ProfilePage />,
         },
-        // {
-        //   path: "/projects/:projectId",
-        //   element: <Project />,
-        // },
-        // {
-        //   path: "/projects/:projectId/plans/:planId",
-        //   element: <Project />,
-        // },
+        {
+          path: "/editor/:projectId",
+          element: <EditorPage />,
+        },
       ],
     },
     {

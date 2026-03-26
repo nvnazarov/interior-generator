@@ -3,18 +3,18 @@
     "ProjectsGrid": {
       "Item": {
         "Name": {
-          "Default": "Проект без названия"
+          "Default": "Untitled Project"
         },
         "Description": {
-          "Default": "Нет описания"
+          "Default": "No description"
         },
         "Date": {
-          "Format": "DD.MM.YYYY в hh:mm"
+          "Format": "DD.MM.YYYY \\a\\t hh:mm"
         }
       }
     },
     "CreateProjectButton": {
-      "Title": "Новый проект"
+      "Title": "New Project"
     }
   }
 }

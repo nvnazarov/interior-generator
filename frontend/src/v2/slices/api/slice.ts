@@ -37,9 +37,9 @@ const api = createApi({
       providesTags: (result) =>
         result
           ? [
-            ...result.map(({ id }) => ({ type: "Projects", id }) as const),
-            { type: "Projects", id: "LIST" },
-          ]
+              ...result.map(({ id }) => ({ type: "Projects", id }) as const),
+              { type: "Projects", id: "LIST" },
+            ]
           : [{ type: "Projects", id: "LIST" }],
     }),
     getProjectById: builder.query<Project, string>({
@@ -119,21 +119,21 @@ const api = createApi({
         url: `projects/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: (_result, _error, id) => [{ type: "Projects", id }]
+      invalidatesTags: (_result, _error, id) => [{ type: "Projects", id }],
     }),
     publishProject: builder.mutation<void, string>({
       query: (id) => ({
         url: `projects/${id}/publish`,
         method: "POST",
       }),
-      invalidatesTags: (_result, _error, id) => [{ type: "Projects", id }]
+      invalidatesTags: (_result, _error, id) => [{ type: "Projects", id }],
     }),
     unpublishProject: builder.mutation<void, string>({
       query: (id) => ({
         url: `projects/${id}/unpublish`,
         method: "POST",
       }),
-      invalidatesTags: (_result, _error, id) => [{ type: "Projects", id }]
+      invalidatesTags: (_result, _error, id) => [{ type: "Projects", id }],
     }),
   }),
 });

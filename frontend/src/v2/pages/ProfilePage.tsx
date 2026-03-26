@@ -1,3 +1,4 @@
+import "./ProfilePage.scss";
 import { NavLink } from "react-router";
 import { Profile, SignOutButton } from "../slices/account";
 import { Center, Page } from "../shared/components";
@@ -5,9 +6,8 @@ import { Center, Page } from "../shared/components";
 export function ProfilePage() {
   return (
     <Page>
-      <div>
+      <div className="pages__profile__header">
         <SignOutButton />
-        <NavLink to="/profile">profile</NavLink>
         <NavLink to="/">home</NavLink>
       </div>
       <Center>

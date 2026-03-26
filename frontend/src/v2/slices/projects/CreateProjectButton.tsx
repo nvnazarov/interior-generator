@@ -2,9 +2,11 @@ import { useCallback, useState } from "react";
 import { useCreateProjectMutation } from "../api/slice";
 import { useNavigate } from "react-router";
 import { Button } from "../../shared/components";
+import { useTranslation } from "react-i18next";
 
 export function CreateProjectButton() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [createProject] = useCreateProjectMutation();
   const [isCreating, setIsCreating] = useState(false);
 
@@ -24,7 +26,7 @@ export function CreateProjectButton() {
     <Button
       onClick={handleClick}
       disabled={isCreating}
-      title="Create project"
+      title={t("Projects.CreateProjectButton.Title", "New Project")}
     />
   );
 }
