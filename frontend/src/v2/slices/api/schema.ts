@@ -53,6 +53,30 @@ export const RawProjectSchema = z.object({
   }),
 });
 
+export const RawFurnitureSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  width: z.number(),
+  height: z.number(),
+  depth: z.number(),
+  model_path: z.string(),
+  thumbnail_path: z.string(),
+  icon_path: z.string(),
+  meta: z.record(z.string(), z.any()),
+});
+
 export const RawProjectsArraySchema = z.array(RawProjectSchema);
+export const RawFurnitureArraySchema = z.array(RawFurnitureSchema);
+
+export const FurnitureCatalogResponseSchema = z.object({
+  furniture: RawFurnitureArraySchema,
+  meta: z.object({
+    cursor: z.string().nullable(),
+  }),
+});
 
 export type RawProject = z.infer<typeof RawProjectSchema>;
+export type RawFurniture = z.infer<typeof RawFurnitureSchema>;
+export type FurnitureCatalogResponse = z.infer<
+  typeof FurnitureCatalogResponseSchema
+>;

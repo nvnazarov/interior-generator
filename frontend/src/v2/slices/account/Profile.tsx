@@ -7,11 +7,15 @@ import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 import { authClient } from "../../shared/betterAuth";
 import { Avatar } from "./Avatar";
 import { Client } from "../../shared/client";
+import { useTranslation } from "react-i18next";
+import { Button } from "../../shared/components";
+import i18next from "i18next";
 
 const MAX_AVATAR_FILE_SIZE_BYTES = 512 * 1024;
 
 export function Profile() {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const [mode, setMode] = useState<"view" | "edit">("view");
   const account = useAppSelector(selectMyAccount);
   const dtCreated = moment(account?.dtCreated);
@@ -130,7 +134,9 @@ export function Profile() {
         <table>
           <tbody>
             <tr>
-              <td className="account__profile__attr__name">NAME</td>
+              <td className="account__profile__attr__name">
+                {t("Account.Profile.Name.Title")}
+              </td>
               <td className="account__profile__attr__value">
                 {mode === "edit" ? (
                   <input
@@ -144,16 +150,21 @@ export function Profile() {
               </td>
             </tr>
             <tr>
-              <td className="account__profile__attr__name">LANG</td>
-              <td className="account__profile__attr__value">EN</td>
+              <td className="account__profile__attr__name">
+                {t("Account.Profile.Lang.Title")}
+              </td>
+              <td className="account__profile__attr__value">
+                {i18next.language}
+              </td>
             </tr>
             <tr>
-              <td className="account__profile__attr__name">DATE</td>
+              <td className="account__profile__attr__name">
+                {t("Account.Profile.Date.Title", "Date")}
+              </td>
               <td className="account__profile__attr__value">
-                {dtCreated.format("DD.MM.YYYY") +
-                  " (" +
-                  dtCreated.fromNow() +
-                  ")"}
+                {dtCreated.format(
+                  t("Account.Profile.Date.Format", "DD.MM.YYYY"),
+                )}
               </td>
             </tr>
           </tbody>
@@ -167,14 +178,15 @@ export function Profile() {
           </>
         ) : (
           <>
-            <button onClick={handleCancel}>Cancel</button>
-            <button
+            <Button
+              onClick={handleCancel}
+              title={t("Account.Profile.Edit.CancelButton.Title", "Cancel")}
+            />
+            <Button
               onClick={handleSave}
               disabled={isSaving || !isDirty}
-              title={!isDirty ? "No changes" : undefined}
-            >
-              Save
-            </button>
+              title={t("Account.Profile.Edit.SaveButton.Title", "Save")}
+            />
           </>
         )}
       </div>

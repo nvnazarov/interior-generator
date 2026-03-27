@@ -2,11 +2,12 @@ import { createBrowserRouter, Navigate, useNavigation } from "react-router";
 import { Config } from "../shared/config";
 import { UrlUtil } from "../shared/util";
 import {
-  EditorPage,
+  ProjectEditorPage,
   HomePage,
   ProfilePage,
   SignInPage,
   SignUpPage,
+  PlanEditorPage,
 } from "../pages";
 import { authClient } from "../shared/betterAuth";
 import { Outlet } from "react-router";
@@ -53,8 +54,12 @@ export const router = createBrowserRouter(
           element: <ProfilePage />,
         },
         {
-          path: "/editor/:projectId",
-          element: <EditorPage />,
+          path: "/editor/project/:projectId",
+          element: <ProjectEditorPage />,
+        },
+        {
+          path: "/editor/project/:projectId/plan/:planId",
+          element: <PlanEditorPage />,
         },
       ],
     },

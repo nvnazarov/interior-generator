@@ -16,5 +16,27 @@
     "CreateProjectButton": {
       "Title": "New Project"
     }
+  },
+  "Account": {
+    "Profile": {
+      "Name": {
+        "Title": "Name"
+      },
+      "Date": {
+        "Title": "Date",
+        "Format": "DD.MM.YYYY"
+      },
+      "Lang": {
+        "Title": "Lang"
+      },
+      "Edit": {
+        "CancelButton": {
+          "Title": "Cancel"
+        },
+        "SaveButton": {
+          "Title": "Save"
+        }
+      }
+    }
   }
 }

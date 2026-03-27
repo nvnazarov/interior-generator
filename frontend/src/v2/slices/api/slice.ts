@@ -1,8 +1,11 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import type { Project } from "./entities";
-import type { Plan } from "../../../features/plan/entities";
-import { RawProjectsArraySchema, RawProjectSchema } from "./schema";
-import type { RawProject } from "./schema";
+import type { Furniture, Project, Plan, ProjectPatch } from "./entities";
+import {
+  FurnitureCatalogResponseSchema,
+  RawProjectsArraySchema,
+  RawProjectSchema,
+} from "./schema";
+import type { FurnitureCatalogResponse, RawProject } from "./schema";
 import { mapById } from "./util";
 import { Config } from "../../shared/config";
 import { UrlUtil } from "../../shared/util";
@@ -53,14 +56,16 @@ const api = createApi({
         content: {
           walls: raw.content.walls,
           windows: mapById(raw.content.windows, (w) => ({
-            wallId: w.id,
+            id: w.id,
+            wallId: w.wall_id,
             x: w.x,
             y: w.y,
             w: w.w,
             h: w.h,
           })),
           doors: mapById(raw.content.doors, (d) => ({
-            wallId: d.id,
+            id: d.id,
+            wallId: d.wall_id,
             x: d.x,
             w: d.w,
             h: d.h,
@@ -93,14 +98,16 @@ const api = createApi({
         content: {
           walls: raw.content.walls,
           windows: mapById(raw.content.windows, (w) => ({
-            wallId: w.id,
+            id: w.id,
+            wallId: w.wall_id,
             x: w.x,
             y: w.y,
             w: w.w,
             h: w.h,
           })),
           doors: mapById(raw.content.doors, (d) => ({
-            wallId: d.id,
+            id: d.id,
+            wallId: d.wall_id,
             x: d.x,
             w: d.w,
             h: d.h,
@@ -135,17 +142,91 @@ const api = createApi({
       }),
       invalidatesTags: (_result, _error, id) => [{ type: "Projects", id }],
     }),
+    patchProject: builder.mutation<
+      string,
+      { id: string; revision: string; patch: ProjectPatch }
+    >({
+      query: ({ id, revision, patch }) => ({
+        url: `projects/${id}`,
+        method: "PATCH",
+        headers: {
+          "if-match": revision,
+        },
+        body: {
+          name: patch.name,
+          description: patch.description,
+          content: patch.content,
+        },
+      }),
+      transformResponse: (_, meta) => {
+        const revision = meta?.response?.headers.get("etag");
+        if (!revision) {
+          throw new Error(
+            "error: transform response: server did not return etag header",
+          );
+        }
+        return revision;
+      },
+      invalidatesTags: (_result, _error, { id }) => [{ type: "Projects", id }],
+    }),
+    getFurniture: builder.infiniteQuery<
+      { furniture: Furniture[]; cursor?: string },
+      { name?: string; area?: string; cursor?: string },
+      string | undefined
+    >({
+      infiniteQueryOptions: {
+        initialPageParam: undefined,
+        getNextPageParam: (
+          _lastPage,
+          _allPages,
+          _lastPageParam,
+          _allPageParams,
+          queryArg,
+        ) => queryArg.cursor,
+      },
+      query: ({ queryArg }) => {
+        const url = new URL(`http://localhost/catalog/search`);
+        if (queryArg.cursor) {
+          url.searchParams.append("cursor", queryArg.cursor);
+        } else {
+          if (queryArg.area) {
+            url.searchParams.append("area", queryArg.area);
+          }
+          if (queryArg.name) {
+            url.searchParams.append("name", queryArg.name);
+          }
+        }
+        return url.pathname + url.search;
+      },
+      rawResponseSchema: FurnitureCatalogResponseSchema,
+      transformResponse: (response: FurnitureCatalogResponse) => ({
+        furniture: response.furniture.map((raw) => ({
+          id: raw.id,
+          name: raw.name,
+          width: raw.width,
+          height: raw.height,
+          depth: raw.depth,
+          modelPath: raw.model_path,
+          thumbnailPath: raw.thumbnail_path,
+          iconPath: raw.icon_path,
+          meta: raw.meta,
+        })),
+        cursor: response.meta.cursor || undefined,
+      }),
+    }),
   }),
 });
 
 export default api;
 export const {
   useGetAllOwnedProjectsQuery,
-  useGetProjectByIdQuery,
+  useLazyGetProjectByIdQuery,
   useGetPlanByIdQuery,
   useGetAllPlansInProjectQuery,
   useCreateProjectMutation,
   useDeleteProjectMutation,
   usePublishProjectMutation,
   useUnpublishProjectMutation,
+  usePatchProjectMutation,
+  useGetFurnitureInfiniteQuery,
 } = api;

@@ -2,4 +2,5 @@ export { SignInPage } from "./SignInPage";
 export { SignUpPage } from "./SignUpPage";
 export { HomePage } from "./HomePage";
 export { ProfilePage } from "./ProfilePage";
-export { EditorPage } from "./EditorPage";
+export { ProjectEditorPage } from "./ProjectEditorPage";
+export { PlanEditorPage } from "./PlanEditorPage";

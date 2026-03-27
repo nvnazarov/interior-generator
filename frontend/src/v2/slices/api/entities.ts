@@ -1,3 +1,36 @@
+export interface Wall {
+  id: string;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
+export interface Window {
+  id: string;
+  wallId: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface Door {
+  id: string;
+  wallId: string;
+  x: number;
+  w: number;
+  h: number;
+}
+
+export interface WetArea {
+  id: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 export interface Project {
   id: string;
   accountId: string;
@@ -5,45 +38,72 @@ export interface Project {
   description: string;
   published: boolean;
   content: {
-    walls: Record<
-      string,
-      {
-        x1: number;
-        y1: number;
-        x2: number;
-        y2: number;
-      }
-    >;
-    windows: Record<
-      string,
-      {
-        wallId: string;
-        x: number;
-        y: number;
-        w: number;
-        h: number;
-      }
-    >;
-    doors: Record<
-      string,
-      {
-        wallId: string;
-        x: number;
-        w: number;
-        h: number;
-      }
-    >;
-    wetAreas: Record<
-      string,
-      {
-        x: number;
-        y: number;
-        w: number;
-        h: number;
-      }
-    >;
+    walls: Record<string, Wall>;
+    windows: Record<string, Window>;
+    doors: Record<string, Door>;
+    wetAreas: Record<string, WetArea>;
   };
   revision: string;
   dtCreated: string;
   dtUpdated: string;
+}
+
+export interface ProjectPatch {
+  name?: string;
+  description?: string;
+  content?: {
+    walls?: Record<string, Partial<Wall> | null>;
+    windows?: Record<string, Partial<Window> | null>;
+    doors?: Record<string, Partial<Door> | null>;
+    wetAreas?: Record<string, Partial<WetArea> | null>;
+  };
+}
+
+export interface FunctionalArea {
+  id: string;
+  type: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface FurnitureInPlan {
+  id: string;
+  furnitureId: string;
+  x: number;
+  y: number;
+  z: number;
+  yaw: number;
+}
+
+export interface PlanPatch {
+  name?: string;
+  furniture?: Record<string, Partial<Furniture> | null>;
+  areas?: Record<string, Partial<FunctionalArea> | null>;
+}
+
+export interface Plan {
+  id: string;
+  projectId: string;
+  name: string;
+  content: {
+    furniture: Record<string, FurnitureInPlan>;
+    areas: Record<string, FunctionalArea>;
+  };
+  dtCreated: string;
+  dtUpdated: string;
+  etag: string;
+}
+
+export interface Furniture {
+  id: string;
+  name: string;
+  width: number;
+  height: number;
+  depth: number;
+  modelPath: string;
+  thumbnailPath: string;
+  iconPath: string;
+  meta: Record<string, any>;
 }

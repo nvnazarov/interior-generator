@@ -28,7 +28,7 @@ function Item({ project }: { project: Project }) {
   }, []);
 
   const handleClick = useCallback(() => {
-    navigate(`/editor/${project.id}`);
+    navigate(`/editor/project/${project.id}`);
   }, [project.id]);
 
   return (
