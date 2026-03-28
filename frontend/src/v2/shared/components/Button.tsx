@@ -4,13 +4,11 @@ import type { MouseEventHandler } from "react";
 export function Button({
   title,
   icon,
-  loading,
   disabled,
   onClick,
 }: {
   title?: string;
   icon?: string;
-  loading?: boolean;
   disabled?: boolean;
   onClick?: MouseEventHandler<HTMLButtonElement>;
 }) {

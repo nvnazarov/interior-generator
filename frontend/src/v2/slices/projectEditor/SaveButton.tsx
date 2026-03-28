@@ -1,12 +1,17 @@
 import { useCallback, useState } from "react";
-import { Button } from "../../shared/components";
+import { Button } from "./Button";
 import { useAppDispatch, useAppSelector } from "../storeTypes";
-import { projectSaved, selectProjectEditor } from "./slice";
+import {
+  projectSaved,
+  selectIsProjectSaved,
+  selectProjectEditor,
+} from "./slice";
 import { usePatchProjectMutation } from "../api/slice";
 
 export function SaveButton() {
   const dispatch = useAppDispatch();
   const editor = useAppSelector(selectProjectEditor);
+  const isProjectSaved = useAppSelector(selectIsProjectSaved);
   const [patchProject] = usePatchProjectMutation();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -33,5 +38,12 @@ export function SaveButton() {
     editor.unsavedAccumulatedPatch,
   ]);
 
-  return <Button title="Save" onClick={handleClick} disabled={isSaving} />;
+  return (
+    <Button
+      title="Save"
+      onClick={handleClick}
+      loading={isSaving}
+      disabled={isProjectSaved}
+    />
+  );
 }

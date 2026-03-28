@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Button } from "../../shared/components";
+import { Button } from "./Button";
 import { useAppDispatch, useAppSelector } from "../storeTypes";
 import { changeUndone, selectCanUndoChange } from "./slice";
 

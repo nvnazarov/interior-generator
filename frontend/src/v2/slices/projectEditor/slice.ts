@@ -33,32 +33,30 @@ const projectEditorSlice = createSlice({
   } as ProjectEditorState,
   reducers: {
     projectOpened: (state, action: PayloadAction<Project>) => {
-      state = {
-        project: action.payload,
-        unsavedAccumulatedPatch: {},
-        undoableChanges: [],
-        redoableChanges: [],
-        view: "2D",
-        tool: "hand",
-      }
+      state.project = action.payload;
+      state.unsavedAccumulatedPatch = {};
+      state.undoableChanges = [];
+      state.redoableChanges = [];
+      state.view = "2D";
+      state.tool = "hand";
     },
     toolSelected: (state, action: PayloadAction<Tool>) => {
       const tool = action.payload;
       state.tool = tool;
-      if (tool in ["wall", "wet_area"]) {
+      if (["wall", "wet_area"].includes(tool)) {
         state.view = "2D";
       }
-      if (tool in ["window", "door"]) {
+      if (["window", "door"].includes(tool)) {
         state.view = "3D";
       }
     },
     viewChanged: (state, action: PayloadAction<View>) => {
       const view = action.payload;
       state.view = view;
-      if (view === "2D" && state.tool in ["door", "window"]) {
+      if (view === "2D" && ["door", "window"].includes(state.tool)) {
         state.tool = "hand";
       }
-      if (view === "3D" && state.tool in ["wall", "wet_area"]) {
+      if (view === "3D" && ["wall", "wet_area"].includes(state.tool)) {
         state.tool = "hand";
       }
     },
@@ -124,6 +122,8 @@ export const selectCanUndoChange = (state: AppState) => state.projectEditor.undo
 export const selectCanRedoChange = (state: AppState) => state.projectEditor.redoableChanges.length !== 0;
 export const selectProjectEditorView = (state: AppState) => state.projectEditor.view;
 export const selectProjectEditorTool = (state: AppState) => state.projectEditor.tool;
+export const selectIsProjectSaved = (state: AppState) => Object.keys(state.projectEditor.unsavedAccumulatedPatch).length === 0;
+export const selectProject = (state: AppState) => state.projectEditor.project;
 
 export default projectEditorSlice.reducer;
 export const {
