@@ -40,9 +40,9 @@ const api = createApi({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: "Projects", id }) as const),
-              { type: "Projects", id: "LIST" },
-            ]
+            ...result.map(({ id }) => ({ type: "Projects", id }) as const),
+            { type: "Projects", id: "LIST" },
+          ]
           : [{ type: "Projects", id: "LIST" }],
     }),
     getProjectById: builder.query<Project, string>({
@@ -146,18 +146,47 @@ const api = createApi({
       string,
       { id: string; revision: string; patch: ProjectPatch }
     >({
-      query: ({ id, revision, patch }) => ({
-        url: `projects/${id}`,
-        method: "PATCH",
-        headers: {
-          "if-match": revision,
-        },
-        body: {
-          name: patch.name,
-          description: patch.description,
-          content: patch.content,
-        },
-      }),
+      query: ({ id, revision, patch }) => {
+        const content = patch.content;
+        const windows = content?.windows;
+        const doors = content?.doors;
+        return {
+          url: `projects/${id}`,
+          method: "PATCH",
+          headers: {
+            "if-match": revision,
+          },
+          body: {
+            name: patch.name,
+            description: patch.description,
+            content: content === undefined ? undefined : ({
+              walls: content.walls,
+              wet_areas: content.wetAreas,
+              windows: windows && Object.entries(windows).map(([id, window]) => ({
+                id: id,
+                wall_id: window?.wallId,
+                x: window?.x,
+                y: window?.y,
+                w: window?.w,
+                h: window?.h,
+              })).reduce((acc, curr) => {
+                acc[curr.id] = curr
+                return acc
+              }, {} as any),
+              doors: doors && Object.entries(doors).map(([id, door]) => ({
+                id: id,
+                wall_id: door?.wallId,
+                x: door?.x,
+                w: door?.w,
+                h: door?.h,
+              })).reduce((acc, curr) => {
+                acc[curr.id] = curr
+                return acc
+              }, {} as any),
+            })
+          },
+        }
+      },
       transformResponse: (_, meta) => {
         const revision = meta?.response?.headers.get("etag");
         if (!revision) {

@@ -1,6 +1,9 @@
 import { useAppSelector } from "../storeTypes";
+import { DoorMesh } from "./DoorMesh";
 import { selectProject } from "./slice";
 import { WallMesh } from "./WallMesh";
+import { WetAreaMesh } from "./WetAreaMesh";
+import { WindowMesh } from "./WindowMesh";
 
 export function ProjectMesh() {
   const project = useAppSelector(selectProject);
@@ -12,6 +15,25 @@ export function ProjectMesh() {
       {Object.entries(project.content.walls).map(([id, wall]) => (
         <WallMesh key={id} wall={wall} />
       ))}
+      {Object.entries(project.content.wetAreas).map(([id, wetArea]) => (
+        <WetAreaMesh key={id} wetArea={wetArea} />
+      ))}
+      {Object.entries(project.content.windows).map(([id, window]) => {
+        const wall = project.content.walls[window.wallId];
+        if (!wall) {
+          return <></>;
+        } else {
+          return <WindowMesh key={id} window={window} wall={wall} />;
+        }
+      })}
+      {Object.entries(project.content.doors).map(([id, door]) => {
+        const wall = project.content.walls[door.wallId];
+        if (!wall) {
+          return <></>;
+        } else {
+          return <DoorMesh key={id} door={door} wall={wall} />;
+        }
+      })}
     </>
   );
 }

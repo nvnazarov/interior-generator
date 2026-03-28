@@ -168,9 +168,10 @@ class Project(BaseModel):
                     entities: dict[str, BaseModel] = self.content.__getattribute__(attr)
                     if (entity := entities.get(id)) is None:
                         if entity_patch is None:
-                            msg = "deleting non existing entity"
-                            logger.error({"msg": msg})
-                            raise PatchError("deleting non existing entity")
+                            continue
+                            # msg = "deleting non existing entity"
+                            # logger.error({"msg": msg})
+                            # raise PatchError("deleting non existing entity")
                         try:
                             entities[id] = cls(**entity_patch.model_dump())
                         except ValidationError as e:
