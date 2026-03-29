@@ -1,25 +1,31 @@
-import "./ProjectEditor.scss";
+import "./PlanEditor.scss";
 import { useEffect } from "react";
-import { useLazyGetProjectByIdQuery } from "../api/slice";
+import { useLazyGetPlanByIdQuery } from "../api/slice";
 import { RedoChangeButton } from "./RedoChangeButton";
 import { SaveButton } from "./SaveButton";
 import { UndoChangeButton } from "./UndoChangeButton";
 import { useAppDispatch } from "../storeTypes";
-import { projectOpened } from "./slice";
+import { planOpened } from "./slice";
 import { Button, ContextMenuProvider } from "../../shared/components";
 import { Scene } from "./Scene";
 import { ChangeViewButton } from "./ChangeViewButton";
 import { SelectToolButton } from "./SelectToolButton";
 import { MenuButton } from "./MenuButton";
 
-export function ProjectEditor({ projectId }: { projectId: string }) {
-  const [getProjectById, { error }] = useLazyGetProjectByIdQuery();
+export function PlanEditor({
+  projectId,
+  planId,
+}: {
+  projectId: string;
+  planId: string;
+}) {
+  const [getPlanById, { error }] = useLazyGetPlanByIdQuery();
   const dispatch = useAppDispatch();
 
   useEffect(() => {
     async function loadProject() {
-      const project = await getProjectById(projectId).unwrap();
-      dispatch(projectOpened(project));
+      const project = await getPlanById(planId).unwrap();
+      dispatch(planOpened(project));
     }
     loadProject();
   }, []);
@@ -34,17 +40,15 @@ export function ProjectEditor({ projectId }: { projectId: string }) {
 
   return (
     <ContextMenuProvider>
-      <div className="project-editor__project-editor__menu">
+      <div className="plan-editor__plan-editor__menu">
         <div>
-          <MenuButton projectId={projectId} />
+          <MenuButton planId={planId} projectId={projectId} />
         </div>
         <span />
         <div>
           <SelectToolButton icon="hand.png" tool="hand" />
-          <SelectToolButton icon="wall.png" tool="wall" />
-          <SelectToolButton icon="window.png" tool="window" />
-          <SelectToolButton icon="door.png" tool="door" />
-          <SelectToolButton icon="raindrops.png" tool="wet_area" />
+          <SelectToolButton icon="area.png" tool="area" />
+          <SelectToolButton icon="furniture.png" tool="furniture" />
         </div>
         <div>
           <ChangeViewButton />

@@ -1,7 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { ProjectPatch } from "../../../features/project/project";
-import type { ProjectChange } from "../../../features/project/editor";
-import type { Project } from "../api/entities";
+import type { Project, ProjectPatch } from "../api/entities";
 import {
   applyJsonMergePatch,
   combineJsonMergePatches,
@@ -11,6 +9,11 @@ import type { AppState } from "../store";
 type View = "2D" | "3D";
 
 type Tool = "hand" | "wall" | "window" | "door" | "wet_area";
+
+type ProjectChange = {
+  patch: ProjectPatch;
+  inversePatch: ProjectPatch;
+}
 
 type ProjectEditorState = {
   project: Project | null;
@@ -22,7 +25,7 @@ type ProjectEditorState = {
 };
 
 const projectEditorSlice = createSlice({
-  name: "editor",
+  name: "projectEditor",
   initialState: {
     project: null,
     unsavedAccumulatedPatch: {},

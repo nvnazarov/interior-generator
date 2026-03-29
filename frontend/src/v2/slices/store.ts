@@ -2,12 +2,14 @@ import type { Action, ThunkAction } from "@reduxjs/toolkit";
 import { configureStore } from "@reduxjs/toolkit";
 import account from "./account/slice";
 import projectEditor from "./projectEditor/slice";
+import planEditor from "./planEditor/slice";
 import api from "./api/slice";
 
 export const store = configureStore({
   reducer: {
     account,
     projectEditor,
+    planEditor,
     [api.reducerPath]: api.reducer,
   },
   middleware: (getDefaultMiddleware) =>

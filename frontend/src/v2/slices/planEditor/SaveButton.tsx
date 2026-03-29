@@ -2,39 +2,39 @@ import { useCallback, useState } from "react";
 import { Button } from "./Button";
 import { useAppDispatch, useAppSelector } from "../storeTypes";
 import {
-  projectSaved,
-  selectIsProjectSaved,
-  selectProjectEditor,
+  planSaved,
+  selectIsPlanSaved,
+  selectPlanEditor,
 } from "./slice";
-import { usePatchProjectMutation } from "../api/slice";
+import { usePatchPlanMutation } from "../api/slice";
 
 export function SaveButton() {
   const dispatch = useAppDispatch();
-  const editor = useAppSelector(selectProjectEditor);
-  const isProjectSaved = useAppSelector(selectIsProjectSaved);
-  const [patchProject] = usePatchProjectMutation();
+  const editor = useAppSelector(selectPlanEditor);
+  const isPlanSaved = useAppSelector(selectIsPlanSaved);
+  const [patchPlan] = usePatchPlanMutation();
   const [isSaving, setIsSaving] = useState(false);
 
   const handleClick = useCallback(async () => {
-    if (!editor.project) {
+    if (!editor.plan) {
       return;
     }
     try {
       setIsSaving(true);
-      const revision = await patchProject({
-        id: editor.project.id,
-        revision: editor.project.revision,
+      const revision = await patchPlan({
+        id: editor.plan.id,
+        revision: editor.plan.revision,
         patch: editor.unsavedAccumulatedPatch,
       }).unwrap();
-      dispatch(projectSaved(revision));
+      dispatch(planSaved(revision));
     } catch {
       // TODO
     } finally {
       setIsSaving(false);
     }
   }, [
-    editor.project?.id,
-    editor.project?.revision,
+    editor.plan?.id,
+    editor.plan?.revision,
     editor.unsavedAccumulatedPatch,
   ]);
 
@@ -43,7 +43,7 @@ export function SaveButton() {
       icon="sync.png"
       onClick={handleClick}
       loading={isSaving}
-      disabled={isProjectSaved}
+      disabled={isPlanSaved}
     />
   );
 }

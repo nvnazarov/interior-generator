@@ -15,7 +15,7 @@ class PatchError(Exception): ...
 
 
 class Furniture(BaseModel):
-    id: UUID
+    id: str
     furniture_id: UUID
     x: int
     y: int
@@ -24,7 +24,7 @@ class Furniture(BaseModel):
 
 
 class FurniturePatch(BaseModel):
-    id: UUID
+    id: str
     x: int | None = None
     y: int | None = None
     z: int | None = None
@@ -32,7 +32,7 @@ class FurniturePatch(BaseModel):
 
 
 class Area(BaseModel):
-    id: UUID
+    id: str
     type: str
     x: int
     y: int
@@ -41,7 +41,7 @@ class Area(BaseModel):
 
 
 class AreaPatch(BaseModel):
-    id: UUID
+    id: str
     type: str | None = None
     x: int | None = None
     y: int | None = None
@@ -50,8 +50,8 @@ class AreaPatch(BaseModel):
 
 
 class ContentPatch(BaseModel):
-    furniture: dict[UUID, FurniturePatch | None] = {}
-    areas: dict[UUID, AreaPatch | None] = {}
+    furniture: dict[str, FurniturePatch | None] = {}
+    areas: dict[str, AreaPatch | None] = {}
 
 
 class Patch(BaseModel):
@@ -60,8 +60,8 @@ class Patch(BaseModel):
 
 
 class Content(BaseModel):
-    furniture: dict[UUID, Furniture] = {}
-    areas: dict[UUID, Area] = {}
+    furniture: dict[str, Furniture] = {}
+    areas: dict[str, Area] = {}
 
 
 class Plan(BaseModel):
@@ -97,9 +97,10 @@ class Plan(BaseModel):
                     try:
                         self.content.furniture.pop(furniture_id)
                     except KeyError:
-                        raise PatchError(
-                            f"furniture[id={furniture_id.hex}] does not exist"
-                        )
+                        # raise PatchError(
+                        #     f"furniture[id={furniture_id}] does not exist"
+                        # )
+                        continue
                 elif (
                     old_furniture := self.content.furniture.get(furniture_id)
                 ) is None:
@@ -109,7 +110,7 @@ class Plan(BaseModel):
                         )
                     except ValidationError:
                         raise PatchError(
-                            f"furniture[id={furniture_id.hex}] must be full"
+                            f"furniture[id={furniture_id}] must be full"
                         )
                 else:
                     self.content.furniture[furniture_id] = self._merge(
@@ -121,12 +122,13 @@ class Plan(BaseModel):
                     try:
                         self.content.areas.pop(area_id)
                     except KeyError:
-                        raise PatchError(f"area[id={area_id.hex}] does not exist")
+                        # raise PatchError(f"area[id={area_id}] does not exist")
+                        continue
                 elif (old_area := self.content.areas.get(area_id)) is None:
                     try:
                         self.content.areas[area_id] = Area(**area.model_dump())
                     except ValidationError:
-                        raise PatchError(f"area[id={area_id.hex}] must be full")
+                        raise PatchError(f"area[id={area_id}] must be full")
                 else:
                     self.content.areas[area_id] = self._merge(old_area, area)
 

@@ -1,6 +1,6 @@
 import { useParams } from "react-router";
 import { Page } from "../shared/components";
-import { ProjectEditor } from "../slices/projectEditor/ProjectEditor";
+import { PlanEditor } from "../slices/planEditor/PlanEditor";
 
 export function PlanEditorPage() {
   const { projectId, planId } = useParams();
@@ -11,14 +11,12 @@ export function PlanEditorPage() {
     );
   }
   if (!planId) {
-    throw new Error(
-      "error: plan editor page: cannot get plan id from params",
-    );
+    throw new Error("error: plan editor page: cannot get plan id from params");
   }
 
   return (
     <Page>
-      <ProjectEditor projectId={projectId} />
+      <PlanEditor planId={planId} projectId={projectId} />
     </Page>
   );
 }

@@ -1,11 +1,13 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import type { Furniture, Project, Plan, ProjectPatch } from "./entities";
+import type { Furniture, Project, Plan, ProjectPatch, PlanPatch } from "./entities";
 import {
   FurnitureCatalogResponseSchema,
+  RawPlansArraySchema,
+  RawPlanSchema,
   RawProjectsArraySchema,
   RawProjectSchema,
 } from "./schema";
-import type { FurnitureCatalogResponse, RawProject } from "./schema";
+import type { FurnitureCatalogResponse, RawPlan, RawProject } from "./schema";
 import { mapById } from "./util";
 import { Config } from "../../shared/config";
 import { UrlUtil } from "../../shared/util";
@@ -14,7 +16,7 @@ const apiBaseUrl = UrlUtil.noRightSlash(Config.gateway.baseUrl) + "/api";
 
 const api = createApi({
   reducerPath: "api",
-  tagTypes: ["Projects"],
+  tagTypes: ["Projects", "Plans"],
   baseQuery: fetchBaseQuery({ baseUrl: apiBaseUrl }),
   endpoints: (builder) => ({
     getAllOwnedProjects: builder.query<Project[], void>({
@@ -77,12 +79,7 @@ const api = createApi({
         dtCreated: raw.created_at,
         dtUpdated: raw.updated_at,
       }),
-    }),
-    getAllPlansInProject: builder.query<Plan[], string>({
-      query: (projectId: string) => `projects/${projectId}/plans`,
-    }),
-    getPlanById: builder.query<Plan, string>({
-      query: (planId: string) => `plans/${planId}`,
+      providesTags: (result) => [{ type: "Projects", id: result?.id }],
     }),
     createProject: builder.mutation<Project, void>({
       query: () => ({
@@ -198,6 +195,128 @@ const api = createApi({
       },
       invalidatesTags: (_result, _error, { id }) => [{ type: "Projects", id }],
     }),
+    getAllPlansInProject: builder.query<Plan[], string>({
+      query: (projectId: string) => `projects/${projectId}/plans`,
+      rawResponseSchema: RawPlansArraySchema,
+      transformResponse: (response: RawPlan[]) =>
+        response.map((raw) => ({
+          id: raw.id,
+          projectId: raw.project_id,
+          name: raw.name,
+          content: {
+            furniture: {},
+            areas: {},
+          },
+          revision: "",
+          dtCreated: raw.created_at,
+          dtUpdated: raw.updated_at,
+        })),
+      providesTags: (result, _error, projectId) =>
+        result
+          ? [
+            ...result.map(({ id }) => ({ type: "Plans", id }) as const),
+            { type: "Plans", id: `LIST:${projectId}` },
+          ]
+          : [{ type: "Plans", id: `LIST:${projectId}` }],
+    }),
+    getPlanById: builder.query<Plan, string>({
+      query: (planId: string) => `plans/${planId}`,
+      rawResponseSchema: RawPlanSchema,
+      transformResponse: (raw: RawPlan, meta?: { response?: Response }) => ({
+        id: raw.id,
+        projectId: raw.project_id,
+        name: raw.name,
+        content: {
+          areas: raw.content.areas,
+          furniture: mapById(raw.content.furniture, (f) => ({
+            id: f.id,
+            furnitureId: f.furniture_id,
+            x: f.x,
+            y: f.y,
+            z: f.z,
+            yaw: f.yaw,
+          })),
+        },
+        revision: meta?.response?.headers.get("etag") || "",
+        dtCreated: raw.created_at,
+        dtUpdated: raw.updated_at,
+      }),
+      providesTags: (result) => [{ type: "Plans", id: result?.id }],
+    }),
+    createPlan: builder.mutation<Plan, string>({
+      query: (projectId: string) => ({
+        url: `projects/${projectId}/plans`,
+        method: "POST",
+      }),
+      rawResponseSchema: RawPlanSchema,
+      transformResponse: (raw: RawPlan, meta?: { response?: Response }) => ({
+        id: raw.id,
+        projectId: raw.project_id,
+        name: raw.name,
+        content: {
+          areas: raw.content.areas,
+          furniture: mapById(raw.content.furniture, (f) => ({
+            id: f.id,
+            furnitureId: f.furniture_id,
+            x: f.x,
+            y: f.y,
+            z: f.z,
+            yaw: f.yaw,
+          })),
+        },
+        revision: meta?.response?.headers.get("etag") || "",
+        dtCreated: raw.created_at,
+        dtUpdated: raw.updated_at,
+      }),
+      invalidatesTags: (_result, _error, projectId) => [{ type: "Plans", id: `LIST:${projectId}` }],
+    }),
+    deletePlan: builder.mutation<void, string>({
+      query: (planId: string) => ({
+        url: `plans/${planId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_result, _error, id) => [{ type: "Plans", id }],
+    }),
+    patchPlan: builder.mutation<string, { id: string, revision: string, patch: PlanPatch }>({
+      query: ({ id, revision, patch }) => {
+        const content = patch.content;
+        const furniture = content?.furniture;
+        return {
+          url: `plans/${id}`,
+          method: "PATCH",
+          headers: {
+            "if-match": revision,
+          },
+          body: {
+            name: patch.name,
+            content: content === undefined ? undefined : ({
+              areas: content.areas,
+              furniture: furniture && Object.entries(furniture).map(([id, f]): [string, any] => (f ? [id, {
+                id: id,
+                furniture_id: f?.furnitureId,
+                x: f?.x,
+                y: f?.y,
+                z: f?.z,
+                yaw: f?.yaw,
+              }] : [id, null])).reduce((acc, curr) => {
+                acc[curr[0]] = curr[1]
+                return acc
+              }, {} as any),
+            })
+          },
+        }
+      },
+      transformResponse: (_, meta) => {
+        const revision = meta?.response?.headers.get("etag");
+        if (!revision) {
+          throw new Error(
+            "error: transform response: server did not return etag header",
+          );
+        }
+        return revision;
+      },
+      invalidatesTags: (_result, _error, { id }) => [{ type: "Plans", id }],
+    }),
     getFurniture: builder.infiniteQuery<
       { furniture: Furniture[]; cursor?: string },
       { name?: string; area?: string; cursor?: string },
@@ -249,13 +368,17 @@ const api = createApi({
 export default api;
 export const {
   useGetAllOwnedProjectsQuery,
+  useGetProjectByIdQuery,
   useLazyGetProjectByIdQuery,
-  useGetPlanByIdQuery,
-  useGetAllPlansInProjectQuery,
   useCreateProjectMutation,
   useDeleteProjectMutation,
   usePublishProjectMutation,
   useUnpublishProjectMutation,
   usePatchProjectMutation,
   useGetFurnitureInfiniteQuery,
+  useGetAllPlansInProjectQuery,
+  useLazyGetPlanByIdQuery,
+  useCreatePlanMutation,
+  useDeletePlanMutation,
+  usePatchPlanMutation,
 } = api;

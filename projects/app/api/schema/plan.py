@@ -8,7 +8,7 @@ from app.core.plan import Plan as CorePlan
 
 
 class Furniture(BaseModel):
-    id: UUID
+    id: str
     x: int
     y: int
     z: int
@@ -16,7 +16,7 @@ class Furniture(BaseModel):
 
 
 class Area(BaseModel):
-    id: UUID
+    id: str
     type: str
     x: int
     y: int
@@ -25,12 +25,12 @@ class Area(BaseModel):
 
 
 class Content(BaseModel):
-    furniture: dict[UUID, Furniture] = {}
-    areas: dict[UUID, Area] = {}
+    furniture: dict[str, Furniture] = {}
+    areas: dict[str, Area] = {}
 
 
 class FurniturePatch(BaseModel):
-    id: UUID
+    id: str
     x: int | None = None
     y: int | None = None
     z: int | None = None
@@ -38,7 +38,7 @@ class FurniturePatch(BaseModel):
 
 
 class AreaPatch(BaseModel):
-    id: UUID
+    id: str
     type: str | None = None
     x: int | None = None
     y: int | None = None
@@ -47,8 +47,8 @@ class AreaPatch(BaseModel):
 
 
 class ContentPatch(BaseModel):
-    furniture: dict[UUID, FurniturePatch | None] = {}
-    areas: dict[UUID, AreaPatch | None] = {}
+    furniture: dict[str, FurniturePatch | None] = {}
+    areas: dict[str, AreaPatch | None] = {}
 
 
 class Patch(BaseModel):

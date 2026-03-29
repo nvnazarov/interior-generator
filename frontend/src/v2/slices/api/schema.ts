@@ -53,6 +53,38 @@ export const RawProjectSchema = z.object({
   }),
 });
 
+export const RawPlanSchema = z.object({
+  id: z.string(),
+  project_id: z.string(),
+  name: z.string(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  content: z.object({
+    furniture: z.record(
+      z.string(),
+      z.object({
+        id: z.string(),
+        furniture_id: z.string(),
+        x: z.number(),
+        y: z.number(),
+        z: z.number(),
+        yaw: z.number(),
+      }),
+    ),
+    areas: z.record(
+      z.string(),
+      z.object({
+        id: z.string(),
+        type: z.string(),
+        x: z.number(),
+        y: z.number(),
+        w: z.number(),
+        h: z.number(),
+      }),
+    ),
+  }),
+});
+
 export const RawFurnitureSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -66,6 +98,7 @@ export const RawFurnitureSchema = z.object({
 });
 
 export const RawProjectsArraySchema = z.array(RawProjectSchema);
+export const RawPlansArraySchema = z.array(RawPlanSchema);
 export const RawFurnitureArraySchema = z.array(RawFurnitureSchema);
 
 export const FurnitureCatalogResponseSchema = z.object({
@@ -76,6 +109,7 @@ export const FurnitureCatalogResponseSchema = z.object({
 });
 
 export type RawProject = z.infer<typeof RawProjectSchema>;
+export type RawPlan = z.infer<typeof RawPlanSchema>;
 export type RawFurniture = z.infer<typeof RawFurnitureSchema>;
 export type FurnitureCatalogResponse = z.infer<
   typeof FurnitureCatalogResponseSchema

@@ -53,8 +53,8 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
       {isShown && (
         <div className="shared__context-menu" style={style}>
           {options.title && <h1>{options.title}</h1>}
-          {(options.items || []).map((item) => (
-            <div className="shared__context-menu__item">
+          {(options.items || []).map((item, idx) => (
+            <div key={idx} className="shared__context-menu__item">
               <Button
                 icon={item.icon}
                 title={item.name}

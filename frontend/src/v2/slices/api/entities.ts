@@ -79,8 +79,10 @@ export interface FurnitureInPlan {
 
 export interface PlanPatch {
   name?: string;
-  furniture?: Record<string, Partial<Furniture> | null>;
-  areas?: Record<string, Partial<FunctionalArea> | null>;
+  content?: {
+    furniture?: Record<string, Partial<FurnitureInPlan> | null>;
+    areas?: Record<string, Partial<FunctionalArea> | null>;
+  }
 }
 
 export interface Plan {
@@ -91,9 +93,9 @@ export interface Plan {
     furniture: Record<string, FurnitureInPlan>;
     areas: Record<string, FunctionalArea>;
   };
+  revision: string;
   dtCreated: string;
   dtUpdated: string;
-  etag: string;
 }
 
 export interface Furniture {
