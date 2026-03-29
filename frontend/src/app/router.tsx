@@ -1,42 +1,80 @@
-import { createBrowserRouter, Navigate } from "react-router";
-import { SignIn } from "../pages/sign-in";
-import { Profile } from "../pages/profile";
-import { SignUp } from "../pages/sign-up";
-import { Projects } from "../pages/projects";
-import { Project } from "../pages/project";
-import { CONFIG } from "../shared/config";
-import { withoutTrailingSlash } from "../shared/util/url";
+import { createBrowserRouter, Navigate, useNavigation } from "react-router";
+import { Config } from "../shared/config";
+import { UrlUtil } from "../shared/util";
+import {
+  ProjectEditorPage,
+  HomePage,
+  ProfilePage,
+  SignInPage,
+  SignUpPage,
+  PlanEditorPage,
+} from "../pages";
+import { authClient } from "../shared/betterAuth";
+import { Outlet } from "react-router";
+import { store } from "../slices/store";
+import { accountRestored } from "../slices/account/slice";
+
+async function loadSessionIfExists() {
+  if (store.getState().account) {
+    return;
+  }
+  const { data } = await authClient.getSession();
+  if (data) {
+    store.dispatch(
+      accountRestored({
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        avatarUrl: data.user.image || null,
+        dtCreated: data.user.createdAt.toISOString(),
+      }),
+    );
+  }
+}
+
+function SessionLoader() {
+  const navigation = useNavigation();
+  const isNavigating = Boolean(navigation.location);
+  return <>{isNavigating ? <>Loading</> : <Outlet />}</>;
+}
 
 export const router = createBrowserRouter(
   [
     {
-      path: "/projects",
-      element: <Projects />,
-    },
-    {
-      path: "/projects/:projectId",
-      element: <Project />,
-    },
-    {
-      path: "/projects/:projectId/plans/:planId",
-      element: <Project />,
-    },
-    {
-      path: "/profile",
-      element: <Profile />,
+      path: "/",
+      Component: SessionLoader,
+      loader: loadSessionIfExists,
+      children: [
+        {
+          path: "/",
+          element: <HomePage />,
+        },
+        {
+          path: "/profile",
+          element: <ProfilePage />,
+        },
+        {
+          path: "/editor/project/:projectId",
+          element: <ProjectEditorPage />,
+        },
+        {
+          path: "/editor/project/:projectId/plan/:planId",
+          element: <PlanEditorPage />,
+        },
+      ],
     },
     {
       path: "/sign-in",
-      element: <SignIn />,
+      element: <SignInPage />,
     },
     {
       path: "/sign-up",
-      element: <SignUp />,
+      element: <SignUpPage />,
     },
     {
       path: "*",
-      element: <Navigate to="/sign-in" />,
+      element: <Navigate to="/" />,
     },
   ],
-  { basename: withoutTrailingSlash(CONFIG.proxy.basePath) },
+  { basename: UrlUtil.noRightSlash(Config.proxy.basePath) },
 );

@@ -1,3 +1,0 @@
-export const MAX_PROJECT_NAME_LENGTH = 256;
-export const MAX_PROJECT_DESCRIPTION_LENGTH = 2048;
-export const MAX_PROJECTS_COUNT = 20;

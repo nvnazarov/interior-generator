@@ -1,6 +1,6 @@
-export const CONFIG = {
+export const Config = {
   gateway: {
-    baseURL: import.meta.env.FRONTEND__API_GATEWAY__BASE_URL,
+    baseUrl: import.meta.env.FRONTEND__API_GATEWAY__BASE_URL,
   },
   proxy: {
     basePath: import.meta.env.FRONTEND__PROXY__BASE_PATH,
