@@ -58,7 +58,10 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
               <Button
                 icon={item.icon}
                 title={item.name}
-                onClick={item.onClick}
+                onClick={(e) => {
+                  hide();
+                  item.onClick?.(e);
+                }}
               />
             </div>
           ))}

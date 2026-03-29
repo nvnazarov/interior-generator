@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import type { Door, Wall } from "../api/entities";
 import { CM } from "./lib";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import { useContextMenu } from "../../shared/hooks/contextMenu";
 import { useAppDispatch } from "../storeTypes";
@@ -10,6 +10,7 @@ import { projectChanged } from "./slice";
 export function DoorMesh({ door, wall }: { door: Door; wall: Wall }) {
   const dispatch = useAppDispatch();
   const menu = useContextMenu();
+  const [hovered, setHovered] = useState(false);
 
   const wallStart = new THREE.Vector3(wall.x1, 0, wall.y1);
   const wallEnd = new THREE.Vector3(wall.x2, 0, wall.y2);
@@ -59,14 +60,26 @@ export function DoorMesh({ door, wall }: { door: Door; wall: Wall }) {
     });
   }, []);
 
+  const handlePointerEnter = useCallback((e: ThreeEvent<PointerEvent>) => {
+    setHovered(true);
+    e.stopPropagation();
+  }, []);
+
+  const handlePointerOut = useCallback((e: ThreeEvent<PointerEvent>) => {
+    setHovered(false);
+    e.stopPropagation();
+  }, []);
+
   return (
     <mesh
       position={[center.x, door.h / 2, center.z]}
       rotation={[0, -angle, 0]}
       onContextMenu={handleContextMenu}
+      onPointerEnter={handlePointerEnter}
+      onPointerOut={handlePointerOut}
     >
       <boxGeometry args={[length, door.h, 24 * CM]} />
-      <meshStandardMaterial color="brown" />
+      <meshStandardMaterial color={hovered ? "hotpink" : "brown"} />
     </mesh>
   );
 }

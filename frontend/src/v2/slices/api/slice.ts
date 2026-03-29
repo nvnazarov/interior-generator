@@ -162,25 +162,25 @@ const api = createApi({
             content: content === undefined ? undefined : ({
               walls: content.walls,
               wet_areas: content.wetAreas,
-              windows: windows && Object.entries(windows).map(([id, window]) => ({
+              windows: windows && Object.entries(windows).map(([id, window]): [string, any] => (window ? [id, {
                 id: id,
                 wall_id: window?.wallId,
                 x: window?.x,
                 y: window?.y,
                 w: window?.w,
                 h: window?.h,
-              })).reduce((acc, curr) => {
-                acc[curr.id] = curr
+              }] : [id, null])).reduce((acc, curr) => {
+                acc[curr[0]] = curr[1]
                 return acc
               }, {} as any),
-              doors: doors && Object.entries(doors).map(([id, door]) => ({
+              doors: doors && Object.entries(doors).map(([id, door]): [string, any] => (door ? [id, {
                 id: id,
                 wall_id: door?.wallId,
                 x: door?.x,
                 w: door?.w,
                 h: door?.h,
-              })).reduce((acc, curr) => {
-                acc[curr.id] = curr
+              }] : [id, null])).reduce((acc, curr) => {
+                acc[curr[0]] = curr[1]
                 return acc
               }, {} as any),
             })
