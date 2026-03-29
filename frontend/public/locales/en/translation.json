@@ -38,5 +38,31 @@
         }
       }
     }
+  },
+  "ProjectEditor": {
+    "WallMesh": {
+      "Name": "Wall",
+      "DeleteOption": {
+        "Title": "Delete"
+      }
+    },
+    "WindowMesh": {
+      "Name": "Window",
+      "DeleteOption": {
+        "Title": "Delete"
+      }
+    },
+    "DoorMesh": {
+      "Name": "Door",
+      "DeleteOption": {
+        "Title": "Delete"
+      }
+    },
+    "WetAreaMesh": {
+      "Name": "Wet area",
+      "DeleteOption": {
+        "Title": "Delete"
+      }
+    }
   }
 }

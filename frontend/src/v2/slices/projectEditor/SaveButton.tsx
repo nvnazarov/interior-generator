@@ -7,6 +7,7 @@ import {
   selectProjectEditor,
 } from "./slice";
 import { usePatchProjectMutation } from "../api/slice";
+import { useTranslation } from "react-i18next";
 
 export function SaveButton() {
   const dispatch = useAppDispatch();
@@ -40,7 +41,7 @@ export function SaveButton() {
 
   return (
     <Button
-      title="Save"
+      icon="sync.png"
       onClick={handleClick}
       loading={isSaving}
       disabled={isProjectSaved}

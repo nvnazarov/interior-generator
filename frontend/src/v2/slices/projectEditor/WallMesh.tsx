@@ -7,6 +7,7 @@ import { useCallback, useMemo, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import { v4 as uuidv4 } from "uuid";
 import { useContextMenu } from "../../shared/hooks/contextMenu";
+import { useTranslation } from "react-i18next";
 
 function WindowPreview({
   startPoint,
@@ -97,6 +98,7 @@ export function WallMesh({ wall }: { wall: Wall }) {
   const [endPoint, setEndPoint] = useState<[number, number]>([0, 0]);
   const [isCreatingWindowOrDoor, setIsCreatingWindowOrDoor] = useState(false);
   const menu = useContextMenu();
+  const { t } = useTranslation();
 
   const start = new THREE.Vector3(wall.x1, 0, wall.y1);
   const end = new THREE.Vector3(wall.x2, 0, wall.y2);
@@ -231,12 +233,12 @@ export function WallMesh({ wall }: { wall: Wall }) {
   const handleContextMenu = useCallback((e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
     menu.show({
-      title: "Wall",
+      title: t("ProjectEditor.WallMesh.Name", "Wall"),
       x: e.clientX,
       y: e.clientY,
       items: [
         {
-          name: "Delete",
+          name: t("ProjectEditor.WallMesh.DeleteOption.Title", "Delete"),
           onClick: () => {
             dispatch(
               projectChanged({

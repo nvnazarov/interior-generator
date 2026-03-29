@@ -6,11 +6,13 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { useContextMenu } from "../../shared/hooks/contextMenu";
 import { useAppDispatch } from "../storeTypes";
 import { projectChanged } from "./slice";
+import { useTranslation } from "react-i18next";
 
 export function DoorMesh({ door, wall }: { door: Door; wall: Wall }) {
   const dispatch = useAppDispatch();
   const menu = useContextMenu();
   const [hovered, setHovered] = useState(false);
+  const { t } = useTranslation();
 
   const wallStart = new THREE.Vector3(wall.x1, 0, wall.y1);
   const wallEnd = new THREE.Vector3(wall.x2, 0, wall.y2);
@@ -29,12 +31,12 @@ export function DoorMesh({ door, wall }: { door: Door; wall: Wall }) {
   const handleContextMenu = useCallback((e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
     menu.show({
-      title: "Door",
+      title: t("ProjectEditor.DoorMesh.Name", "Door"),
       x: e.clientX,
       y: e.clientY,
       items: [
         {
-          name: "Delete",
+          name: t("ProjectEditor.DoorMesh.DeleteOption.Title", "Delete"),
           onClick: () => {
             dispatch(
               projectChanged({

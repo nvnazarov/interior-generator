@@ -38,5 +38,31 @@
         }
       }
     }
+  },
+  "ProjectEditor": {
+    "WallMesh": {
+      "Name": "Несущая стена",
+      "DeleteOption": {
+        "Title": "Удалить"
+      }
+    },
+    "WindowMesh": {
+      "Name": "Окно",
+      "DeleteOption": {
+        "Title": "Удалить"
+      }
+    },
+    "DoorMesh": {
+      "Name": "Дверь",
+      "DeleteOption": {
+        "Title": "Удалить"
+      }
+    },
+    "WetAreaMesh": {
+      "Name": "Мокрая зона",
+      "DeleteOption": {
+        "Title": "Удалить"
+      }
+    }
   }
 }

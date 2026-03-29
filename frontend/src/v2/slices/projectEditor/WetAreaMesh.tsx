@@ -6,6 +6,7 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { useContextMenu } from "../../shared/hooks/contextMenu";
 import { projectChanged } from "./slice";
 import { useAppDispatch } from "../storeTypes";
+import { useTranslation } from "react-i18next";
 
 const WET_AREA_MATERIAL = new THREE.MeshStandardMaterial({
   color: "lightblue",
@@ -18,6 +19,7 @@ export function WetAreaMesh({ wetArea }: { wetArea: WetArea }) {
   const dispatch = useAppDispatch();
   const menu = useContextMenu();
   const [hovered, setHovered] = useState(false);
+  const { t } = useTranslation();
 
   const size = new THREE.Vector3(wetArea.w, 0, wetArea.h);
   const corner = new THREE.Vector3(wetArea.x, 0, wetArea.y);
@@ -26,12 +28,12 @@ export function WetAreaMesh({ wetArea }: { wetArea: WetArea }) {
   const handleContextMenu = useCallback((e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
     menu.show({
-      title: "Wet area",
+      title: t("ProjectEditor.WetAreaMesh.Name", "Wet area"),
       x: e.clientX,
       y: e.clientY,
       items: [
         {
-          name: "Delete",
+          name: t("ProjectEditor.WetAreaMesh.DeleteOption.Title", "Delete"),
           onClick: () => {
             dispatch(
               projectChanged({
