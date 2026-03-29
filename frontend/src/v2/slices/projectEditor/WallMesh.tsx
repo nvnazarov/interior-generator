@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from "../storeTypes";
 import { useCallback, useMemo, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import { v4 as uuidv4 } from "uuid";
+import { useContextMenu } from "../../shared/hooks/contextMenu";
 
 function WindowPreview({
   startPoint,
@@ -91,9 +92,11 @@ function DoorPreview({
 export function WallMesh({ wall }: { wall: Wall }) {
   const dispatch = useAppDispatch();
   const tool = useAppSelector(selectProjectEditorTool);
+  const [hovered, setHovered] = useState(false);
   const [startPoint, setStartPoint] = useState<[number, number]>([0, 0]);
   const [endPoint, setEndPoint] = useState<[number, number]>([0, 0]);
   const [isCreatingWindowOrDoor, setIsCreatingWindowOrDoor] = useState(false);
+  const menu = useContextMenu();
 
   const start = new THREE.Vector3(wall.x1, 0, wall.y1);
   const end = new THREE.Vector3(wall.x2, 0, wall.y2);
@@ -156,6 +159,9 @@ export function WallMesh({ wall }: { wall: Wall }) {
       const y1 = Math.min(startPoint[1], endPoint[1]);
       const y2 = Math.max(startPoint[1], endPoint[1]);
       if (tool === "window") {
+        if (x2 - x1 <= 0 || y2 - y1 <= 0) {
+          return;
+        }
         const window: Window = {
           id: uuidv4(),
           wallId: wall.id,
@@ -184,6 +190,9 @@ export function WallMesh({ wall }: { wall: Wall }) {
         );
       }
       if (tool === "door") {
+        if (x2 - x1 <= 0) {
+          return;
+        }
         const door: Door = {
           id: uuidv4(),
           wallId: wall.id,
@@ -219,18 +228,65 @@ export function WallMesh({ wall }: { wall: Wall }) {
     setIsCreatingWindowOrDoor(false);
   }, []);
 
+  const handleContextMenu = useCallback((e: ThreeEvent<MouseEvent>) => {
+    e.stopPropagation();
+    menu.show({
+      title: "Wall",
+      x: e.clientX,
+      y: e.clientY,
+      items: [
+        {
+          name: "Delete",
+          onClick: () => {
+            dispatch(
+              projectChanged({
+                patch: {
+                  content: {
+                    walls: {
+                      [wall.id]: null,
+                    },
+                  },
+                },
+                inversePatch: {
+                  content: {
+                    walls: {
+                      [wall.id]: wall,
+                    },
+                  },
+                },
+              }),
+            );
+          },
+        },
+      ],
+    });
+  }, []);
+
+  const handlePointerEnter = useCallback((e: ThreeEvent<PointerEvent>) => {
+    setHovered(true);
+    e.stopPropagation();
+  }, []);
+
+  const handlePointerOut = useCallback((e: ThreeEvent<PointerEvent>) => {
+    setHovered(false);
+    e.stopPropagation();
+  }, []);
+
   return (
     <>
       <mesh
         position={[center.x, (3 * M) / 2, center.z]}
         rotation={[0, -angle, 0]}
+        onPointerEnter={handlePointerEnter}
+        onPointerOut={handlePointerOut}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerLeave}
+        onContextMenu={handleContextMenu}
       >
         <boxGeometry args={[length, 3 * M, 20 * CM]} />
-        <meshStandardMaterial color="white" />
+        <meshStandardMaterial color={hovered ? "hotpink" : "white"} />
       </mesh>
       {isCreatingWindowOrDoor &&
         (tool === "window" ? (

@@ -14,10 +14,12 @@ import { M } from "./lib";
 import { ProjectMesh } from "./ProjectMesh";
 import { WallTool } from "./WallTool";
 import { WetAreaTool } from "./WetAreaTool";
+import { useContextMenu } from "../../shared/hooks/contextMenu";
 
 const { ACTION } = CameraControlsImpl;
 
 export function Scene() {
+  const menu = useContextMenu();
   const view = useAppSelector(selectProjectEditorView);
   const tool = useAppSelector(selectProjectEditorTool);
   const toolIsHand = tool === "hand";
@@ -26,9 +28,14 @@ export function Scene() {
   const toolIsDoorOrWindow = ["window", "door"].includes(tool);
 
   return (
-    <Canvas>
-      <ambientLight intensity={1} />
-      <directionalLight position={[5, 5, 5]} />
+    <Canvas
+      onPointerDown={() => menu.hide()}
+      gl={{ logarithmicDepthBuffer: true }}
+    >
+      <ambientLight intensity={0.15} />
+      <directionalLight position={[5, 5, 3]} intensity={1} />
+      <directionalLight position={[-3, 2, 4]} intensity={0.4} color="#ffaa88" />
+      <directionalLight position={[0, 3, -5]} intensity={0.6} color="#88aaff" />
       {view === "2D" ? (
         <>
           <OrthographicCamera
@@ -56,9 +63,9 @@ export function Scene() {
           <PerspectiveCamera
             position={[0, 20 * M, 0]}
             rotation={[-Math.PI / 2, 0, 0]}
-            far={10000 * M}
+            far={100 * M}
             zoom={1}
-            near={0.01}
+            near={0.1}
             makeDefault
           />
           <CameraControls

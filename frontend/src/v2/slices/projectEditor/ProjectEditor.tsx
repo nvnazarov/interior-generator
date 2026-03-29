@@ -6,7 +6,7 @@ import { SaveButton } from "./SaveButton";
 import { UndoChangeButton } from "./UndoChangeButton";
 import { useAppDispatch } from "../storeTypes";
 import { projectOpened } from "./slice";
-import { Button } from "../../shared/components";
+import { Button, ContextMenuProvider } from "../../shared/components";
 import { Scene } from "./Scene";
 import { ChangeViewButton } from "./ChangeViewButton";
 import { SelectToolButton } from "./SelectToolButton";
@@ -33,7 +33,7 @@ export function ProjectEditor({ projectId }: { projectId: string }) {
   }
 
   return (
-    <>
+    <ContextMenuProvider>
       <div className="project-editor__project-editor__menu">
         <div>
           <SelectToolButton icon="hand.png" tool="hand" />
@@ -54,6 +54,6 @@ export function ProjectEditor({ projectId }: { projectId: string }) {
         </div>
       </div>
       <Scene />
-    </>
+    </ContextMenuProvider>
   );
 }

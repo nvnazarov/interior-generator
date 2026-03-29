@@ -1,0 +1,32 @@
+.shared__context-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+  border: 1px solid #ddd;
+  box-shadow: rgba(17, 17, 26, 0.1) 0px 0px 16px;
+  background-color: white;
+  border-radius: 10px;
+
+  h1 {
+    font-size: 1em;
+    font-weight: normal;
+    padding: 5px;
+    border-bottom: 1px solid #ddd;
+  }
+
+  &__item {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    gap: 5px;
+    padding: 5px;
+    img {
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
