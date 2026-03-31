@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 from uuid import UUID
 
@@ -23,6 +24,8 @@ from app.core.project import PatchError as ProjectPatchError
 from app.core.project import PlansLimitExceededError, Project
 from app.core.project import RevisionError as ProjectRevisionError
 from app.core.service import PlanNotFoundError, ProjectNotFoundError, Service
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_HEADER = "x-account-id"
 
@@ -271,7 +274,8 @@ class ASGI(FastAPI):
                 attach_plan_etag(response, plan)
             except PlanNotFoundError:
                 raise HTTPPlanNotFound
-            except PlanPatchError:
+            except PlanPatchError as e:
+                logger.error({"msg": "plan patch error", "error": str(e)})
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="invalid patch",

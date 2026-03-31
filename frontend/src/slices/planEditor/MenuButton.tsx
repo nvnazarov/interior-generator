@@ -5,10 +5,13 @@ import { useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "../storeTypes";
 import {
   useCreatePlanMutation,
+  useDeletePlanMutation,
   useGetAllPlansInProjectQuery,
   usePatchPlanMutation,
 } from "../api/slice";
 import { planSaved, selectPlanEditor } from "./slice";
+import { UrlUtil } from "../../shared/util";
+import { Config } from "../../shared/config";
 
 export function MenuButton({
   planId,
@@ -23,6 +26,7 @@ export function MenuButton({
   const navigate = useNavigate();
   const [patchPlan] = usePatchPlanMutation();
   const [createPlan] = useCreatePlanMutation();
+  const [deletePlan] = useDeletePlanMutation();
   const { data } = useGetAllPlansInProjectQuery(projectId);
 
   const handleClick = useCallback(() => {
@@ -48,21 +52,72 @@ export function MenuButton({
           },
         },
         {
+          name: "Edit project",
+          onClick: async () => {
+            if (editor.plan) {
+              navigate(`/editor/project/${editor.plan.projectId}`);
+            }
+          },
+        },
+        {
+          divider: true,
+        },
+        {
+          name: "Export (DXF)",
+          onClick: async () => {
+            if (editor.plan) {
+              const resp = await fetch(
+                `${UrlUtil.noRightSlash(Config.gateway.baseUrl)}/api/plans/${editor.plan.id}/export/dxf`,
+                {
+                  method: "POST",
+                  body: "{}",
+                  headers: { "Content-Type": "application/json" },
+                },
+              );
+              if (!resp.ok) {
+                throw new Error("error: export plan dxf: response is not ok");
+              }
+              const blob = await resp.blob();
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `${editor.plan.id}.dxf`;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              window.URL.revokeObjectURL(url);
+            }
+          },
+        },
+        {
+          name: "Delete plan",
+          onClick: async () => {
+            if (editor.plan) {
+              await deletePlan(planId).unwrap();
+              navigate(`/editor/project/${projectId}`);
+            }
+          },
+        },
+        {
           name: "Create plan",
           onClick: async () => {
             if (editor.plan) {
               const plan = await createPlan(projectId).unwrap();
-              navigate(`/projects/${projectId}/plans/${plan.id}`);
+              navigate(`/editor/project/${projectId}/plan/${plan.id}`);
             }
           },
         },
+        {
+          divider: true,
+        },
         ...(data || []).map((plan) => ({
           name: plan.name || "Untitiled plan",
-          onClick: () => navigate(`/projects/${projectId}/plans/${plan.id}`),
+          onClick: () =>
+            navigate(`/editor/project/${projectId}/plan/${plan.id}`),
         })),
       ],
     });
-  }, [menu, editor, projectId, dispatch]);
+  }, [menu, editor, projectId, planId, dispatch]);
 
   return (
     <Button icon="menu.png" onClick={handleClick} disabled={!editor.plan} />

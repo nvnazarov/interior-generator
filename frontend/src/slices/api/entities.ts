@@ -107,5 +107,6 @@ export interface Furniture {
   modelPath: string;
   thumbnailPath: string;
   iconPath: string;
+  mount: string;
   meta: Record<string, any>;
 }

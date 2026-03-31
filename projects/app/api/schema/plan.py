@@ -9,10 +9,11 @@ from app.core.plan import Plan as CorePlan
 
 class Furniture(BaseModel):
     id: str
+    furniture_id: str
     x: int
     y: int
     z: int
-    yaw: int
+    yaw: float
 
 
 class Area(BaseModel):
@@ -31,10 +32,11 @@ class Content(BaseModel):
 
 class FurniturePatch(BaseModel):
     id: str
+    furniture_id: str | None = None
     x: int | None = None
     y: int | None = None
     z: int | None = None
-    yaw: int | None = None
+    yaw: float | None = None
 
 
 class AreaPatch(BaseModel):

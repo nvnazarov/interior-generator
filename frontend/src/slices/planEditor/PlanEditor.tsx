@@ -4,13 +4,16 @@ import { useLazyGetPlanByIdQuery } from "../api/slice";
 import { RedoChangeButton } from "./RedoChangeButton";
 import { SaveButton } from "./SaveButton";
 import { UndoChangeButton } from "./UndoChangeButton";
-import { useAppDispatch } from "../storeTypes";
-import { planOpened } from "./slice";
+import { useAppDispatch, useAppSelector } from "../storeTypes";
+import { planOpened, selectIsCatalogOpen } from "./slice";
 import { Button, ContextMenuProvider } from "../../shared/components";
 import { Scene } from "./Scene";
 import { ChangeViewButton } from "./ChangeViewButton";
 import { SelectToolButton } from "./SelectToolButton";
 import { MenuButton } from "./MenuButton";
+import { FurnitureCatalog } from "./FurnitureCatalog";
+import { FurnitureCatalogSwitch } from "./FurnitureCatalogSwitch";
+import { NameInput } from "./NameInput";
 
 export function PlanEditor({
   projectId,
@@ -21,14 +24,15 @@ export function PlanEditor({
 }) {
   const [getPlanById, { error }] = useLazyGetPlanByIdQuery();
   const dispatch = useAppDispatch();
+  const isCatalogOpen = useAppSelector(selectIsCatalogOpen);
 
   useEffect(() => {
-    async function loadProject() {
-      const project = await getPlanById(planId).unwrap();
-      dispatch(planOpened(project));
+    async function loadPlan() {
+      const plan = await getPlanById(planId).unwrap();
+      dispatch(planOpened(plan));
     }
-    loadProject();
-  }, []);
+    loadPlan();
+  }, [planId]);
 
   if (error) {
     return (
@@ -46,9 +50,12 @@ export function PlanEditor({
         </div>
         <span />
         <div>
+          <NameInput />
+        </div>
+        <div>
           <SelectToolButton icon="hand.png" tool="hand" />
           <SelectToolButton icon="area.png" tool="area" />
-          <SelectToolButton icon="furniture.png" tool="furniture" />
+          <SelectToolButton icon="move.png" tool="furniture" />
         </div>
         <div>
           <ChangeViewButton />
@@ -61,7 +68,11 @@ export function PlanEditor({
           <SaveButton />
         </div>
         <span />
+        <div>
+          <FurnitureCatalogSwitch />
+        </div>
       </div>
+      <div>{isCatalogOpen && <FurnitureCatalog />}</div>
       <Scene />
     </ContextMenuProvider>
   );

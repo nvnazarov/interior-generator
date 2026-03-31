@@ -2,12 +2,13 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { Furniture, Project, Plan, ProjectPatch, PlanPatch } from "./entities";
 import {
   FurnitureCatalogResponseSchema,
+  RawFurnitureSchema,
   RawPlansArraySchema,
   RawPlanSchema,
   RawProjectsArraySchema,
   RawProjectSchema,
 } from "./schema";
-import type { FurnitureCatalogResponse, RawPlan, RawProject } from "./schema";
+import type { FurnitureCatalogResponse, RawFurniture, RawPlan, RawProject } from "./schema";
 import { mapById } from "./util";
 import { Config } from "../../shared/config";
 import { UrlUtil } from "../../shared/util";
@@ -357,9 +358,26 @@ const api = createApi({
           modelPath: raw.model_path,
           thumbnailPath: raw.thumbnail_path,
           iconPath: raw.icon_path,
+          mount: raw.mount,
           meta: raw.meta,
         })),
         cursor: response.meta.cursor || undefined,
+      }),
+    }),
+    getFurnitureById: builder.query<Furniture, string>({
+      query: (furnitureId: string) => `catalog/furniture/${furnitureId}`,
+      rawResponseSchema: RawFurnitureSchema,
+      transformResponse: (raw: RawFurniture) => ({
+        id: raw.id,
+        name: raw.name,
+        width: raw.width,
+        height: raw.height,
+        depth: raw.depth,
+        mount: raw.mount,
+        modelPath: raw.model_path,
+        iconPath: raw.icon_path,
+        thumbnailPath: raw.thumbnail_path,
+        meta: raw.meta,
       }),
     }),
   }),
@@ -375,10 +393,12 @@ export const {
   usePublishProjectMutation,
   useUnpublishProjectMutation,
   usePatchProjectMutation,
-  useGetFurnitureInfiniteQuery,
   useGetAllPlansInProjectQuery,
   useLazyGetPlanByIdQuery,
   useCreatePlanMutation,
   useDeletePlanMutation,
   usePatchPlanMutation,
+  useGetFurnitureInfiniteQuery,
+  useGetFurnitureByIdQuery,
+  useLazyGetFurnitureByIdQuery,
 } = api;

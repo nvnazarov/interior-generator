@@ -1,4 +1,3 @@
-import { Button } from "./Button";
 import "./ContextMenu.scss";
 import React, {
   createContext,
@@ -11,6 +10,7 @@ import React, {
 export interface ContextMenuItem {
   icon?: string;
   name?: string;
+  divider?: boolean;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
@@ -53,18 +53,23 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
       {isShown && (
         <div className="shared__context-menu" style={style}>
           {options.title && <h1>{options.title}</h1>}
-          {(options.items || []).map((item, idx) => (
-            <div key={idx} className="shared__context-menu__item">
-              <Button
-                icon={item.icon}
-                title={item.name}
-                onClick={(e) => {
-                  hide();
-                  item.onClick?.(e);
-                }}
-              />
-            </div>
-          ))}
+          {(options.items || []).map((item, idx) => {
+            if (item.divider) {
+              return <span key={idx} />;
+            } else {
+              return (
+                <button
+                  key={idx}
+                  onClick={(e) => {
+                    hide();
+                    item.onClick?.(e);
+                  }}
+                >
+                  {item.name}
+                </button>
+              );
+            }
+          })}
         </div>
       )}
     </ContextMenuContext.Provider>

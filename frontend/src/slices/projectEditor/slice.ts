@@ -63,6 +63,18 @@ const projectEditorSlice = createSlice({
         state.tool = "hand";
       }
     },
+    projectUndoablyChanged: (state, action: PayloadAction<ProjectPatch>) => {
+      const patch = action.payload;
+      if (state.project) {
+        state.project = applyJsonMergePatch(state.project, patch);
+      } else {
+        throw new Error("error: project undoably changed: project is not initialized");
+      }
+      state.unsavedAccumulatedPatch = combineJsonMergePatches(
+        state.unsavedAccumulatedPatch,
+        patch,
+      );
+    },
     projectChanged: (state, action: PayloadAction<ProjectChange>) => {
       const change = action.payload;
       if (state.project) {
@@ -137,4 +149,5 @@ export const {
   projectSaved,
   projectChanged,
   projectOpened,
+  projectUndoablyChanged,
 } = projectEditorSlice.actions;

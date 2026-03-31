@@ -1,8 +1,23 @@
-import type { Wall } from "../api/entities";
+import { type Furniture, type Wall } from "../api/entities";
 import * as THREE from "three";
-import { CM, M } from "./lib";
+import { CM, M, snapToGridVector3 } from "./lib";
+import { useAppDispatch, useAppSelector } from "../storeTypes";
+import {
+  furniturePreviewUpdated,
+  hideFurniturePreview,
+  selectFurnitureDrag,
+  showFurniturePreview,
+} from "./slice";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLazyGetFurnitureByIdQuery } from "../api/slice";
+import type { ThreeEvent } from "@react-three/fiber";
 
 export function WallMesh({ wall }: { wall: Wall }) {
+  const dispatch = useAppDispatch();
+  const furnitureDrag = useAppSelector(selectFurnitureDrag);
+  const [furniture, setFurniture] = useState<Furniture | null>(null);
+  const [getFurnitureById] = useLazyGetFurnitureByIdQuery();
+
   const start = new THREE.Vector3(wall.x1, 0, wall.y1);
   const end = new THREE.Vector3(wall.x2, 0, wall.y2);
   const length = start.distanceTo(end) + 20 * CM;
@@ -11,15 +26,96 @@ export function WallMesh({ wall }: { wall: Wall }) {
   const direction = new THREE.Vector3().subVectors(end, start).normalize();
   const angle = Math.atan2(direction.z, direction.x);
 
-  return (
-    <>
+  useEffect(() => {
+    if (furnitureDrag) {
+      getFurnitureById(furnitureDrag.furnitureId)
+        .unwrap()
+        .then((f) => setFurniture(f));
+    }
+  }, [furnitureDrag]);
+
+  const handlePointerMove = useCallback(
+    async (e: ThreeEvent<PointerEvent>) => {
+      if (furnitureDrag && furniture) {
+        e.stopPropagation();
+        const normal = e.normal?.clone();
+        if (!normal) {
+          return;
+        }
+        normal.applyQuaternion(e.object.quaternion).normalize();
+        const yaw = Math.atan2(normal.x, normal.z);
+        normal.multiplyScalar(furniture.depth / 2);
+        const point = snapToGridVector3(e.point, CM).add(normal);
+        switch (furniture.mount) {
+          case "floor": {
+            point.y = furniture.height / 2;
+            break;
+          }
+          case "ceiling": {
+            point.y = 3 * M - furniture.height / 2;
+            break;
+          }
+          case "wall": {
+            break;
+          }
+        }
+        dispatch(
+          furniturePreviewUpdated({
+            x: point.x,
+            y: point.y,
+            z: point.z,
+            yaw: yaw,
+          }),
+        );
+      }
+    },
+    [furnitureDrag, furniture],
+  );
+
+  const handlePointerOut = useCallback(
+    (e: ThreeEvent<PointerEvent>) => {
+      if (furnitureDrag) {
+        e.stopPropagation();
+        dispatch(hideFurniturePreview());
+      }
+    },
+    [furnitureDrag],
+  );
+
+  const handlePointerEnter = useCallback(
+    (e: ThreeEvent<PointerEvent>) => {
+      if (furnitureDrag && furniture) {
+        e.stopPropagation();
+        const point = snapToGridVector3(e.point, CM);
+        dispatch(
+          showFurniturePreview({
+            furnitureId: furnitureDrag.furnitureId,
+            x: point.x,
+            y: point.y,
+            z: point.z,
+            yaw: 0,
+          }),
+        );
+      }
+    },
+    [furnitureDrag, furniture],
+  );
+
+  const mesh = useMemo(
+    () => (
       <mesh
         position={[center.x, (3 * M) / 2, center.z]}
         rotation={[0, -angle, 0]}
+        onPointerEnter={handlePointerEnter}
+        onPointerMove={handlePointerMove}
+        onPointerOut={handlePointerOut}
       >
         <boxGeometry args={[length, 3 * M, 20 * CM]} />
         <meshStandardMaterial color="white" />
       </mesh>
-    </>
+    ),
+    [handlePointerEnter, handlePointerMove, handlePointerOut],
   );
+
+  return mesh;
 }

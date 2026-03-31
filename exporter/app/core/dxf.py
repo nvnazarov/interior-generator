@@ -1,4 +1,5 @@
-from io import BytesIO
+from io import StringIO
+from typing import TextIO
 
 import ezdxf.filemanagement
 from ezdxf.lldxf.const import DXF2018
@@ -8,7 +9,7 @@ from app.core.models import Plan, Project
 
 
 class DXFRenderer:
-    def __init__(self, buffer: BytesIO):
+    def __init__(self, buffer: TextIO):
         self.doc = ezdxf.filemanagement.new(DXF2018, False, units=CM)
         self.buffer = buffer
 
@@ -20,8 +21,8 @@ class DXFRenderer:
         self.doc.write(self.buffer)
 
 
-def export_dxf(project: Project, plan: Plan) -> BytesIO:
-    buffer = BytesIO()
+def export_dxf(project: Project, plan: Plan) -> TextIO:
+    buffer = StringIO()
     renderer = DXFRenderer(buffer)
     renderer.draw(project, plan)
     renderer.flush()

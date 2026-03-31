@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from io import BytesIO
-from typing import AsyncIterable
+from typing import AsyncIterable, TextIO
 from uuid import UUID
 
 from app.core.dxf import export_dxf
@@ -46,7 +46,7 @@ class Exporter:
         bytes = await export_pdf(project, plans)
         return bytes
 
-    async def export_plan_dxf(self, plan_id: UUID, account_id: UUID) -> BytesIO:
+    async def export_plan_dxf(self, plan_id: UUID, account_id: UUID) -> TextIO:
         plan = await self.db.get_plan(account_id, plan_id)
         if plan is None:
             raise PlanNotFoundError

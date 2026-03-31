@@ -16,19 +16,20 @@ class PatchError(Exception): ...
 
 class Furniture(BaseModel):
     id: str
-    furniture_id: UUID
+    furniture_id: str
     x: int
     y: int
     z: int
-    yaw: int
+    yaw: float
 
 
 class FurniturePatch(BaseModel):
     id: str
+    furniture_id: str | None = None
     x: int | None = None
     y: int | None = None
     z: int | None = None
-    yaw: int | None = None
+    yaw: float | None = None
 
 
 class Area(BaseModel):
@@ -109,9 +110,7 @@ class Plan(BaseModel):
                             **furniture.model_dump()
                         )
                     except ValidationError:
-                        raise PatchError(
-                            f"furniture[id={furniture_id}] must be full"
-                        )
+                        raise PatchError(f"furniture[id={furniture_id}] must be full")
                 else:
                     self.content.furniture[furniture_id] = self._merge(
                         old_furniture, furniture

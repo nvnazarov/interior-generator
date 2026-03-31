@@ -1,16 +1,61 @@
-.editor__furniture-catalog {
+.plan-editor__furniture-catalog {
+  position: absolute;
+  top: 70px;
+  right: 10px;
   display: flex;
   flex-direction: column;
   gap: 5px;
-  background-color: #efefef;
-  border-radius: 20px;
-  border: 1px solid #aaa;
-  padding: 10px;
+  border: 1px solid #ddd;
+  box-shadow: rgba(17, 17, 26, 0.1) 0px 0px 16px;
+  border-radius: 10px;
+  background-color: white;
+  height: 500px;
+  z-index: 10;
 
   &__feed {
+    padding: 10px;
     display: flex;
     flex-direction: column;
     gap: 5px;
     overflow-y: scroll;
+
+    &__item {
+      width: 160px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 10px;
+
+      border: 1px solid #ddd;
+      box-shadow: rgba(17, 17, 26, 0.1) 0px 0px 16px;
+      border-radius: 10px;
+      background-color: white;
+
+      img {
+        aspect-ratio: 1;
+      }
+
+      span {
+        color: #bbb;
+        font-size: 0.8em;
+      }
+    }
+  }
+
+  &__filters {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    border-bottom: 1px solid #ddd;
+
+    div {
+      display: flex;
+      gap: 5px;
+
+      :nth-child(1) {
+        flex: 50px;
+      }
+    }
   }
 }

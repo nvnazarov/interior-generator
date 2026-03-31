@@ -94,6 +94,7 @@ export const RawFurnitureSchema = z.object({
   model_path: z.string(),
   thumbnail_path: z.string(),
   icon_path: z.string(),
+  mount: z.string(),
   meta: z.record(z.string(), z.any()),
 });
 

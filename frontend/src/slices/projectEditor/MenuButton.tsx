@@ -5,6 +5,7 @@ import { useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "../storeTypes";
 import {
   useCreatePlanMutation,
+  useDeleteProjectMutation,
   useGetAllPlansInProjectQuery,
   usePatchProjectMutation,
 } from "../api/slice";
@@ -17,6 +18,7 @@ export function MenuButton({ projectId }: { projectId: string }) {
   const navigate = useNavigate();
   const [patchProject] = usePatchProjectMutation();
   const [createPlan] = useCreatePlanMutation();
+  const [deleteProject] = useDeleteProjectMutation();
   const { data } = useGetAllPlansInProjectQuery(projectId);
 
   const handleClick = useCallback(() => {
@@ -42,6 +44,15 @@ export function MenuButton({ projectId }: { projectId: string }) {
           },
         },
         {
+          name: "Delete project",
+          onClick: async () => {
+            if (editor.project) {
+              await deleteProject(editor.project.id).unwrap();
+              navigate("/");
+            }
+          },
+        },
+        {
           name: "Create plan",
           onClick: async () => {
             if (editor.project) {
@@ -50,9 +61,13 @@ export function MenuButton({ projectId }: { projectId: string }) {
             }
           },
         },
+        {
+          divider: true,
+        },
         ...(data || []).map((plan) => ({
           name: plan.name || "Untitiled plan",
-          onClick: () => navigate(`/editor/project/${projectId}/plan/${plan.id}`),
+          onClick: () =>
+            navigate(`/editor/project/${projectId}/plan/${plan.id}`),
         })),
       ],
     });

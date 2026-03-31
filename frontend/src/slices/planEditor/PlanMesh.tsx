@@ -6,6 +6,7 @@ import { selectPlan } from "./slice";
 import { WallMesh } from "./WallMesh";
 import { WindowMesh } from "./WindowMesh";
 import { AreaMesh } from "./AreaMesh";
+import { FurnitureMesh } from "./FurnitureMesh";
 
 export function PlanMesh() {
   const plan = useAppSelector(selectPlan);
@@ -47,6 +48,9 @@ export function PlanMesh() {
       })}
       {Object.entries(plan.content.areas).map(([id, area]) => (
         <AreaMesh key={id} area={area} />
+      ))}
+      {Object.entries(plan.content.furniture).map(([id, furniture]) => (
+        <FurnitureMesh key={id} furniture={furniture} />
       ))}
     </>
   );

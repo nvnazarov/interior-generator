@@ -11,6 +11,7 @@ import { Scene } from "./Scene";
 import { ChangeViewButton } from "./ChangeViewButton";
 import { SelectToolButton } from "./SelectToolButton";
 import { MenuButton } from "./MenuButton";
+import { NameInput } from "./NameInput";
 
 export function ProjectEditor({ projectId }: { projectId: string }) {
   const [getProjectById, { error }] = useLazyGetProjectByIdQuery();
@@ -39,6 +40,9 @@ export function ProjectEditor({ projectId }: { projectId: string }) {
           <MenuButton projectId={projectId} />
         </div>
         <span />
+        <div>
+          <NameInput />
+        </div>
         <div>
           <SelectToolButton icon="hand.png" tool="hand" />
           <SelectToolButton icon="wall.png" tool="wall" />

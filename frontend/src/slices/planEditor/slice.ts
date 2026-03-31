@@ -15,6 +15,19 @@ type PlanChange = {
   inversePatch: PlanPatch;
 }
 
+type FurnitureDrag = {
+  furnitureId: string;
+  furnitureOnPlanId?: string;
+}
+
+type FurniturePreview = {
+  furnitureId: string;
+  x: number;
+  y: number;
+  z: number;
+  yaw: number;
+}
+
 type PlanEditorState = {
   plan: Plan | null;
   unsavedAccumulatedPatch: PlanPatch;
@@ -22,6 +35,9 @@ type PlanEditorState = {
   redoableChanges: PlanChange[];
   view: View;
   tool: Tool;
+  isCatalogOpen: boolean;
+  furnitureDrag: FurnitureDrag | null;
+  furniturePreview: FurniturePreview | null;
 };
 
 const planEditorSlice = createSlice({
@@ -33,6 +49,9 @@ const planEditorSlice = createSlice({
     redoableChanges: [],
     view: "2D",
     tool: "hand",
+    isCatalogOpen: false,
+    furnitureDrag: null,
+    furniturePreview: null,
   } as PlanEditorState,
   reducers: {
     planOpened: (state, action: PayloadAction<Plan>) => {
@@ -42,6 +61,7 @@ const planEditorSlice = createSlice({
       state.redoableChanges = [];
       state.view = "2D";
       state.tool = "hand";
+      state.isCatalogOpen = false;
     },
     toolSelected: (state, action: PayloadAction<Tool>) => {
       const tool = action.payload;
@@ -62,6 +82,18 @@ const planEditorSlice = createSlice({
       if (view === "3D" && state.tool === "area") {
         state.tool = "hand";
       }
+    },
+    planUndoablyChanged: (state, action: PayloadAction<PlanPatch>) => {
+      const patch = action.payload;
+      if (state.plan) {
+        state.plan = applyJsonMergePatch(state.plan, patch);
+      } else {
+        throw new Error("error: plan undoably changed: plan is not initialized");
+      }
+      state.unsavedAccumulatedPatch = combineJsonMergePatches(
+        state.unsavedAccumulatedPatch,
+        patch,
+      );
     },
     planChanged: (state, action: PayloadAction<PlanChange>) => {
       const change = action.payload;
@@ -117,6 +149,29 @@ const planEditorSlice = createSlice({
       }
       state.unsavedAccumulatedPatch = {};
     },
+    catalogSwitched: (state, action: PayloadAction<boolean>) => {
+      state.isCatalogOpen = action.payload;
+    },
+    startedDraggingFurniture: (state, action: PayloadAction<FurnitureDrag>) => {
+      state.furnitureDrag = action.payload;
+    },
+    finishedDraggingFurniture: (state) => {
+      state.furnitureDrag = null;
+      state.furniturePreview = null;
+    },
+    furniturePreviewUpdated: (state, action: PayloadAction<Partial<FurniturePreview>>) => {
+      if (state.furniturePreview) {
+        state.furniturePreview = { ...state.furniturePreview, ...action.payload };
+      } else {
+        // throw new Error("error: furniture preview update: preview is not enabled")
+      }
+    },
+    showFurniturePreview: (state, action: PayloadAction<FurniturePreview>) => {
+      state.furniturePreview = action.payload;
+    },
+    hideFurniturePreview: (state) => {
+      state.furniturePreview = null;
+    },
   },
 });
 
@@ -127,6 +182,8 @@ export const selectPlanEditorView = (state: AppState) => state.planEditor.view;
 export const selectPlanEditorTool = (state: AppState) => state.planEditor.tool;
 export const selectIsPlanSaved = (state: AppState) => Object.keys(state.planEditor.unsavedAccumulatedPatch).length === 0;
 export const selectPlan = (state: AppState) => state.planEditor.plan;
+export const selectIsCatalogOpen = (state: AppState) => state.planEditor.isCatalogOpen;
+export const selectFurnitureDrag = (state: AppState) => state.planEditor.furnitureDrag;
 
 export default planEditorSlice.reducer;
 export const {
@@ -137,4 +194,11 @@ export const {
   planSaved,
   planChanged,
   planOpened,
+  catalogSwitched,
+  startedDraggingFurniture,
+  finishedDraggingFurniture,
+  furniturePreviewUpdated,
+  showFurniturePreview,
+  hideFurniturePreview,
+  planUndoablyChanged,
 } = planEditorSlice.actions;

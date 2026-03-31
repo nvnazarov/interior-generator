@@ -1,7 +1,6 @@
 .shared__context-menu {
   display: flex;
   flex-direction: column;
-  gap: 5px;
   position: absolute;
   top: 20px;
   left: 20px;
@@ -10,6 +9,9 @@
   box-shadow: rgba(17, 17, 26, 0.1) 0px 0px 16px;
   background-color: white;
   border-radius: 10px;
+  padding: 5px;
+  gap: 5px;
+  max-width: 200px;
 
   h1 {
     font-size: 1em;
@@ -18,15 +20,20 @@
     border-bottom: 1px solid #ddd;
   }
 
-  &__item {
-    display: flex;
-    justify-content: start;
-    align-items: center;
-    gap: 5px;
+  span {
+    border-bottom: 1px solid #ddd;
+  }
+
+  button {
+    background-color: transparent;
     padding: 5px;
-    img {
-      width: 20px;
-      height: 20px;
-    }
+    border: none;
+    border-radius: 5px;
+    width: 100%;
+    text-align: left;
+  }
+
+  button:hover {
+    background-color: #ddd;
   }
 }
