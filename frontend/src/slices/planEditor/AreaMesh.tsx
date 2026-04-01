@@ -1,19 +1,12 @@
-import { Plane } from "@react-three/drei";
 import type { FunctionalArea } from "../api/entities";
 import * as THREE from "three";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import { useContextMenu } from "../../shared/hooks/contextMenu";
 import { planChanged } from "./slice";
 import { useAppDispatch } from "../storeTypes";
 import { useTranslation } from "react-i18next";
-
-const AREA_MATERIAL = new THREE.MeshStandardMaterial({
-  color: "lightblue",
-});
-const AREA_HOVERED_MATERIAL = new THREE.MeshStandardMaterial({
-  color: "hotpink",
-});
+import { areaColorByType } from "./lib";
 
 export function AreaMesh({ area }: { area: FunctionalArea }) {
   const dispatch = useAppDispatch();
@@ -21,43 +14,95 @@ export function AreaMesh({ area }: { area: FunctionalArea }) {
   const [hovered, setHovered] = useState(false);
   const { t } = useTranslation();
 
-  const size = new THREE.Vector3(area.w, 0, area.h);
-  const corner = new THREE.Vector3(area.x, 0, area.y);
-  const center = new THREE.Vector3().add(size).multiplyScalar(0.5).add(corner);
+  const shape = useMemo(() => {
+    const points = area.points;
+    const shape = new THREE.Shape();
+    shape.moveTo(points[0]!.x, points[0]!.y);
+    for (let i = 1; i < points.length; i++) {
+      shape.lineTo(points[i]!.x, points[i]!.y);
+    }
+    shape.closePath();
+    return shape;
+  }, [area.points]);
 
-  const handleContextMenu = useCallback((e: ThreeEvent<MouseEvent>) => {
-    e.stopPropagation();
-    menu.show({
-      title: t("ProjectEditor.WetAreaMesh.Name", "Wet area"),
-      x: e.clientX,
-      y: e.clientY,
-      items: [
-        {
-          name: t("ProjectEditor.WetAreaMesh.DeleteOption.Title", "Delete"),
-          onClick: () => {
-            dispatch(
-              planChanged({
-                patch: {
-                  content: {
-                    areas: {
-                      [area.id]: null,
+  const handleContextMenu = useCallback(
+    (e: ThreeEvent<MouseEvent>) => {
+      e.stopPropagation();
+      menu.show({
+        title: area.type,
+        x: e.clientX,
+        y: e.clientY,
+        items: [
+          {
+            name: t("ProjectEditor.WetAreaMesh.DeleteOption.Title", "Delete"),
+            onClick: () => {
+              dispatch(
+                planChanged({
+                  patch: {
+                    content: {
+                      areas: {
+                        [area.id]: null,
+                      },
                     },
                   },
-                },
-                inversePatch: {
-                  content: {
-                    areas: {
-                      [area.id]: area,
+                  inversePatch: {
+                    content: {
+                      areas: {
+                        [area.id]: area,
+                      },
                     },
                   },
-                },
-              }),
-            );
+                }),
+              );
+            },
           },
-        },
-      ],
-    });
-  }, []);
+          {
+            divider: true,
+          },
+          ...(
+            [
+              "kitchen",
+              "livingroom",
+              "bathroom",
+              "bedroom",
+              "hallway",
+            ] as FunctionalArea["type"][]
+          )
+            .filter((type) => type !== area.type)
+            .map((type) => ({
+              name: type,
+              onClick: () => {
+                dispatch(
+                  planChanged({
+                    patch: {
+                      content: {
+                        areas: {
+                          [area.id]: {
+                            id: area.id,
+                            type: type,
+                          },
+                        },
+                      },
+                    },
+                    inversePatch: {
+                      content: {
+                        areas: {
+                          [area.id]: {
+                            id: area.id,
+                            type: area.type,
+                          },
+                        },
+                      },
+                    },
+                  }),
+                );
+              },
+            })),
+        ],
+      });
+    },
+    [area],
+  );
 
   const handlePointerEnter = useCallback((e: ThreeEvent<PointerEvent>) => {
     setHovered(true);
@@ -70,14 +115,17 @@ export function AreaMesh({ area }: { area: FunctionalArea }) {
   }, []);
 
   return (
-    <Plane
-      args={[size.x, size.z]}
-      position={center}
-      rotation={[-Math.PI / 2, 0, 0]}
-      material={hovered ? AREA_HOVERED_MATERIAL : AREA_MATERIAL}
+    <mesh
+      rotation={[Math.PI / 2, 0, 0]}
       onContextMenu={handleContextMenu}
       onPointerEnter={handlePointerEnter}
       onPointerOut={handlePointerOut}
-    />
+    >
+      <shapeGeometry args={[shape]} />
+      <meshStandardMaterial
+        color={hovered ? "hotpink" : areaColorByType(area.type)}
+        side={THREE.DoubleSide}
+      />
+    </mesh>
   );
 }

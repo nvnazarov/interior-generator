@@ -1,6 +1,8 @@
 import {
   CameraControls,
   CameraControlsImpl,
+  GizmoHelper,
+  GizmoViewport,
   Grid,
   OrbitControls,
   OrthographicCamera,
@@ -155,6 +157,12 @@ export function Scene() {
       <PlanMesh />
       <FurniturePreview />
       <DragHelper />
+      <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
+        <GizmoViewport
+          axisColors={["red", "green", "blue"]}
+          labelColor="black"
+        />
+      </GizmoHelper>
       {toolIsArea && <AreaTool />}
       {toolIsFurinture && <FurnitureTool />}
     </Canvas>

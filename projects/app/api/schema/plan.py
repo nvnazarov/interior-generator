@@ -16,13 +16,15 @@ class Furniture(BaseModel):
     yaw: float
 
 
+class Point(BaseModel):
+    x: int
+    y: int
+
+
 class Area(BaseModel):
     id: str
     type: str
-    x: int
-    y: int
-    w: int
-    h: int
+    points: list[Point]
 
 
 class Content(BaseModel):
@@ -42,10 +44,7 @@ class FurniturePatch(BaseModel):
 class AreaPatch(BaseModel):
     id: str
     type: str | None = None
-    x: int | None = None
-    y: int | None = None
-    w: int | None = None
-    h: int | None = None
+    points: list[Point] | None = None
 
 
 class ContentPatch(BaseModel):

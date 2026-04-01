@@ -61,11 +61,8 @@ export interface ProjectPatch {
 
 export interface FunctionalArea {
   id: string;
-  type: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
+  type: "kitchen" | "livingroom" | "bedroom" | "bathroom" | "hallway";
+  points: { x: number, y: number }[]
 }
 
 export interface FurnitureInPlan {

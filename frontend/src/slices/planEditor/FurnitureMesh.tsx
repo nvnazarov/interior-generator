@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import type { FurnitureInPlan } from "../api/entities";
 import { useGetFurnitureByIdQuery } from "../api/slice";
 import { CM } from "./lib";
@@ -11,10 +11,12 @@ export function FurnitureMesh({ furniture }: { furniture: FurnitureInPlan }) {
   const dispatch = useAppDispatch();
   const { data, isSuccess } = useGetFurnitureByIdQuery(furniture.furnitureId);
   const menu = useContextMenu();
+  const [hovered, setHovered] = useState(false);
 
   const handleContextMenu = useCallback(
     (e: ThreeEvent<MouseEvent>) => {
       if (isSuccess) {
+        e.stopPropagation();
         menu.show({
           title: data.name,
           x: e.clientX,
@@ -57,14 +59,26 @@ export function FurnitureMesh({ furniture }: { furniture: FurnitureInPlan }) {
     [isSuccess],
   );
 
+  const handlePointerEnter = useCallback((e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation();
+    setHovered(true);
+  }, []);
+
+  const handlePointerLeave = useCallback((e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation();
+    setHovered(false);
+  }, []);
+
   return isSuccess ? (
     <mesh
       position={[furniture.x, furniture.y, furniture.z]}
       rotation={[0, furniture.yaw, 0]}
       onContextMenu={handleContextMenu}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
     >
       <boxGeometry args={[data.width, data.height, data.depth]} />
-      <meshStandardMaterial color="green" />
+      <meshStandardMaterial color={hovered ? "hotpink" : "green"} />
     </mesh>
   ) : (
     <mesh

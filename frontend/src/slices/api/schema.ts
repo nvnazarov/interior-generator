@@ -75,11 +75,11 @@ export const RawPlanSchema = z.object({
       z.string(),
       z.object({
         id: z.string(),
-        type: z.string(),
-        x: z.number(),
-        y: z.number(),
-        w: z.number(),
-        h: z.number(),
+        type: z.literal(["kitchen", "livingroom", "bedroom", "bathroom", "hallway"]),
+        points: z.array(z.object({
+          x: z.number(),
+          y: z.number(),
+        }))
       }),
     ),
   }),
