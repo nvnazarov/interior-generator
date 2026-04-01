@@ -33,7 +33,7 @@ def upgrade() -> None:
     op.create_table(
         "projects",
         Column("id", UUID(), primary_key=True),
-        Column("account_id", UUID(), nullable=False),
+        Column("account_id", VARCHAR(256), nullable=False),
         Column("name", VARCHAR(256), nullable=False),
         Column("description", VARCHAR(2048), nullable=False),
         Column("revision", INTEGER, nullable=False),
@@ -62,7 +62,7 @@ def upgrade() -> None:
     )
     op.create_table(
         "accounts",
-        Column("account_id", UUID(), primary_key=True),
+        Column("account_id", VARCHAR(256), primary_key=True),
         Column("projects_count", INTEGER, nullable=False),
         Column("projects_limit", INTEGER, nullable=False),
         Column("version", INTEGER, nullable=False),

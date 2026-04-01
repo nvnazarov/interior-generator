@@ -164,7 +164,7 @@ export function Scene() {
         />
       </GizmoHelper>
       {toolIsArea && <AreaTool />}
-      {toolIsFurinture && <FurnitureTool />}
+      {/* {toolIsFurinture && <FurnitureTool />} */}
     </Canvas>
   );
 }

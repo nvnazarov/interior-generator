@@ -1,5 +1,6 @@
+import "./SignInForm.scss";
 import { useCallback, useState, type ChangeEvent } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { authClient } from "../../shared/betterAuth";
 import { useAppDispatch } from "../storeTypes";
 import { userSignedIn } from "./slice";
@@ -56,12 +57,13 @@ export function SignInForm() {
   );
 
   return (
-    <form>
+    <form className="account__sign-in-form">
       <input value={email} onChange={handleEmailChange} />
       <input value={password} onChange={handlePasswordChange} />
       <button onClick={handleSignIn} disabled={isSigningIn}>
         Sign In
       </button>
+      <Link to="/sign-up">Sign up</Link>
     </form>
   );
 }

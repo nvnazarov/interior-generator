@@ -33,16 +33,15 @@ class ASGI(FastAPI):
                 str,
                 Header(alias=header_for_account_id),
             ] = "",
-        ) -> UUID:
-            try:
-                return UUID(account_id)
-            except ValueError:
+        ) -> str:
+            if account_id == "":
                 raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+            return account_id
 
         @self.post("/projects/{project_id}/export/pdf")
         async def export_project_pdf(
             project_id: UUID,
-            account_id: Annotated[UUID, Depends(get_account_id)],
+            account_id: Annotated[str, Depends(get_account_id)],
             opts: PDFExportOptions,
         ):
             try:
@@ -63,7 +62,7 @@ class ASGI(FastAPI):
         @self.post("/plans/{plan_id}/export/dxf")
         async def export_plan_dxf(
             plan_id: UUID,
-            account_id: Annotated[UUID, Depends(get_account_id)],
+            account_id: Annotated[str, Depends(get_account_id)],
             opts: DXFExportOptions,
         ):
             try:

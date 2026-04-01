@@ -11,7 +11,7 @@ class Server:
 
     async def generate_plans(
         self,
-        account_id: UUID,
+        account_id: str,
         project_id: UUID,
         base_plan_id: UUID | None = None,
         n: int = DEFAULT_PLANS_COUNT,

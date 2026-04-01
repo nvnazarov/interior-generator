@@ -35,7 +35,7 @@ export function WallMesh({ wall }: { wall: Wall }) {
   }, [furnitureDrag]);
 
   const handlePointerMove = useCallback(
-    async (e: ThreeEvent<PointerEvent>) => {
+    (e: ThreeEvent<PointerEvent>) => {
       if (furnitureDrag && furniture) {
         e.stopPropagation();
         const normal = e.normal?.clone();
@@ -45,7 +45,7 @@ export function WallMesh({ wall }: { wall: Wall }) {
         normal.applyQuaternion(e.object.quaternion).normalize();
         const yaw = Math.atan2(normal.x, normal.z);
         normal.multiplyScalar(furniture.depth / 2);
-        const point = snapToGridVector3(e.point, CM).add(normal);
+        let point = e.point.add(normal);
         switch (furniture.mount) {
           case "floor": {
             point.y = furniture.height / 2;
@@ -59,6 +59,7 @@ export function WallMesh({ wall }: { wall: Wall }) {
             break;
           }
         }
+        point = snapToGridVector3(point, CM);
         dispatch(
           furniturePreviewUpdated({
             x: point.x,

@@ -270,7 +270,7 @@ class PostgresAccountRepository(AccountRepository):
     def __init__(self, connection: AsyncConnection):
         self._conn = connection
 
-    async def get(self, account_id: UUID) -> Account | None:
+    async def get(self, account_id: str) -> Account | None:
         cursor = await self._conn.execute(
             STMT_GET_ACCOUNT_BY_ID, {"account_id": account_id}
         )

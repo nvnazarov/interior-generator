@@ -224,8 +224,7 @@ async def test_get_plans_of_project(client: AsyncClient):
 @pytest.mark.integration
 async def test_plans_limit_exceeded(client: AsyncClient):
     headers = {"x-account-id": "022f51f9-98bb-40af-9d30-0b3c03819212"}
-    account_id = UUID("022f51f9-98bb-40af-9d30-0b3c03819212")
-    resp = await client.post("/projects", headers={"x-account-id": account_id.hex})
+    resp = await client.post("/projects", headers=headers)
     assert resp.status_code == status.HTTP_201_CREATED
     project_id = UUID(resp.json()["id"])
 
@@ -233,14 +232,14 @@ async def test_plans_limit_exceeded(client: AsyncClient):
     for _ in range(20):
         resp = await client.post(
             f"/projects/{project_id}/plans",
-            headers={"x-account-id": account_id.hex},
+            headers=headers,
         )
         assert resp.status_code == status.HTTP_201_CREATED
         last_plan_id = resp.json()["id"]
 
     resp = await client.post(
         f"/projects/{project_id}/plans",
-        headers={"x-account-id": account_id.hex},
+        headers=headers,
     )
     assert resp.status_code == status.HTTP_400_BAD_REQUEST
     assert resp.json() == {"detail": "plans limit exceeded"}
@@ -251,6 +250,6 @@ async def test_plans_limit_exceeded(client: AsyncClient):
 
     resp = await client.post(
         f"/projects/{project_id}/plans",
-        headers={"x-account-id": account_id.hex},
+        headers=headers,
     )
     assert resp.status_code == status.HTTP_201_CREATED

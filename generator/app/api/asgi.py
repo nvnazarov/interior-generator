@@ -19,16 +19,15 @@ class ASGI(FastAPI):
                 str,
                 Header(alias=header_for_account_id),
             ] = "",
-        ) -> UUID:
-            try:
-                return UUID(account_id)
-            except ValueError:
+        ) -> str:
+            if account_id == "":
                 raise HTTPException(status_code=401)
+            return account_id
 
         @self.post("/projects/{project_id}/plans/generate")
         async def generate_plans(
             project_id: UUID,
-            account_id: Annotated[UUID, Depends(get_account_id)],
+            account_id: Annotated[str, Depends(get_account_id)],
             base_plan_id: UUID | None = None,
             n: int = 5,
         ) -> list[UUID]:

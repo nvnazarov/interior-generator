@@ -75,16 +75,15 @@ class ASGI(FastAPI):
                 str,
                 Header(alias=self.header_for_account_id),
             ] = "",
-        ) -> UUID:
-            try:
-                return UUID(account_id)
-            except ValueError:
+        ) -> str:
+            if account_id == "":
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+            return account_id
 
         @self.post("/projects", status_code=status.HTTP_201_CREATED, tags=["projects"])
         async def create_project(
             response: Response,
-            account_id: Annotated[UUID, Depends(get_account_id)],
+            account_id: Annotated[str, Depends(get_account_id)],
         ) -> ProjectSchema:
             try:
                 project = await self.service.create_project(account_id)
@@ -97,7 +96,7 @@ class ASGI(FastAPI):
         async def get_project(
             response: Response,
             project_id: UUID,
-            account_id: Annotated[UUID, Depends(get_account_id)],
+            account_id: Annotated[str, Depends(get_account_id)],
             revision: Annotated[str | None, Header(alias="if-none-match")] = None,
         ):
             try:
@@ -117,7 +116,7 @@ class ASGI(FastAPI):
             tags=["projects"],
         )
         async def publish_project(
-            project_id: UUID, account_id: Annotated[UUID, Depends(get_account_id)]
+            project_id: UUID, account_id: Annotated[str, Depends(get_account_id)]
         ) -> None:
             try:
                 await self.service.publish_project(project_id, account_id)
@@ -130,7 +129,7 @@ class ASGI(FastAPI):
             tags=["projects"],
         )
         async def unpublish_project(
-            project_id: UUID, account_id: Annotated[UUID, Depends(get_account_id)]
+            project_id: UUID, account_id: Annotated[str, Depends(get_account_id)]
         ) -> None:
             try:
                 await self.service.unublish_project(project_id, account_id)
@@ -143,7 +142,7 @@ class ASGI(FastAPI):
             tags=["projects"],
         )
         async def delete_project(
-            project_id: UUID, account_id: Annotated[UUID, Depends(get_account_id)]
+            project_id: UUID, account_id: Annotated[str, Depends(get_account_id)]
         ) -> None:
             try:
                 await self.service.delete_project(account_id, project_id)
@@ -158,7 +157,7 @@ class ASGI(FastAPI):
         async def patch_project(
             response: Response,
             project_id: UUID,
-            account_id: Annotated[UUID, Depends(get_account_id)],
+            account_id: Annotated[str, Depends(get_account_id)],
             patch: ProjectPatch,
             revision: Annotated[str, Header(alias="if-match")],
         ) -> None:
@@ -184,7 +183,7 @@ class ASGI(FastAPI):
 
         @self.get("/projects", tags=["projects"], response_model_exclude_none=True)
         async def get_projects_owned_by_account(
-            account_id: Annotated[UUID, Depends(get_account_id)],
+            account_id: Annotated[str, Depends(get_account_id)],
         ) -> list[ProjectSchema]:
             projects = await self.service.get_projects_owned_by_account(account_id)
             return list(map(ProjectSchema.from_core, projects))
@@ -197,7 +196,7 @@ class ASGI(FastAPI):
         async def create_plan(
             response: Response,
             project_id: UUID,
-            account_id: Annotated[UUID, Depends(get_account_id)],
+            account_id: Annotated[str, Depends(get_account_id)],
         ) -> PlanSchema:
             try:
                 plan = await self.service.create_plan(account_id, project_id)
@@ -212,7 +211,7 @@ class ASGI(FastAPI):
         async def get_plan(
             response: Response,
             plan_id: UUID,
-            account_id: Annotated[UUID, Depends(get_account_id)],
+            account_id: Annotated[str, Depends(get_account_id)],
             etag: Annotated[str | None, Header(alias="if-none-match")] = None,
         ):
             try:
@@ -231,7 +230,7 @@ class ASGI(FastAPI):
         )
         async def get_plans_of_project(
             project_id: UUID,
-            account_id: Annotated[UUID, Depends(get_account_id)],
+            account_id: Annotated[str, Depends(get_account_id)],
         ) -> list[PlanSchema]:
             try:
                 plans = await self.service.get_plans_of_project(account_id, project_id)
@@ -245,7 +244,7 @@ class ASGI(FastAPI):
             status_code=status.HTTP_204_NO_CONTENT,
         )
         async def delete_plan(
-            plan_id: UUID, account_id: Annotated[UUID, Depends(get_account_id)]
+            plan_id: UUID, account_id: Annotated[str, Depends(get_account_id)]
         ):
             try:
                 await self.service.delete_plan(account_id, plan_id)
@@ -260,7 +259,7 @@ class ASGI(FastAPI):
         async def patch_plan(
             response: Response,
             plan_id: UUID,
-            account_id: Annotated[UUID, Depends(get_account_id)],
+            account_id: Annotated[str, Depends(get_account_id)],
             patch: PlanPatch,
             etag: Annotated[str, Header(alias="if-match")],
         ) -> None:

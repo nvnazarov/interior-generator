@@ -22,15 +22,15 @@ class Catalog(ABC):
 class Repository(ABC):
     @abstractmethod
     async def get_project(
-        self, account_id: UUID, project_id: UUID
+        self, account_id: str, project_id: UUID
     ) -> Project | None: ...
 
     @abstractmethod
-    async def get_plan(self, account_id: UUID, plan_id: UUID) -> Plan | None: ...
+    async def get_plan(self, account_id: str, plan_id: UUID) -> Plan | None: ...
 
     @abstractmethod
     def get_plans_of_project(
-        self, account_id: UUID, project_id: UUID
+        self, account_id: str, project_id: UUID
     ) -> AsyncIterable[Plan]: ...
 
 
@@ -38,7 +38,7 @@ class Exporter:
     def __init__(self, db: Repository):
         self.db = db
 
-    async def export_project_pdf(self, project_id: UUID, account_id: UUID) -> BytesIO:
+    async def export_project_pdf(self, project_id: UUID, account_id: str) -> BytesIO:
         project = await self.db.get_project(account_id, project_id)
         if project is None:
             raise ProjectNotFoundError
@@ -46,7 +46,7 @@ class Exporter:
         bytes = await export_pdf(project, plans)
         return bytes
 
-    async def export_plan_dxf(self, plan_id: UUID, account_id: UUID) -> TextIO:
+    async def export_plan_dxf(self, plan_id: UUID, account_id: str) -> TextIO:
         plan = await self.db.get_plan(account_id, plan_id)
         if plan is None:
             raise PlanNotFoundError

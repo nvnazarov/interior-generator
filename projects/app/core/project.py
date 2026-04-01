@@ -112,7 +112,7 @@ class Content(BaseModel):
 
 class Project(BaseModel):
     id: UUID
-    account_id: UUID
+    account_id: str
     name: str = Field(max_length=256)
     description: str = Field(max_length=2048)
     revision: int = 0
@@ -140,10 +140,10 @@ class Project(BaseModel):
         self.published = False
         self.updated_at = now()
 
-    def is_owned_by(self, account_id: UUID):
+    def is_owned_by(self, account_id: str):
         return self.account_id == account_id
 
-    def can_be_read_by(self, account_id: UUID):
+    def can_be_read_by(self, account_id: str):
         return self.account_id == account_id or self.published
 
     def patch(self, patch: Patch, revision: int):
@@ -231,4 +231,4 @@ class ProjectRepository(ABC):
     async def delete(self, project_id: UUID) -> None: ...
 
     @abstractmethod
-    async def get_all_owned_by_account(self, account_id: UUID) -> list[Project]: ...
+    async def get_all_owned_by_account(self, account_id: str) -> list[Project]: ...

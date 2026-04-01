@@ -26,7 +26,7 @@ class Service:
         self.plans_limit = plans_limit
         self.projects_limit = projects_limit
 
-    async def create_project(self, account_id: UUID) -> Project:
+    async def create_project(self, account_id: str) -> Project:
         async with self.uow_factory as u:
             account = await u.accounts.get(account_id)
             if account is None:
@@ -36,14 +36,14 @@ class Service:
             await u.projects.save(project)
             return project
 
-    async def get_project(self, account_id: UUID, project_id: UUID) -> Project:
+    async def get_project(self, account_id: str, project_id: UUID) -> Project:
         async with self.uow_factory as u:
             project = await u.projects.get(project_id)
             if project is None or not project.can_be_read_by(account_id):
                 raise ProjectNotFoundError
             return project
 
-    async def delete_project(self, account_id: UUID, project_id: UUID) -> None:
+    async def delete_project(self, account_id: str, project_id: UUID) -> None:
         async with self.uow_factory as u:
             account = await u.accounts.get(account_id)
             if account is None:
@@ -57,7 +57,7 @@ class Service:
 
     async def patch_project(
         self,
-        account_id: UUID,
+        account_id: str,
         project_id: UUID,
         *,
         patch: ProjectPatch,
@@ -77,11 +77,11 @@ class Service:
                 await u.projects.save(project)
             return project
 
-    async def get_projects_owned_by_account(self, account_id: UUID) -> list[Project]:
+    async def get_projects_owned_by_account(self, account_id: str) -> list[Project]:
         async with self.uow_factory as u:
             return await u.projects.get_all_owned_by_account(account_id)
 
-    async def publish_project(self, project_id: UUID, account_id: UUID) -> None:
+    async def publish_project(self, project_id: UUID, account_id: str) -> None:
         async with self.uow_factory as u:
             project = await u.projects.get_without_content(project_id)
             if project is None or not project.is_owned_by(account_id):
@@ -89,7 +89,7 @@ class Service:
             project.publish()
             await u.projects.save_without_content(project)
 
-    async def unublish_project(self, project_id: UUID, account_id: UUID) -> None:
+    async def unublish_project(self, project_id: UUID, account_id: str) -> None:
         async with self.uow_factory as u:
             project = await u.projects.get_without_content(project_id)
             if project is None or not project.is_owned_by(account_id):
@@ -97,7 +97,7 @@ class Service:
             project.unpublish()
             await u.projects.save_without_content(project)
 
-    async def create_plan(self, account_id: UUID, project_id: UUID) -> Plan:
+    async def create_plan(self, account_id: str, project_id: UUID) -> Plan:
         async with self.uow_factory as u:
             project = await u.projects.get_without_content(project_id)
             if project is None or not project.is_owned_by(account_id):
@@ -107,7 +107,7 @@ class Service:
             await u.plans.save(plan)
             return plan
 
-    async def get_plan(self, account_id: UUID, plan_id: UUID) -> Plan:
+    async def get_plan(self, account_id: str, plan_id: UUID) -> Plan:
         async with self.uow_factory as u:
             plan = await u.plans.get(plan_id)
             if plan is None:
@@ -117,7 +117,7 @@ class Service:
                 raise PlanNotFoundError
             return plan
 
-    async def delete_plan(self, account_id: UUID, plan_id: UUID) -> None:
+    async def delete_plan(self, account_id: str, plan_id: UUID) -> None:
         async with self.uow_factory as u:
             plan = await u.plans.get(plan_id)
             if plan is None:
@@ -130,7 +130,7 @@ class Service:
             await u.plans.delete(plan)
 
     async def patch_plan(
-        self, account_id: UUID, plan_id: UUID, *, patch: PlanPatch, revision: int
+        self, account_id: str, plan_id: UUID, *, patch: PlanPatch, revision: int
     ) -> Plan:
         async with self.uow_factory as u:
             if patch.content is None:
@@ -150,7 +150,7 @@ class Service:
             return plan
 
     async def get_plans_of_project(
-        self, account_id: UUID, project_id: UUID
+        self, account_id: str, project_id: UUID
     ) -> list[Plan]:
         async with self.uow_factory as u:
             project = await u.projects.get_without_content(project_id)

@@ -14,13 +14,13 @@ class NoProjects(Exception): ...
 
 
 class Account(BaseModel):
-    id: UUID
+    id: str
     projects_count: int = 0
     projects_limit: int = 0
 
     @staticmethod
     def create(
-        account_id: UUID, *, projects_count: int = 0, projects_limit: int = 0
+        account_id: str, *, projects_count: int = 0, projects_limit: int = 0
     ) -> "Account":
         return Account(
             id=account_id,
@@ -54,7 +54,7 @@ class Account(BaseModel):
 
 class AccountRepository(ABC):
     @abstractmethod
-    async def get(self, account_id: UUID) -> Account | None: ...
+    async def get(self, account_id: str) -> Account | None: ...
 
     @abstractmethod
     async def save(self, account: Account) -> None: ...
