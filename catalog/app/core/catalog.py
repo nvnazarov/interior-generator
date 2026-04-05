@@ -9,9 +9,6 @@ MAX_LIMIT = 20
 
 class IFurnitureRepository(ABC):
     @abstractmethod
-    async def save(self, furniture: Furniture) -> None: ...
-
-    @abstractmethod
     async def get(self, furniture_id: UUID) -> Furniture | None: ...
 
     @abstractmethod
@@ -22,13 +19,13 @@ class IFurnitureRepository(ABC):
         self, name: str | None, area: Furniture.Area | None, limit: int
     ) -> SearchResult: ...
 
+    @abstractmethod
+    async def get_top_k_like(self, k: int, description: str) -> list[Furniture]: ...
+
 
 class Catalog:
     def __init__(self, furniture: IFurnitureRepository):
         self.furniture = furniture
-
-    async def add_furniture(self, furniture: Furniture) -> None:
-        await self.furniture.save(furniture)
 
     async def get_furniture_by_id(self, furniture_id: UUID) -> Furniture:
         furniture = await self.furniture.get(furniture_id)
@@ -45,3 +42,6 @@ class Catalog:
         self, name: str | None, area: Furniture.Area | None, limit: int
     ) -> tuple[list[Furniture], Cursor | None]:
         return await self.furniture.search(name, area, min(limit, MAX_LIMIT))
+
+    async def get_top_k_like(self, k: int, description: str) -> list[Furniture]:
+        return await self.furniture.get_top_k_like(k, description)

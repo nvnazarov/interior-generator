@@ -61,33 +61,6 @@ class PostgresFurnitureRepository(IFurnitureRepository):
         "FROM catalog.catalog "
         "WHERE id = :furniture_id"
     )
-    stmt_save = text(
-        "INSERT INTO catalog.catalog("
-        "   id, "
-        "   name, "
-        "   width, "
-        "   height, "
-        "   depth, "
-        "   mount, "
-        "   model_path, "
-        "   icon_path, "
-        "   thumbnail_path, "
-        "   meta "
-        ")"
-        "VALUES ("
-        "   :id, "
-        "   :name, "
-        "   :width, "
-        "   :height, "
-        "   :depth, "
-        "   :mount, "
-        "   :model_path, "
-        "   :icon_path, "
-        "   :thumbnail_path, "
-        "   :meta "
-        ") "
-        "ON CONFLICT (id) DO NOTHING"  # TODO: update (if will be needed)
-    )
     stmt_search = text(
         "SELECT "
         "   id, "
@@ -136,17 +109,6 @@ class PostgresFurnitureRepository(IFurnitureRepository):
 
     def __init__(self, engine: AsyncEngine):
         self.engine = engine
-
-    async def save(self, furniture: Furniture) -> None:
-        async with self.engine.connect() as c:
-            _ = await c.execute(
-                self.stmt_save,
-                {
-                    **furniture.model_dump(exclude={"meta"}),
-                    "meta": furniture.meta.model_dump_json(),
-                },
-            )
-            await c.commit()
 
     async def search_with_cursor(self, cursor: Cursor, limit: int) -> SearchResult:
         pg_cursor = decode_cursor(cursor)
@@ -206,3 +168,6 @@ class PostgresFurnitureRepository(IFurnitureRepository):
                 return None
             else:
                 return parse_row(row)
+
+    async def get_top_k_like(self, k: int, description: str) -> list[Furniture]:
+        return []

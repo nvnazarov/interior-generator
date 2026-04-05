@@ -5,7 +5,13 @@ import { CM } from "./lib";
 import { useContextMenu } from "../../shared/hooks/contextMenu";
 import type { ThreeEvent } from "@react-three/fiber";
 import { useAppDispatch } from "../storeTypes";
-import { planChanged } from "./slice";
+import {
+  hideHint,
+  planChanged,
+  planUndoablyChanged,
+  showHint,
+  startedDraggingFurniture,
+} from "./slice";
 
 export function FurnitureMesh({ furniture }: { furniture: FurnitureInPlan }) {
   const dispatch = useAppDispatch();
@@ -69,6 +75,42 @@ export function FurnitureMesh({ furniture }: { furniture: FurnitureInPlan }) {
     setHovered(false);
   }, []);
 
+  const handlePointerDown = useCallback(
+    (e: ThreeEvent<PointerEvent>) => {
+      if (e.button === 0) {
+        dispatch(
+          planUndoablyChanged({
+            content: {
+              furniture: {
+                [furniture.id]: null,
+              },
+            },
+          }),
+        );
+        dispatch(
+          startedDraggingFurniture({
+            furnitureId: furniture.furnitureId,
+          }),
+        );
+      }
+    },
+    [furniture],
+  );
+
+  const handlePointerMove = useCallback(
+    (e: ThreeEvent<PointerEvent>) => {
+      e.stopPropagation();
+      if (data) {
+        dispatch(showHint({ title: data.name, x: e.clientX, y: e.clientY }));
+      }
+    },
+    [data],
+  );
+
+  const handlePointerOut = useCallback(() => {
+    dispatch(hideHint());
+  }, []);
+
   return isSuccess ? (
     <mesh
       position={[furniture.x, furniture.y, furniture.z]}
@@ -76,6 +118,9 @@ export function FurnitureMesh({ furniture }: { furniture: FurnitureInPlan }) {
       onContextMenu={handleContextMenu}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerOut={handlePointerOut}
     >
       <boxGeometry args={[data.width, data.height, data.depth]} />
       <meshStandardMaterial color={hovered ? "hotpink" : "green"} />

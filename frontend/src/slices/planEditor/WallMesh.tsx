@@ -5,8 +5,10 @@ import { useAppDispatch, useAppSelector } from "../storeTypes";
 import {
   furniturePreviewUpdated,
   hideFurniturePreview,
+  hideHint,
   selectFurnitureDrag,
   showFurniturePreview,
+  showHint,
 } from "./slice";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLazyGetFurnitureByIdQuery } from "../api/slice";
@@ -26,6 +28,8 @@ export function WallMesh({ wall }: { wall: Wall }) {
   const direction = new THREE.Vector3().subVectors(end, start).normalize();
   const angle = Math.atan2(direction.z, direction.x);
 
+  const l = +(start.distanceTo(end) / M).toFixed(2);
+
   useEffect(() => {
     if (furnitureDrag) {
       getFurnitureById(furnitureDrag.furnitureId)
@@ -36,8 +40,16 @@ export function WallMesh({ wall }: { wall: Wall }) {
 
   const handlePointerMove = useCallback(
     (e: ThreeEvent<PointerEvent>) => {
+      e.stopPropagation();
+      dispatch(
+        showHint({
+          title: "Несущая стена",
+          length: l,
+          x: e.clientX,
+          y: e.clientY,
+        }),
+      );
       if (furnitureDrag && furniture) {
-        e.stopPropagation();
         const normal = e.normal?.clone();
         if (!normal) {
           return;
@@ -70,11 +82,12 @@ export function WallMesh({ wall }: { wall: Wall }) {
         );
       }
     },
-    [furnitureDrag, furniture],
+    [furnitureDrag, furniture, l],
   );
 
   const handlePointerOut = useCallback(
     (e: ThreeEvent<PointerEvent>) => {
+      dispatch(hideHint());
       if (furnitureDrag) {
         e.stopPropagation();
         dispatch(hideFurniturePreview());

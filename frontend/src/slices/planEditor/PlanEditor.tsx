@@ -14,6 +14,7 @@ import { MenuButton } from "./MenuButton";
 import { FurnitureCatalog } from "./FurnitureCatalog";
 import { FurnitureCatalogSwitch } from "./FurnitureCatalogSwitch";
 import { NameInput } from "./NameInput";
+import { Hint } from "./Hint";
 
 export function PlanEditor({
   projectId,
@@ -74,6 +75,7 @@ export function PlanEditor({
       </div>
       <div>{isCatalogOpen && <FurnitureCatalog />}</div>
       <Scene />
+      <Hint />
     </ContextMenuProvider>
   );
 }

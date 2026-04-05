@@ -55,6 +55,12 @@ class ASGI(FastAPI):
                 furniture=furniture, meta=SearchResult.Meta(cursor=next_cursor)
             )
 
+        @self.get("/like")
+        async def get_top_k_like(
+            description: Annotated[str, Query()], k: Annotated[int, Query(le=5)] = 5
+        ) -> list[Furniture]:
+            return await catalog.get_top_k_like(k, description)
+
         @self.get("/health", status_code=204)
         async def healthcheck():
             pass

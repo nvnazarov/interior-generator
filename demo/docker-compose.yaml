@@ -58,6 +58,27 @@ services:
       timeout: "5s"
       retries: 3
 
+  elastic:
+    image: "docker.elastic.co/elasticsearch/elasticsearch:9.3.2"
+    environment:
+      - "discovery.type=single-node"
+      - "xpack.security.enabled=false"
+    volumes:
+      - "elastic:/usr/share/elasticsearch/data"
+    networks:
+      - "private"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:9200/_cluster/health?local=true",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   auth:
     build:
       context: "../auth"
@@ -86,11 +107,8 @@ services:
     environment:
       - "CATALOG__API__HOST=0.0.0.0"
       - "CATALOG__API__PORT=80"
-      - "CATALOG__POSTGRES__HOST=postgres"
-      - "CATALOG__POSTGRES__PORT=5432"
-      - "CATALOG__POSTGRES__USER=postgres"
-      - "CATALOG__POSTGRES__PASSWORD=postgres"
-      - "CATALOG__POSTGRES__DB=postgres"
+      - "CATALOG__ELASTIC__HOST=http://elastic:9200"
+      - "CATALOG__ELASTIC__INDEX=catalog"
       - "CATALOG__LOGGING__LEVEL=INFO"
     networks:
       - "private"
@@ -100,7 +118,7 @@ services:
       timeout: 5s
       retries: 3
     depends_on:
-      postgres:
+      elastic:
         condition: "service_healthy"
 
   generator:
@@ -208,3 +226,4 @@ networks:
 volumes:
   postgres: {}
   minio: {}
+  elastic: {}

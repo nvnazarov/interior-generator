@@ -16,7 +16,7 @@ export function ProjectMesh() {
         <WallMesh key={id} wall={wall} />
       ))}
       {Object.entries(project.content.wetAreas).map(([id, wetArea]) => (
-        <WetAreaMesh key={id} wetArea={wetArea} />
+        <WetAreaMesh key={id} area={wetArea} />
       ))}
       {Object.entries(project.content.windows).map(([id, window]) => {
         const wall = project.content.walls[window.wallId];

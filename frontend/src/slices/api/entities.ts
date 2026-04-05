@@ -25,10 +25,7 @@ export interface Door {
 
 export interface WetArea {
   id: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
+  points: { x: number, y: number }[]
 }
 
 export interface Project {

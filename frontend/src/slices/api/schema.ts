@@ -44,10 +44,10 @@ export const RawProjectSchema = z.object({
       z.string(),
       z.object({
         id: z.string(),
-        x: z.number(),
-        y: z.number(),
-        w: z.number(),
-        h: z.number(),
+        points: z.array(z.object({
+          x: z.number(),
+          y: z.number(),
+        }))
       }),
     ),
   }),

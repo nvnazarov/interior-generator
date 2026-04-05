@@ -1,51 +1,62 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useAppDispatch } from "../storeTypes";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { M, snapToGrid } from "./lib";
+import { CM, M, snapToGrid } from "./lib";
 import { projectChanged } from "./slice";
-import type { WetArea } from "../api/entities";
+import type { FunctionalArea, WetArea } from "../api/entities";
 import { v4 as uuidv4 } from "uuid";
-import { Plane } from "@react-three/drei";
 
-const WET_AREA_PREVIEW_MATERIAL = new THREE.MeshStandardMaterial({
-  color: "hotpink",
-});
-
-function WetAreaPreview({
-  startPosition,
-  endPosition,
+function AreaPreview({
+  points,
+  position,
 }: {
-  startPosition: [number, number];
-  endPosition: [number, number];
+  points: { x: number; y: number }[];
+  position: { x: number; y: number } | null;
 }) {
-  const start = new THREE.Vector3(startPosition[0], 0, startPosition[1]);
-  const end = new THREE.Vector3(endPosition[0], 0, endPosition[1]);
-  const center = new THREE.Vector3()
-    .subVectors(end, start)
-    .multiplyScalar(0.5)
-    .add(start);
-  const sizeX = Math.abs(endPosition[0] - startPosition[0]);
-  const sizeZ = Math.abs(endPosition[1] - startPosition[1]);
+  const shape = useMemo(() => {
+    const shape = new THREE.Shape();
+    if (points.length > 2) {
+      shape.moveTo(points[0]!.x, points[0]!.y);
+      for (let i = 1; i < points.length; i++) {
+        shape.lineTo(points[i]!.x, points[i]!.y);
+      }
+      shape.closePath();
+    }
+    return shape;
+  }, [points]);
+
+  const addShape = useMemo(() => {
+    const shape = new THREE.Shape();
+    if (points.length >= 2 && position) {
+      shape.moveTo(points[0]!.x, points[0]!.y);
+      shape.lineTo(points[points.length - 1]!.x, points[points.length - 1]!.y);
+      shape.lineTo(position.x, position.y);
+      shape.closePath();
+    }
+    return shape;
+  }, [points, position]);
+
   return (
-    <Plane
-      args={[sizeX, sizeZ]}
-      position={center}
-      rotation={[-Math.PI / 2, 0, 0]}
-      material={WET_AREA_PREVIEW_MATERIAL}
-    />
+    <>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <shapeGeometry args={[shape]} />
+        <meshStandardMaterial color="hotpink" side={THREE.DoubleSide} />
+      </mesh>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <shapeGeometry args={[addShape]} />
+        <meshStandardMaterial color="green" side={THREE.DoubleSide} />
+      </mesh>
+    </>
   );
 }
 
 export function WetAreaTool() {
   const dispatch = useAppDispatch();
-  const [isCreatingWetArea, setIsCreatingWetArea] = useState(false);
-  const [areaStartPosition, setAreaStartPosition] = useState<[number, number]>([
-    0, 0,
-  ]);
-  const [areaEndPosition, setAreaEndPosition] = useState<[number, number]>([
-    0, 0,
-  ]);
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(
+    null,
+  );
+  const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
   const { camera, raycaster } = useThree();
 
   const getMousePosition = useCallback(
@@ -71,49 +82,41 @@ export function WetAreaTool() {
         return;
       }
       const position = getMousePosition(e);
-      if (position) {
-        setIsCreatingWetArea(true);
-        setAreaStartPosition(position);
-        setAreaEndPosition(position);
+      if (
+        position &&
+        !points.find(
+          (point) => point.x === position[0] && point.y === position[1],
+        )
+      ) {
+        setPoints([...points, { x: position[0], y: position[1] }]);
       }
     },
-    [getMousePosition],
+    [getMousePosition, points],
   );
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
       const position = getMousePosition(e);
       if (position) {
-        setAreaEndPosition(position);
+        setPosition({ x: position[0], y: position[1] });
       }
     },
     [getMousePosition],
   );
 
-  const handleMouseUp = useCallback(() => {
-    try {
-      const isValidArea =
-        Math.abs(areaEndPosition[0] - areaStartPosition[0]) > 0 &&
-        Math.abs(areaEndPosition[1] - areaStartPosition[1]) > 0;
-      if (isCreatingWetArea && isValidArea) {
-        const area: WetArea = {
-          id: uuidv4(),
-          x: Math.min(areaStartPosition[0], areaEndPosition[0]),
-          y: Math.min(areaStartPosition[1], areaEndPosition[1]),
-          w: Math.abs(areaEndPosition[0] - areaStartPosition[0]),
-          h: Math.abs(areaEndPosition[1] - areaStartPosition[1]),
-        };
-        dispatch(
-          projectChanged({
-            patch: { content: { wetAreas: { [area.id]: area } } },
-            inversePatch: { content: { wetAreas: { [area.id]: null } } },
-          }),
-        );
-      }
-    } finally {
-      setIsCreatingWetArea(false);
-    }
-  }, [isCreatingWetArea, areaStartPosition, areaEndPosition]);
+  const handleStartPointClick = useCallback(() => {
+    const area: WetArea = {
+      id: uuidv4(),
+      points: points,
+    };
+    dispatch(
+      projectChanged({
+        patch: { content: { wetAreas: { [area.id]: area } } },
+        inversePatch: { content: { wetAreas: { [area.id]: null } } },
+      }),
+    );
+    setPoints([]);
+  }, [points]);
 
   return (
     <>
@@ -122,16 +125,25 @@ export function WetAreaTool() {
         rotation={[-Math.PI / 2, 0, 0]}
         onPointerDown={handleMouseDown}
         onPointerMove={handleMouseMove}
-        onPointerUp={handleMouseUp}
       >
         <planeGeometry args={[1000 * M, 1000 * M]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
-      {isCreatingWetArea && (
-        <WetAreaPreview
-          startPosition={areaStartPosition}
-          endPosition={areaEndPosition}
-        />
+      <AreaPreview points={points} position={position} />
+      {points.length > 0 && (
+        <mesh
+          position={[points[0]!.x, 3.5 * M, points[0]!.y]}
+          onClick={handleStartPointClick}
+        >
+          <sphereGeometry args={[10 * CM, 32, 32]} />
+          <meshStandardMaterial color="green" />
+        </mesh>
+      )}
+      {position && (
+        <mesh position={[position.x, 3.5 * M, position.y]}>
+          <sphereGeometry args={[10 * CM, 32, 32]} />
+          <meshStandardMaterial color="red" />
+        </mesh>
       )}
     </>
   );

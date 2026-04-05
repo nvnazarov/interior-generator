@@ -23,7 +23,6 @@ import { M } from "./lib";
 import { useContextMenu } from "../../shared/hooks/contextMenu";
 import { PlanMesh } from "./PlanMesh";
 import { AreaTool } from "./AreaTool";
-import { FurnitureTool } from "./FurnitureTool";
 import { FurniturePreview } from "./FurniturePreview";
 import { useEffect } from "react";
 import type { FurnitureInPlan } from "../api/entities";
@@ -157,12 +156,14 @@ export function Scene() {
       <PlanMesh />
       <FurniturePreview />
       <DragHelper />
-      <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
-        <GizmoViewport
-          axisColors={["red", "green", "blue"]}
-          labelColor="black"
-        />
-      </GizmoHelper>
+      {view === "3D" && (
+        <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
+          <GizmoViewport
+            axisColors={["red", "green", "blue"]}
+            labelColor="black"
+          />
+        </GizmoHelper>
+      )}
       {toolIsArea && <AreaTool />}
       {/* {toolIsFurinture && <FurnitureTool />} */}
     </Canvas>

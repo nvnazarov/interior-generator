@@ -44,7 +44,7 @@ make qa                 # run code formatter and linter
 make local              # start the program locally
 make up                 # start the program in docker compose
 
-make migration          # get migration script
+make migration          # get migration script (for PostgreSQL implementation)
 ```
 
 Environment:
@@ -54,11 +54,7 @@ MOD=dev
 PORT=8080
 CATALOG__API__HOST=0.0.0.0
 CATALOG__API__PORT=8080
-CATALOG__POSTGRES__HOST=postgres
-CATALOG__POSTGRES__PORT=5432
-CATALOG__POSTGRES__DB=postgres
-CATALOG__POSTGRES__USER=postgres
-CATALOG__POSTGRES__PASSWORD=***
-# CATALOG__POSTGRES__PASSWORD_FILE=/path/to/password/file
+CATALOG__ELASTIC__HOST=http://127.0.0.1:9200
+CATALOG__ELASTIC__INDEX=catalog
 CATALOG__LOGGING__LEVEL=INFO
 ```

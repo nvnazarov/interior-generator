@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { useCallback, useMemo, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import { useContextMenu } from "../../shared/hooks/contextMenu";
-import { planChanged } from "./slice";
+import { hideHint, planChanged, showHint } from "./slice";
 import { useAppDispatch } from "../storeTypes";
 import { useTranslation } from "react-i18next";
 import { areaColorByType } from "./lib";
@@ -111,8 +111,17 @@ export function AreaMesh({ area }: { area: FunctionalArea }) {
 
   const handlePointerOut = useCallback((e: ThreeEvent<PointerEvent>) => {
     setHovered(false);
+    dispatch(hideHint());
     e.stopPropagation();
   }, []);
+
+  const handlePointerMove = useCallback(
+    (e: ThreeEvent<PointerEvent>) => {
+      e.stopPropagation();
+      dispatch(showHint({ title: area.type, x: e.clientX, y: e.clientY }));
+    },
+    [area],
+  );
 
   return (
     <mesh
@@ -120,6 +129,7 @@ export function AreaMesh({ area }: { area: FunctionalArea }) {
       onContextMenu={handleContextMenu}
       onPointerEnter={handlePointerEnter}
       onPointerOut={handlePointerOut}
+      onPointerMove={handlePointerMove}
     >
       <shapeGeometry args={[shape]} />
       <meshStandardMaterial

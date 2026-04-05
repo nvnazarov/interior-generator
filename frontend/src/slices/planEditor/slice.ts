@@ -38,6 +38,16 @@ type PlanEditorState = {
   isCatalogOpen: boolean;
   furnitureDrag: FurnitureDrag | null;
   furniturePreview: FurniturePreview | null;
+  hint: {
+    hidden: boolean;
+    title?: string;
+    description?: string;
+    size?: [number, number, number];
+    length?: number;
+    area?: number;
+    x?: number;
+    y?: number;
+  },
 };
 
 const planEditorSlice = createSlice({
@@ -52,6 +62,9 @@ const planEditorSlice = createSlice({
     isCatalogOpen: false,
     furnitureDrag: null,
     furniturePreview: null,
+    hint: {
+      hidden: true,
+    },
   } as PlanEditorState,
   reducers: {
     planOpened: (state, action: PayloadAction<Plan>) => {
@@ -172,6 +185,12 @@ const planEditorSlice = createSlice({
     hideFurniturePreview: (state) => {
       state.furniturePreview = null;
     },
+    showHint: (state, action: PayloadAction<Omit<PlanEditorState['hint'], "hidden">>) => {
+      state.hint = { hidden: false, ...action.payload };
+    },
+    hideHint: (state) => {
+      state.hint = { hidden: true }
+    },
   },
 });
 
@@ -184,6 +203,7 @@ export const selectIsPlanSaved = (state: AppState) => Object.keys(state.planEdit
 export const selectPlan = (state: AppState) => state.planEditor.plan;
 export const selectIsCatalogOpen = (state: AppState) => state.planEditor.isCatalogOpen;
 export const selectFurnitureDrag = (state: AppState) => state.planEditor.furnitureDrag;
+export const selectHint = (state: AppState) => state.planEditor.hint;
 
 export default planEditorSlice.reducer;
 export const {
@@ -201,4 +221,6 @@ export const {
   showFurniturePreview,
   hideFurniturePreview,
   planUndoablyChanged,
+  showHint,
+  hideHint,
 } = planEditorSlice.actions;

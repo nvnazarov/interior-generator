@@ -1,63 +1,65 @@
-import { Plane } from "@react-three/drei";
 import type { WetArea } from "../api/entities";
 import * as THREE from "three";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import { useContextMenu } from "../../shared/hooks/contextMenu";
 import { projectChanged } from "./slice";
 import { useAppDispatch } from "../storeTypes";
 import { useTranslation } from "react-i18next";
 
-const WET_AREA_MATERIAL = new THREE.MeshStandardMaterial({
-  color: "lightblue",
-});
-const WET_AREA_HOVERED_MATERIAL = new THREE.MeshStandardMaterial({
-  color: "hotpink",
-});
-
-export function WetAreaMesh({ wetArea }: { wetArea: WetArea }) {
+export function WetAreaMesh({ area }: { area: WetArea }) {
   const dispatch = useAppDispatch();
   const menu = useContextMenu();
   const [hovered, setHovered] = useState(false);
   const { t } = useTranslation();
 
-  const size = new THREE.Vector3(wetArea.w, 0, wetArea.h);
-  const corner = new THREE.Vector3(wetArea.x, 0, wetArea.y);
-  const center = new THREE.Vector3().add(size).multiplyScalar(0.5).add(corner);
+  const shape = useMemo(() => {
+    const points = area.points;
+    const shape = new THREE.Shape();
+    shape.moveTo(points[0]!.x, points[0]!.y);
+    for (let i = 1; i < points.length; i++) {
+      shape.lineTo(points[i]!.x, points[i]!.y);
+    }
+    shape.closePath();
+    return shape;
+  }, [area.points]);
 
-  const handleContextMenu = useCallback((e: ThreeEvent<MouseEvent>) => {
-    e.stopPropagation();
-    menu.show({
-      title: t("ProjectEditor.WetAreaMesh.Name", "Wet area"),
-      x: e.clientX,
-      y: e.clientY,
-      items: [
-        {
-          name: t("ProjectEditor.WetAreaMesh.DeleteOption.Title", "Delete"),
-          onClick: () => {
-            dispatch(
-              projectChanged({
-                patch: {
-                  content: {
-                    wetAreas: {
-                      [wetArea.id]: null,
+  const handleContextMenu = useCallback(
+    (e: ThreeEvent<MouseEvent>) => {
+      e.stopPropagation();
+      menu.show({
+        title: "Wet Area",
+        x: e.clientX,
+        y: e.clientY,
+        items: [
+          {
+            name: t("ProjectEditor.WetAreaMesh.DeleteOption.Title", "Delete"),
+            onClick: () => {
+              dispatch(
+                projectChanged({
+                  patch: {
+                    content: {
+                      wetAreas: {
+                        [area.id]: null,
+                      },
                     },
                   },
-                },
-                inversePatch: {
-                  content: {
-                    wetAreas: {
-                      [wetArea.id]: wetArea,
+                  inversePatch: {
+                    content: {
+                      wetAreas: {
+                        [area.id]: area,
+                      },
                     },
                   },
-                },
-              }),
-            );
+                }),
+              );
+            },
           },
-        },
-      ],
-    });
-  }, []);
+        ],
+      });
+    },
+    [area],
+  );
 
   const handlePointerEnter = useCallback((e: ThreeEvent<PointerEvent>) => {
     setHovered(true);
@@ -70,14 +72,17 @@ export function WetAreaMesh({ wetArea }: { wetArea: WetArea }) {
   }, []);
 
   return (
-    <Plane
-      args={[size.x, size.z]}
-      position={center}
-      rotation={[-Math.PI / 2, 0, 0]}
-      material={hovered ? WET_AREA_HOVERED_MATERIAL : WET_AREA_MATERIAL}
+    <mesh
+      rotation={[Math.PI / 2, 0, 0]}
       onContextMenu={handleContextMenu}
       onPointerEnter={handlePointerEnter}
       onPointerOut={handlePointerOut}
-    />
+    >
+      <shapeGeometry args={[shape]} />
+      <meshStandardMaterial
+        color={hovered ? "hotpink" : "lightblue"}
+        side={THREE.DoubleSide}
+      />
+    </mesh>
   );
 }

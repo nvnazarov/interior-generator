@@ -74,20 +74,19 @@ class WallPatch(BaseModel):
     y2: int | None = None
 
 
-class WetArea(BaseModel):
-    id: str
+class Point(BaseModel):
     x: int
     y: int
-    w: int = Field(ge=0)
-    h: int = Field(ge=0)
+
+
+class WetArea(BaseModel):
+    id: str
+    points: list[Point]
 
 
 class WetAreaPatch(BaseModel):
     id: str | None = None
-    x: int | None = None
-    y: int | None = None
-    w: int | None = Field(None, ge=0)
-    h: int | None = Field(None, ge=0)
+    points: list[Point] | None = None
 
 
 class ContentPatch(BaseModel):
