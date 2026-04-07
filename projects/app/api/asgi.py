@@ -1,6 +1,5 @@
 import logging
 from typing import Annotated
-from uuid import UUID
 
 import uvicorn
 from fastapi import Depends, FastAPI, Header, HTTPException, Response, status
@@ -31,7 +30,7 @@ DEFAULT_HEADER = "x-account-id"
 
 
 def attach_project_etag(response: Response, project: Project) -> None:
-    response.headers["ETag"] = f"project-{project.id.hex}-{project.revision}"
+    response.headers["ETag"] = f"project-{project.id}-{project.revision}"
 
 
 def parse_project_etag(etag: str) -> int:
@@ -95,7 +94,7 @@ class ASGI(FastAPI):
         @self.get("/projects/{project_id}", tags=["projects"])
         async def get_project(
             response: Response,
-            project_id: UUID,
+            project_id: str,
             account_id: Annotated[str, Depends(get_account_id)],
             revision: Annotated[str | None, Header(alias="if-none-match")] = None,
         ):
@@ -116,7 +115,7 @@ class ASGI(FastAPI):
             tags=["projects"],
         )
         async def publish_project(
-            project_id: UUID, account_id: Annotated[str, Depends(get_account_id)]
+            project_id: str, account_id: Annotated[str, Depends(get_account_id)]
         ) -> None:
             try:
                 await self.service.publish_project(project_id, account_id)
@@ -129,7 +128,7 @@ class ASGI(FastAPI):
             tags=["projects"],
         )
         async def unpublish_project(
-            project_id: UUID, account_id: Annotated[str, Depends(get_account_id)]
+            project_id: str, account_id: Annotated[str, Depends(get_account_id)]
         ) -> None:
             try:
                 await self.service.unublish_project(project_id, account_id)
@@ -142,7 +141,7 @@ class ASGI(FastAPI):
             tags=["projects"],
         )
         async def delete_project(
-            project_id: UUID, account_id: Annotated[str, Depends(get_account_id)]
+            project_id: str, account_id: Annotated[str, Depends(get_account_id)]
         ) -> None:
             try:
                 await self.service.delete_project(account_id, project_id)
@@ -156,7 +155,7 @@ class ASGI(FastAPI):
         )
         async def patch_project(
             response: Response,
-            project_id: UUID,
+            project_id: str,
             account_id: Annotated[str, Depends(get_account_id)],
             patch: ProjectPatch,
             revision: Annotated[str, Header(alias="if-match")],
@@ -195,7 +194,7 @@ class ASGI(FastAPI):
         )
         async def create_plan(
             response: Response,
-            project_id: UUID,
+            project_id: str,
             account_id: Annotated[str, Depends(get_account_id)],
         ) -> PlanSchema:
             try:
@@ -210,7 +209,7 @@ class ASGI(FastAPI):
         @self.get("/plans/{plan_id}", tags=["plans"])
         async def get_plan(
             response: Response,
-            plan_id: UUID,
+            plan_id: str,
             account_id: Annotated[str, Depends(get_account_id)],
             etag: Annotated[str | None, Header(alias="if-none-match")] = None,
         ):
@@ -229,7 +228,7 @@ class ASGI(FastAPI):
             response_model_exclude_none=True,
         )
         async def get_plans_of_project(
-            project_id: UUID,
+            project_id: str,
             account_id: Annotated[str, Depends(get_account_id)],
         ) -> list[PlanSchema]:
             try:
@@ -244,7 +243,7 @@ class ASGI(FastAPI):
             status_code=status.HTTP_204_NO_CONTENT,
         )
         async def delete_plan(
-            plan_id: UUID, account_id: Annotated[str, Depends(get_account_id)]
+            plan_id: str, account_id: Annotated[str, Depends(get_account_id)]
         ):
             try:
                 await self.service.delete_plan(account_id, plan_id)
@@ -258,7 +257,7 @@ class ASGI(FastAPI):
         )
         async def patch_plan(
             response: Response,
-            plan_id: UUID,
+            plan_id: str,
             account_id: Annotated[str, Depends(get_account_id)],
             patch: PlanPatch,
             etag: Annotated[str, Header(alias="if-match")],

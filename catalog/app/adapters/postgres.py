@@ -1,6 +1,5 @@
 import base64
 from typing import Any
-from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
 from sqlalchemy import Row, String, bindparam, text
@@ -12,7 +11,7 @@ from app.core.models import Cursor, Furniture, SearchResult
 
 
 class PostgresCursor(BaseModel):
-    last_id: UUID
+    last_id: str
     area: str | None = None
     name: str | None = None
 
@@ -158,7 +157,7 @@ class PostgresFurnitureRepository(IFurnitureRepository):
             )
             return furniture, cursor
 
-    async def get(self, furniture_id: UUID) -> Furniture | None:
+    async def get(self, furniture_id: str) -> Furniture | None:
         async with self.engine.connect() as c:
             result = await c.execute(
                 self.stmt_get,

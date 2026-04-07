@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -50,8 +50,8 @@ class AreaPatch(BaseModel):
 
 
 class ContentPatch(BaseModel):
-    furniture: dict[str, FurniturePatch | None] = {}
-    areas: dict[str, AreaPatch | None] = {}
+    furniture: dict[str, FurniturePatch | None] = Field(default_factory=dict)
+    areas: dict[str, AreaPatch | None] = Field(default_factory=dict)
 
 
 class Patch(BaseModel):
@@ -60,13 +60,13 @@ class Patch(BaseModel):
 
 
 class Content(BaseModel):
-    furniture: dict[str, Furniture] = {}
-    areas: dict[str, Area] = {}
+    furniture: dict[str, Furniture] = Field(default_factory=dict)
+    areas: dict[str, Area] = Field(default_factory=dict)
 
 
 class Plan(BaseModel):
-    id: UUID
-    project_id: UUID
+    id: str
+    project_id: str
     revision: int = 0
     content: Content = Field(default_factory=lambda: Content())
     name: str = Field("", max_length=256)
@@ -74,10 +74,10 @@ class Plan(BaseModel):
     updated_at: datetime = Field(default_factory=now)
 
     @staticmethod
-    def empty(project_id: UUID, *, name: str = "") -> "Plan":
+    def empty(project_id: str, *, name: str = "") -> "Plan":
         dt = now()
         return Plan(
-            id=uuid4(),
+            id=uuid4().hex,
             project_id=project_id,
             revision=0,
             name=name,
@@ -143,13 +143,13 @@ class Plan(BaseModel):
 
 class PlanRepository(ABC):
     @abstractmethod
-    async def get(self, plan_id: UUID) -> Plan | None: ...
+    async def get(self, plan_id: str) -> Plan | None: ...
 
     @abstractmethod
     async def save(self, plan: Plan) -> None: ...
 
     @abstractmethod
-    async def get_without_content(self, plan_id: UUID) -> Plan | None: ...
+    async def get_without_content(self, plan_id: str) -> Plan | None: ...
 
     @abstractmethod
     async def save_without_content(self, plan: Plan) -> None: ...
@@ -158,4 +158,4 @@ class PlanRepository(ABC):
     async def delete(self, plan: Plan) -> None: ...
 
     @abstractmethod
-    async def get_all_of_project(self, project_id: UUID) -> list[Plan]: ...
+    async def get_all_of_project(self, project_id: str) -> list[Plan]: ...

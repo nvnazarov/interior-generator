@@ -131,6 +131,11 @@ services:
       - "GENERATOR__API__HEADER_FOR_ACCOUNT_ID=x-account-id"
       - "GENERATOR__OPENAI__API_KEY=${GENERATOR__OPENAI__API_KEY}"
       - "GENERATOR__OPENAI__BASE_URL=${GENERATOR__OPENAI__BASE_URL}"
+      - "GENERATOR__POSTGRES__HOST=postgres"
+      - "GENERATOR__POSTGRES__PORT=5432"
+      - "GENERATOR__POSTGRES__USER=postgres"
+      - "GENERATOR__POSTGRES__PASSWORD=postgres"
+      - "GENERATOR__POSTGRES__DB=postgres"
       - "GENERATOR__LOGGING__LEVEL=INFO"
     networks:
       - "private"
@@ -173,6 +178,7 @@ services:
       - "PROJECTS__POSTGRES__USER=postgres"
       - "PROJECTS__POSTGRES__PASSWORD=postgres"
       - "PROJECTS__POSTGRES__DB=postgres"
+      - "PROJECTS__LOGGING__LEVEL=INFO"
     networks:
       - "private"
     healthcheck:

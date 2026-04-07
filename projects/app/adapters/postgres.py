@@ -1,6 +1,5 @@
 import logging
 from typing import Any
-from uuid import UUID
 
 from sqlalchemy import bindparam, text
 from sqlalchemy.dialects.postgresql import JSONB
@@ -303,7 +302,7 @@ class PostgresProjectRepository(ProjectRepository):
     def __init__(self, connection: AsyncConnection):
         self._conn = connection
 
-    async def get(self, project_id: UUID) -> Project | None:
+    async def get(self, project_id: str) -> Project | None:
         cursor = await self._conn.execute(STMT_GET_PROJECT, {"project_id": project_id})
         if (row := cursor.one_or_none()) is None:
             return None
@@ -335,7 +334,7 @@ class PostgresProjectRepository(ProjectRepository):
         if cursor.rowcount == 0:
             raise OptimisticLockError
 
-    async def get_without_content(self, project_id: UUID) -> Project | None:
+    async def get_without_content(self, project_id: str) -> Project | None:
         cursor = await self._conn.execute(
             STMT_GET_PROJECT_WITHOUT_CONTENT, {"project_id": project_id}
         )
@@ -368,10 +367,10 @@ class PostgresProjectRepository(ProjectRepository):
         if cursor.rowcount == 0:
             raise OptimisticLockError
 
-    async def delete(self, project_id: UUID) -> None:
+    async def delete(self, project_id: str) -> None:
         _ = await self._conn.execute(STMT_DELETE_PROJECT, {"project_id": project_id})
 
-    async def get_all_owned_by_account(self, account_id: UUID) -> list[Project]:
+    async def get_all_owned_by_account(self, account_id: str) -> list[Project]:
         cursor = await self._conn.execute(
             STMT_GET_ALL_PROJECTS_OWNED_BY_ACCOUNT, {"account_id": account_id}
         )
@@ -395,7 +394,7 @@ class PostgresPlanRepository(PlanRepository):
     def __init__(self, connection: AsyncConnection):
         self._conn = connection
 
-    async def get(self, plan_id: UUID) -> Plan | None:
+    async def get(self, plan_id: str) -> Plan | None:
         cursor = await self._conn.execute(STMT_GET_PLAN, {"plan_id": plan_id})
         if (row := cursor.one_or_none()) is None:
             return None
@@ -420,7 +419,7 @@ class PostgresPlanRepository(PlanRepository):
         if cursor.rowcount == 0:
             raise OptimisticLockError
 
-    async def get_without_content(self, plan_id: UUID) -> Plan | None:
+    async def get_without_content(self, plan_id: str) -> Plan | None:
         cursor = await self._conn.execute(
             STMT_GET_PLAN_WITHOUT_CONTENT, {"plan_id": plan_id}
         )
@@ -453,7 +452,7 @@ class PostgresPlanRepository(PlanRepository):
         if cursor.rowcount == 0:
             raise OptimisticLockError
 
-    async def get_all_of_project(self, project_id: UUID) -> list[Plan]:
+    async def get_all_of_project(self, project_id: str) -> list[Plan]:
         cursor = await self._conn.execute(
             STMT_GET_PLANS_OF_PROJECT, {"project_id": project_id}
         )

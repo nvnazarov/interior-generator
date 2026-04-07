@@ -1,7 +1,6 @@
 import base64
 import logging
 from typing import Any
-from uuid import UUID
 
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from elasticsearch.helpers import async_bulk
@@ -35,9 +34,9 @@ def decode_cursor(cursor: Cursor) -> ElasticsearchCursor:
 
 def furniture_to_es_doc(furniture: Furniture) -> dict[str, Any]:
     return {
-        "_id": str(furniture.id),
+        "_id": furniture.id,
         "_source": {
-            "id": str(furniture.id),
+            "id": furniture.id,
             "name": furniture.name,
             "width": furniture.width,
             "height": furniture.height,
@@ -59,7 +58,7 @@ def furniture_to_es_doc(furniture: Furniture) -> dict[str, Any]:
 def es_doc_to_furniture(doc: dict[str, Any]) -> Furniture:
     source = doc["_source"]
     return Furniture(
-        id=UUID(source["id"]),
+        id=source["id"],
         name=source["name"],
         width=source["width"],
         height=source["height"],
@@ -148,10 +147,10 @@ class ElasticFurnitureRepository(IFurnitureRepository):
 
         return furniture_list, cursor
 
-    async def get(self, furniture_id: UUID) -> Furniture | None:
+    async def get(self, furniture_id: str) -> Furniture | None:
         await self.ensure_index_exists()
         try:
-            result = await self.es.get(index=self.index, id=str(furniture_id))
+            result = await self.es.get(index=self.index, id=furniture_id)
             return es_doc_to_furniture(result.raw)
         except NotFoundError:
             return None
@@ -215,7 +214,7 @@ class ElasticFurnitureRepository(IFurnitureRepository):
         actions: list[Any] = []
         for furniture, description in furniture_list:
             doc: dict[str, Any] = {
-                "id": str(furniture.id),
+                "id": furniture.id,
                 "name": furniture.name,
                 "width": furniture.width,
                 "height": furniture.height,
@@ -235,9 +234,7 @@ class ElasticFurnitureRepository(IFurnitureRepository):
             }
             if description:
                 doc["description"] = description
-            actions.append(
-                {"_index": self.index, "_id": str(furniture.id), "_source": doc}
-            )
+            actions.append({"_index": self.index, "_id": furniture.id, "_source": doc})
         if actions:
             _, failed = await async_bulk(client=self.es, actions=actions, refresh=True)
             if failed:

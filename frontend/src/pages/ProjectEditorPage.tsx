@@ -6,7 +6,9 @@ export function ProjectEditorPage() {
   const { projectId } = useParams();
 
   if (!projectId) {
-    throw new Error("error: project editor page: cannot get project id from params");
+    throw new Error(
+      "error: project editor page: cannot get project id from params",
+    );
   }
 
   return (

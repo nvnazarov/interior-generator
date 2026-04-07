@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from uuid import UUID
 
 import pytest
 from fastapi import status
@@ -10,14 +9,14 @@ from httpx import AsyncClient
 @pytest.mark.plan
 @pytest.mark.integration
 async def test_create_plan(client: AsyncClient):
-    account_id = UUID("022f51f9-98bb-40af-9d30-0b3c03819212")
-    resp = await client.post("/projects", headers={"x-account-id": account_id.hex})
-    project_id = UUID(resp.json()["id"])
+    account_id = "022f51f9-98bb-40af-9d30-0b3c03819212"
+    resp = await client.post("/projects", headers={"x-account-id": account_id})
+    project_id = resp.json()["id"]
 
     start_time = datetime.now(tz=timezone.utc)
     resp = await client.post(
-        f"/projects/{project_id.hex}/plans",
-        headers={"x-account-id": account_id.hex},
+        f"/projects/{project_id}/plans",
+        headers={"x-account-id": account_id},
     )
     finish_time = datetime.now(tz=timezone.utc)
     assert resp.status_code == status.HTTP_201_CREATED
@@ -42,29 +41,29 @@ async def test_create_plan(client: AsyncClient):
 @pytest.mark.plan
 @pytest.mark.integration
 async def test_get_plan(client: AsyncClient):
-    account_id = UUID("022f51f9-98bb-40af-9d30-0b3c03819212")
-    resp = await client.post("/projects", headers={"x-account-id": account_id.hex})
-    project_id = UUID(resp.json()["id"])
+    account_id = "022f51f9-98bb-40af-9d30-0b3c03819212"
+    resp = await client.post("/projects", headers={"x-account-id": account_id})
+    project_id = resp.json()["id"]
     resp = await client.post(
         f"/projects/{project_id}/plans",
-        headers={"x-account-id": account_id.hex},
+        headers={"x-account-id": account_id},
     )
     plan = resp.json()
-    plan_id = UUID(plan["id"])
+    plan_id = plan["id"]
     plan_etag = resp.headers.get("etag")
 
     resp = await client.get(
-        f"/plans/{plan_id.hex}",
-        headers={"x-account-id": account_id.hex},
+        f"/plans/{plan_id}",
+        headers={"x-account-id": account_id},
     )
     assert resp.status_code == status.HTTP_200_OK
     assert resp.json() == plan
     assert resp.headers.get("etag") == plan_etag
 
     resp = await client.get(
-        f"/plans/{plan_id.hex}",
+        f"/plans/{plan_id}",
         headers={
-            "x-account-id": account_id.hex,
+            "x-account-id": account_id,
             "if-none-match": plan_etag,
         },
     )
@@ -72,9 +71,9 @@ async def test_get_plan(client: AsyncClient):
     assert resp.text == ""
 
     resp = await client.get(
-        f"/plans/{plan_id.hex}",
+        f"/plans/{plan_id}",
         headers={
-            "x-account-id": account_id.hex,
+            "x-account-id": account_id,
             "if-none-match": plan_etag + "0",
         },
     )
@@ -87,35 +86,35 @@ async def test_get_plan(client: AsyncClient):
 @pytest.mark.plan
 @pytest.mark.integration
 async def test_delete_plan(client: AsyncClient):
-    account_id = UUID("022f51f9-98bb-40af-9d30-0b3c03819212")
-    other_account_id = UUID("022f51f9-98bb-40af-9d30-0b3c03819213")
-    resp = await client.post("/projects", headers={"x-account-id": account_id.hex})
-    project_id = UUID(resp.json()["id"])
+    account_id = "022f51f9-98bb-40af-9d30-0b3c03819212"
+    other_account_id = "022f51f9-98bb-40af-9d30-0b3c03819213"
+    resp = await client.post("/projects", headers={"x-account-id": account_id})
+    project_id = resp.json()["id"]
     resp = await client.post(
         f"/projects/{project_id}/plans",
-        headers={"x-account-id": account_id.hex},
+        headers={"x-account-id": account_id},
     )
     plan = resp.json()
-    plan_id = UUID(plan["id"])
+    plan_id = plan["id"]
 
     # Account that does not own the project gets 404 error.
     resp = await client.delete(
-        f"/plans/{plan_id.hex}",
-        headers={"x-account-id": other_account_id.hex},
+        f"/plans/{plan_id}",
+        headers={"x-account-id": other_account_id},
     )
     assert resp.status_code == status.HTTP_404_NOT_FOUND
     assert resp.json() == {"detail": "plan not found"}
 
     resp = await client.delete(
         f"/plans/{plan_id}",
-        headers={"x-account-id": account_id.hex},
+        headers={"x-account-id": account_id},
     )
     assert resp.status_code == status.HTTP_204_NO_CONTENT
     assert resp.text == ""
 
     resp = await client.delete(
         f"/plans/{plan_id}",
-        headers={"x-account-id": account_id.hex},
+        headers={"x-account-id": account_id},
     )
     assert resp.status_code == status.HTTP_404_NOT_FOUND
     assert resp.json() == {"detail": "plan not found"}
@@ -125,22 +124,22 @@ async def test_delete_plan(client: AsyncClient):
 @pytest.mark.plan
 @pytest.mark.integration
 async def test_patch_plan(client: AsyncClient):
-    account_id = UUID("022f51f9-98bb-40af-9d30-0b3c03819212")
-    resp = await client.post("/projects", headers={"x-account-id": account_id.hex})
-    project_id = UUID(resp.json()["id"])
+    account_id = "022f51f9-98bb-40af-9d30-0b3c03819212"
+    resp = await client.post("/projects", headers={"x-account-id": account_id})
+    project_id = resp.json()["id"]
     resp = await client.post(
         f"/projects/{project_id}/plans",
-        headers={"x-account-id": account_id.hex},
+        headers={"x-account-id": account_id},
     )
     plan = resp.json()
-    plan_id = UUID(plan["id"])
+    plan_id = plan["id"]
     plan_etag = resp.headers.get("etag")
 
     # Cannot patch without providing a revision (through If-Match header).
     resp = await client.patch(
-        f"/plans/{plan_id.hex}",
+        f"/plans/{plan_id}",
         headers={
-            "x-account-id": account_id.hex,
+            "x-account-id": account_id,
         },
         json={},
     )
@@ -148,9 +147,9 @@ async def test_patch_plan(client: AsyncClient):
 
     # Cannot patch with incorrect revision.
     resp = await client.patch(
-        f"/plans/{plan_id.hex}",
+        f"/plans/{plan_id}",
         headers={
-            "x-account-id": account_id.hex,
+            "x-account-id": account_id,
             "if-match": plan_etag + "1",
         },
         json={},
@@ -160,9 +159,9 @@ async def test_patch_plan(client: AsyncClient):
 
     # Normal patches are applied.
     resp = await client.patch(
-        f"/plans/{plan_id.hex}",
+        f"/plans/{plan_id}",
         headers={
-            "x-account-id": account_id.hex,
+            "x-account-id": account_id,
             "if-match": plan_etag,
         },
         json={
@@ -178,8 +177,8 @@ async def test_patch_plan(client: AsyncClient):
     assert (plan_new_etag := resp.headers.get("etag")) != plan_etag
 
     resp = await client.get(
-        f"/plans/{plan_id.hex}",
-        headers={"x-account-id": account_id.hex},
+        f"/plans/{plan_id}",
+        headers={"x-account-id": account_id},
     )
     assert resp.status_code == status.HTTP_200_OK
     assert resp.json()["name"] == "test name"
@@ -194,25 +193,25 @@ async def test_patch_plan(client: AsyncClient):
 @pytest.mark.plan
 @pytest.mark.integration
 async def test_get_plans_of_project(client: AsyncClient):
-    account_id = UUID("022f51f9-98bb-40af-9d30-0b3c03819212")
-    resp = await client.post("/projects", headers={"x-account-id": account_id.hex})
-    project_id = UUID(resp.json()["id"])
+    account_id = "022f51f9-98bb-40af-9d30-0b3c03819212"
+    resp = await client.post("/projects", headers={"x-account-id": account_id})
+    project_id = resp.json()["id"]
 
     resp = await client.post(
-        f"/projects/{project_id.hex}/plans",
-        headers={"x-account-id": account_id.hex},
+        f"/projects/{project_id}/plans",
+        headers={"x-account-id": account_id},
     )
     plan_1 = resp.json()
 
     resp = await client.post(
-        f"/projects/{project_id.hex}/plans",
-        headers={"x-account-id": account_id.hex},
+        f"/projects/{project_id}/plans",
+        headers={"x-account-id": account_id},
     )
     plan_2 = resp.json()
 
     resp = await client.get(
-        f"/projects/{project_id.hex}/plans",
-        headers={"x-account-id": account_id.hex},
+        f"/projects/{project_id}/plans",
+        headers={"x-account-id": account_id},
     )
     assert resp.status_code == status.HTTP_200_OK
     assert resp.json()[0]["id"] == plan_1["id"]
@@ -226,7 +225,7 @@ async def test_plans_limit_exceeded(client: AsyncClient):
     headers = {"x-account-id": "022f51f9-98bb-40af-9d30-0b3c03819212"}
     resp = await client.post("/projects", headers=headers)
     assert resp.status_code == status.HTTP_201_CREATED
-    project_id = UUID(resp.json()["id"])
+    project_id = resp.json()["id"]
 
     last_plan_id: str = ""
     for _ in range(20):

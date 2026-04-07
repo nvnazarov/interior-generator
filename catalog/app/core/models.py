@@ -1,5 +1,4 @@
 from enum import Enum
-from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -26,7 +25,7 @@ class Furniture(BaseModel):
         CEILING = "ceiling"
         WALL = "wall"
 
-    id: UUID
+    id: str
     name: str
     width: int = Field(ge=0)
     height: int = Field(ge=0)

@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from io import BytesIO
 from typing import AsyncIterable, TextIO
-from uuid import UUID
 
 from app.core.dxf import export_dxf
 from app.core.models import Plan, Project
@@ -16,21 +15,19 @@ class PlanNotFoundError(Exception): ...
 
 class Catalog(ABC):
     @abstractmethod
-    async def get_furniture(self, furniture_id: UUID) -> None: ...
+    async def get_furniture(self, furniture_id: str) -> None: ...
 
 
 class Repository(ABC):
     @abstractmethod
-    async def get_project(
-        self, account_id: str, project_id: UUID
-    ) -> Project | None: ...
+    async def get_project(self, account_id: str, project_id: str) -> Project | None: ...
 
     @abstractmethod
-    async def get_plan(self, account_id: str, plan_id: UUID) -> Plan | None: ...
+    async def get_plan(self, account_id: str, plan_id: str) -> Plan | None: ...
 
     @abstractmethod
     def get_plans_of_project(
-        self, account_id: str, project_id: UUID
+        self, account_id: str, project_id: str
     ) -> AsyncIterable[Plan]: ...
 
 
@@ -38,7 +35,7 @@ class Exporter:
     def __init__(self, db: Repository):
         self.db = db
 
-    async def export_project_pdf(self, project_id: UUID, account_id: str) -> BytesIO:
+    async def export_project_pdf(self, project_id: str, account_id: str) -> BytesIO:
         project = await self.db.get_project(account_id, project_id)
         if project is None:
             raise ProjectNotFoundError
@@ -46,7 +43,7 @@ class Exporter:
         bytes = await export_pdf(project, plans)
         return bytes
 
-    async def export_plan_dxf(self, plan_id: UUID, account_id: str) -> TextIO:
+    async def export_plan_dxf(self, plan_id: str, account_id: str) -> TextIO:
         plan = await self.db.get_plan(account_id, plan_id)
         if plan is None:
             raise PlanNotFoundError

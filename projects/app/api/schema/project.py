@@ -1,5 +1,4 @@
 from datetime import datetime
-from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -99,7 +98,7 @@ class Patch(BaseModel):
 
 
 class Project(BaseModel):
-    id: UUID
+    id: str
     account_id: str
     name: str = Field(max_length=256)
     description: str = Field(max_length=2048)

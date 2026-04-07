@@ -1,5 +1,4 @@
 from enum import Enum
-from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -74,25 +73,25 @@ class Window(BaseModel):
 
 
 class ProjectContent(BaseModel):
-    walls: dict[str, Wall] = {}
-    doors: dict[str, Door] = {}
-    windows: dict[str, Window] = {}
-    wet_areas: dict[str, WetArea] = {}
+    walls: dict[str, Wall] = Field(default_factory=dict)
+    doors: dict[str, Door] = Field(default_factory=dict)
+    windows: dict[str, Window] = Field(default_factory=dict)
+    wet_areas: dict[str, WetArea] = Field(default_factory=dict)
 
 
 class Project(BaseModel):
-    id: UUID
+    id: str
     name: str
     content: ProjectContent
 
 
 class PlanContent(BaseModel):
-    furniture: dict[str, FurnitureInPlan] = {}
-    areas: dict[str, Area] = {}
+    furniture: dict[str, FurnitureInPlan] = Field(default_factory=dict)
+    areas: dict[str, Area] = Field(default_factory=dict)
 
 
 class Plan(BaseModel):
-    id: UUID
-    project_id: UUID
+    id: str
+    project_id: str
     name: str
     content: PlanContent

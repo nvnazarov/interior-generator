@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from uuid import UUID
 
 from app.core.errors import FurnitureNotFoundError
 from app.core.models import Cursor, Furniture, SearchResult
@@ -9,7 +8,7 @@ MAX_LIMIT = 20
 
 class IFurnitureRepository(ABC):
     @abstractmethod
-    async def get(self, furniture_id: UUID) -> Furniture | None: ...
+    async def get(self, furniture_id: str) -> Furniture | None: ...
 
     @abstractmethod
     async def search_with_cursor(self, cursor: Cursor, limit: int) -> SearchResult: ...
@@ -27,10 +26,10 @@ class Catalog:
     def __init__(self, furniture: IFurnitureRepository):
         self.furniture = furniture
 
-    async def get_furniture_by_id(self, furniture_id: UUID) -> Furniture:
+    async def get_furniture_by_id(self, furniture_id: str) -> Furniture:
         furniture = await self.furniture.get(furniture_id)
         if furniture is None:
-            raise FurnitureNotFoundError(f"furniture[id={furniture_id.hex}] not found")
+            raise FurnitureNotFoundError(f"furniture[id={furniture_id}] not found")
         return furniture
 
     async def search_furniture_with_cursor(

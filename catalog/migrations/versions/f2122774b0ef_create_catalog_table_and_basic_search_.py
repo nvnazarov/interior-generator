@@ -10,7 +10,7 @@ from typing import Sequence, Union
 
 from alembic import op
 from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import INTEGER, JSONB, UUID, VARCHAR
+from sqlalchemy.dialects.postgresql import INTEGER, JSONB, VARCHAR
 
 # revision identifiers, used by Alembic.
 revision: str = "f2122774b0ef"
@@ -24,7 +24,7 @@ def upgrade() -> None:
     op.execute("CREATE SCHEMA catalog")
     op.create_table(
         "catalog",
-        Column("id", UUID(), primary_key=True),
+        Column("id", VARCHAR(256), primary_key=True),
         Column("name", VARCHAR(256), nullable=False),
         Column("width", INTEGER, nullable=False),
         Column("height", INTEGER, nullable=False),

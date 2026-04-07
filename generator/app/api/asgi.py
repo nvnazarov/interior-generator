@@ -4,6 +4,7 @@ from uuid import UUID
 import uvicorn
 from fastapi import Depends, FastAPI, Header, HTTPException
 
+from app.core.models import Prompt
 from app.core.server import Server
 
 
@@ -24,7 +25,7 @@ class ASGI(FastAPI):
                 raise HTTPException(status_code=401)
             return account_id
 
-        @self.post("/projects/{project_id}/plans/generate")
+        @self.post("/projects/{project_id}/prompts")
         async def generate_plans(
             project_id: UUID,
             account_id: Annotated[str, Depends(get_account_id)],
@@ -33,6 +34,12 @@ class ASGI(FastAPI):
         ) -> list[UUID]:
             plans = await server.generate_plans(account_id, project_id, base_plan_id, n)
             return [plan.id for plan in plans]
+
+        @self.get("/projects/{project_id}/prompts")
+        async def get_prompts_for_project(
+            project_id: UUID, account_id: Annotated[str, Depends(get_account_id)]
+        ) -> list[Prompt]:
+            return await server.get_prompts_for_project(account_id, project_id)
 
         @self.get("/health", status_code=204)
         async def healthcheck():

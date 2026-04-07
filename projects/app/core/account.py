@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from pydantic import BaseModel
 
@@ -36,7 +36,7 @@ class Account(BaseModel):
         self.projects_count += 1
         dt = now()
         return Project(
-            id=uuid4(),
+            id=uuid4().hex,
             account_id=self.id,
             name=name,
             description=description,
@@ -46,7 +46,7 @@ class Account(BaseModel):
             plans_limit=plans_limit,
         )
 
-    def delete_project(self, project_id: UUID) -> None:
+    def delete_project(self, project_id: str) -> None:
         if self.projects_count == 0:
             raise NoProjects
         self.projects_count = max(0, self.projects_count - 1)

@@ -1,5 +1,4 @@
 from typing import Annotated
-from uuid import UUID
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query, status
@@ -26,7 +25,7 @@ class ASGI(FastAPI):
         )
 
         @self.get("/furniture/{furniture_id}")
-        async def get_furniture_by_id(furniture_id: UUID) -> Furniture:
+        async def get_furniture_by_id(furniture_id: str) -> Furniture:
             try:
                 return await catalog.get_furniture_by_id(furniture_id)
             except FurnitureNotFoundError:

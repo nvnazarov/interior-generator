@@ -2,7 +2,6 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Sequence
-from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -90,10 +89,10 @@ class WetAreaPatch(BaseModel):
 
 
 class ContentPatch(BaseModel):
-    walls: dict[str, WallPatch | None] = {}
-    doors: dict[str, DoorPatch | None] = {}
-    windows: dict[str, WindowPatch | None] = {}
-    wet_areas: dict[str, WetAreaPatch | None] = {}
+    walls: dict[str, WallPatch | None] = Field(default_factory=dict)
+    doors: dict[str, DoorPatch | None] = Field(default_factory=dict)
+    windows: dict[str, WindowPatch | None] = Field(default_factory=dict)
+    wet_areas: dict[str, WetAreaPatch | None] = Field(default_factory=dict)
 
 
 class Patch(BaseModel):
@@ -103,20 +102,20 @@ class Patch(BaseModel):
 
 
 class Content(BaseModel):
-    walls: dict[str, Wall] = {}
-    doors: dict[str, Door] = {}
-    windows: dict[str, Window] = {}
-    wet_areas: dict[str, WetArea] = {}
+    walls: dict[str, Wall] = Field(default_factory=dict)
+    doors: dict[str, Door] = Field(default_factory=dict)
+    windows: dict[str, Window] = Field(default_factory=dict)
+    wet_areas: dict[str, WetArea] = Field(default_factory=dict)
 
 
 class Project(BaseModel):
-    id: UUID
+    id: str
     account_id: str
     name: str = Field(max_length=256)
     description: str = Field(max_length=2048)
     revision: int = 0
     published: bool = False
-    content: Content = Field(default_factory=lambda: Content())
+    content: Content = Field(default_factory=Content)
     created_at: datetime = Field(default_factory=now)
     updated_at: datetime = Field(default_factory=now)
     plans_count: int = 0
@@ -128,7 +127,7 @@ class Project(BaseModel):
         self.plans_count += 1
         return Plan.empty(self.id, name=name)
 
-    def delete_plan(self, plan_id: UUID):
+    def delete_plan(self, plan_id: str):
         self.plans_count = max(0, self.plans_count - 1)
 
     def publish(self):
@@ -215,19 +214,19 @@ class Project(BaseModel):
 
 class ProjectRepository(ABC):
     @abstractmethod
-    async def get(self, project_id: UUID) -> Project | None: ...
+    async def get(self, project_id: str) -> Project | None: ...
 
     @abstractmethod
     async def save(self, project: Project) -> None: ...
 
     @abstractmethod
-    async def get_without_content(self, project_id: UUID) -> Project | None: ...
+    async def get_without_content(self, project_id: str) -> Project | None: ...
 
     @abstractmethod
     async def save_without_content(self, project: Project) -> None: ...
 
     @abstractmethod
-    async def delete(self, project_id: UUID) -> None: ...
+    async def delete(self, project_id: str) -> None: ...
 
     @abstractmethod
     async def get_all_owned_by_account(self, account_id: str) -> list[Project]: ...

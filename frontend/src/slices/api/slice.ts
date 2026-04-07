@@ -1,5 +1,12 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import type { Furniture, Project, Plan, ProjectPatch, PlanPatch } from "./entities";
+import type {
+  Furniture,
+  Project,
+  Plan,
+  ProjectPatch,
+  PlanPatch,
+  Prompt,
+} from "./entities";
 import {
   FurnitureCatalogResponseSchema,
   RawFurnitureSchema,
@@ -7,8 +14,15 @@ import {
   RawPlanSchema,
   RawProjectsArraySchema,
   RawProjectSchema,
+  RawPromptsArraySchema,
 } from "./schema";
-import type { FurnitureCatalogResponse, RawFurniture, RawPlan, RawProject } from "./schema";
+import type {
+  FurnitureCatalogResponse,
+  RawFurniture,
+  RawPlan,
+  RawProject,
+  RawPrompt,
+} from "./schema";
 import { mapById } from "./util";
 import { Config } from "../../shared/config";
 import { UrlUtil } from "../../shared/util";
@@ -17,7 +31,7 @@ const apiBaseUrl = UrlUtil.noRightSlash(Config.gateway.baseUrl) + "/api";
 
 const api = createApi({
   reducerPath: "api",
-  tagTypes: ["Projects", "Plans"],
+  tagTypes: ["Projects", "Plans", "Prompts"],
   baseQuery: fetchBaseQuery({ baseUrl: apiBaseUrl }),
   endpoints: (builder) => ({
     getAllOwnedProjects: builder.query<Project[], void>({
@@ -43,9 +57,9 @@ const api = createApi({
       providesTags: (result) =>
         result
           ? [
-            ...result.map(({ id }) => ({ type: "Projects", id }) as const),
-            { type: "Projects", id: "LIST" },
-          ]
+              ...result.map(({ id }) => ({ type: "Projects", id }) as const),
+              { type: "Projects", id: "LIST" },
+            ]
           : [{ type: "Projects", id: "LIST" }],
     }),
     getProjectById: builder.query<Project, string>({
@@ -157,33 +171,58 @@ const api = createApi({
           body: {
             name: patch.name,
             description: patch.description,
-            content: content === undefined ? undefined : ({
-              walls: content.walls,
-              wet_areas: content.wetAreas,
-              windows: windows && Object.entries(windows).map(([id, window]): [string, any] => (window ? [id, {
-                id: id,
-                wall_id: window?.wallId,
-                x: window?.x,
-                y: window?.y,
-                w: window?.w,
-                h: window?.h,
-              }] : [id, null])).reduce((acc, curr) => {
-                acc[curr[0]] = curr[1]
-                return acc
-              }, {} as any),
-              doors: doors && Object.entries(doors).map(([id, door]): [string, any] => (door ? [id, {
-                id: id,
-                wall_id: door?.wallId,
-                x: door?.x,
-                w: door?.w,
-                h: door?.h,
-              }] : [id, null])).reduce((acc, curr) => {
-                acc[curr[0]] = curr[1]
-                return acc
-              }, {} as any),
-            })
+            content:
+              content === undefined
+                ? undefined
+                : {
+                    walls: content.walls,
+                    wet_areas: content.wetAreas,
+                    windows:
+                      windows &&
+                      Object.entries(windows)
+                        .map(([id, window]): [string, any] =>
+                          window
+                            ? [
+                                id,
+                                {
+                                  id: id,
+                                  wall_id: window?.wallId,
+                                  x: window?.x,
+                                  y: window?.y,
+                                  w: window?.w,
+                                  h: window?.h,
+                                },
+                              ]
+                            : [id, null],
+                        )
+                        .reduce((acc, curr) => {
+                          acc[curr[0]] = curr[1];
+                          return acc;
+                        }, {} as any),
+                    doors:
+                      doors &&
+                      Object.entries(doors)
+                        .map(([id, door]): [string, any] =>
+                          door
+                            ? [
+                                id,
+                                {
+                                  id: id,
+                                  wall_id: door?.wallId,
+                                  x: door?.x,
+                                  w: door?.w,
+                                  h: door?.h,
+                                },
+                              ]
+                            : [id, null],
+                        )
+                        .reduce((acc, curr) => {
+                          acc[curr[0]] = curr[1];
+                          return acc;
+                        }, {} as any),
+                  },
           },
-        }
+        };
       },
       transformResponse: (_, meta) => {
         const revision = meta?.response?.headers.get("etag");
@@ -215,9 +254,9 @@ const api = createApi({
       providesTags: (result, _error, projectId) =>
         result
           ? [
-            ...result.map(({ id }) => ({ type: "Plans", id }) as const),
-            { type: "Plans", id: `LIST:${projectId}` },
-          ]
+              ...result.map(({ id }) => ({ type: "Plans", id }) as const),
+              { type: "Plans", id: `LIST:${projectId}` },
+            ]
           : [{ type: "Plans", id: `LIST:${projectId}` }],
     }),
     getPlanById: builder.query<Plan, string>({
@@ -269,7 +308,9 @@ const api = createApi({
         dtCreated: raw.created_at,
         dtUpdated: raw.updated_at,
       }),
-      invalidatesTags: (_result, _error, projectId) => [{ type: "Plans", id: `LIST:${projectId}` }],
+      invalidatesTags: (_result, _error, projectId) => [
+        { type: "Plans", id: `LIST:${projectId}` },
+      ],
     }),
     deletePlan: builder.mutation<void, string>({
       query: (planId: string) => ({
@@ -278,7 +319,10 @@ const api = createApi({
       }),
       invalidatesTags: (_result, _error, id) => [{ type: "Plans", id }],
     }),
-    patchPlan: builder.mutation<string, { id: string, revision: string, patch: PlanPatch }>({
+    patchPlan: builder.mutation<
+      string,
+      { id: string; revision: string; patch: PlanPatch }
+    >({
       query: ({ id, revision, patch }) => {
         const content = patch.content;
         const furniture = content?.furniture;
@@ -290,22 +334,36 @@ const api = createApi({
           },
           body: {
             name: patch.name,
-            content: content === undefined ? undefined : ({
-              areas: content.areas,
-              furniture: furniture && Object.entries(furniture).map(([id, f]): [string, any] => (f ? [id, {
-                id: id,
-                furniture_id: f?.furnitureId,
-                x: f?.x,
-                y: f?.y,
-                z: f?.z,
-                yaw: f?.yaw,
-              }] : [id, null])).reduce((acc, curr) => {
-                acc[curr[0]] = curr[1]
-                return acc
-              }, {} as any),
-            })
+            content:
+              content === undefined
+                ? undefined
+                : {
+                    areas: content.areas,
+                    furniture:
+                      furniture &&
+                      Object.entries(furniture)
+                        .map(([id, f]): [string, any] =>
+                          f
+                            ? [
+                                id,
+                                {
+                                  id: id,
+                                  furniture_id: f?.furnitureId,
+                                  x: f?.x,
+                                  y: f?.y,
+                                  z: f?.z,
+                                  yaw: f?.yaw,
+                                },
+                              ]
+                            : [id, null],
+                        )
+                        .reduce((acc, curr) => {
+                          acc[curr[0]] = curr[1];
+                          return acc;
+                        }, {} as any),
+                  },
           },
-        }
+        };
       },
       transformResponse: (_, meta) => {
         const revision = meta?.response?.headers.get("etag");
@@ -380,6 +438,56 @@ const api = createApi({
         meta: raw.meta,
       }),
     }),
+    getPromptsForProject: builder.query<Prompt[], string>({
+      query: (projectId: string) => `projects/${projectId}/prompts`,
+      rawResponseSchema: RawPromptsArraySchema,
+      transformResponse: (prompts: RawPrompt[]) =>
+        prompts.map((raw) => ({
+          id: raw.id,
+          text: raw.text,
+          projectId: raw.project_id,
+          basePlanId: raw.base_plan_id,
+          generatedPlansIds: raw.generated_plans_ids,
+          status: raw.status,
+          dtCreated: raw.dt_created,
+          dtDone: raw.dt_done,
+        })),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: "Prompts", id }) as const),
+              { type: "Prompts", id: "LIST" },
+            ]
+          : [{ type: "Prompts", id: "LIST" }],
+    }),
+    generatePlans: builder.mutation<
+      Prompt,
+      { projectId: string; text: string; basePlanId: string | null }
+    >({
+      query: ({ projectId, text, basePlanId }) => ({
+        url: `projects/${projectId}/prompts`,
+        method: "POST",
+        body: {
+          text,
+          basePlanId,
+        },
+      }),
+      rawResponseSchema: RawPlanSchema,
+      transformResponse: (raw: RawPrompt) => ({
+        id: raw.id,
+        text: raw.text,
+        projectId: raw.project_id,
+        basePlanId: raw.base_plan_id,
+        generatedPlansIds: raw.generated_plans_ids,
+        status: raw.status,
+        dtCreated: raw.dt_created,
+        dtDone: raw.dt_done,
+      }),
+      invalidatesTags: (_result, _error, { projectId }) => [
+        { type: "Prompts", id: `LIST:${projectId}` },
+        { type: "Plans", id: `LIST:${projectId}` },
+      ],
+    }),
   }),
 });
 
@@ -401,4 +509,7 @@ export const {
   useGetFurnitureInfiniteQuery,
   useGetFurnitureByIdQuery,
   useLazyGetFurnitureByIdQuery,
+  useGeneratePlansMutation,
+  useGetPromptsForProjectQuery,
+  useLazyGetPromptsForProjectQuery,
 } = api;

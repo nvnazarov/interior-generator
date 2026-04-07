@@ -13,7 +13,7 @@ type Tool = "hand" | "wall" | "window" | "door" | "wet_area";
 type ProjectChange = {
   patch: ProjectPatch;
   inversePatch: ProjectPatch;
-}
+};
 
 type ProjectEditorState = {
   project: Project | null;
@@ -68,7 +68,9 @@ const projectEditorSlice = createSlice({
       if (state.project) {
         state.project = applyJsonMergePatch(state.project, patch);
       } else {
-        throw new Error("error: project undoably changed: project is not initialized");
+        throw new Error(
+          "error: project undoably changed: project is not initialized",
+        );
       }
       state.unsavedAccumulatedPatch = combineJsonMergePatches(
         state.unsavedAccumulatedPatch,
@@ -133,11 +135,16 @@ const projectEditorSlice = createSlice({
 });
 
 export const selectProjectEditor = (state: AppState) => state.projectEditor;
-export const selectCanUndoChange = (state: AppState) => state.projectEditor.undoableChanges.length !== 0;
-export const selectCanRedoChange = (state: AppState) => state.projectEditor.redoableChanges.length !== 0;
-export const selectProjectEditorView = (state: AppState) => state.projectEditor.view;
-export const selectProjectEditorTool = (state: AppState) => state.projectEditor.tool;
-export const selectIsProjectSaved = (state: AppState) => Object.keys(state.projectEditor.unsavedAccumulatedPatch).length === 0;
+export const selectCanUndoChange = (state: AppState) =>
+  state.projectEditor.undoableChanges.length !== 0;
+export const selectCanRedoChange = (state: AppState) =>
+  state.projectEditor.redoableChanges.length !== 0;
+export const selectProjectEditorView = (state: AppState) =>
+  state.projectEditor.view;
+export const selectProjectEditorTool = (state: AppState) =>
+  state.projectEditor.tool;
+export const selectIsProjectSaved = (state: AppState) =>
+  Object.keys(state.projectEditor.unsavedAccumulatedPatch).length === 0;
 export const selectProject = (state: AppState) => state.projectEditor.project;
 
 export default projectEditorSlice.reducer;

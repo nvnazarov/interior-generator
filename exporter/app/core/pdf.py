@@ -1,14 +1,14 @@
+import logging
 from io import BytesIO
 from typing import AsyncIterable, Iterable, NamedTuple
-import logging
 
-from reportlab.lib.colors import Color, black, brown, green, red, yellow, blue
+import numpy as np
+from reportlab.lib.colors import Color, black, blue, brown, green, red, yellow
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import cm, mm
 from reportlab.pdfgen import canvas
-import numpy as np
 
-from app.core.models import AreaType, Plan, Project, Wall, Window, Point
+from app.core.models import AreaType, Plan, Point, Project, Wall, Window
 
 logger = logging.getLogger(__name__)
 

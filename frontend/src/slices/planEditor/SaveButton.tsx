@@ -1,11 +1,7 @@
 import { useCallback, useState } from "react";
 import { Button } from "./Button";
 import { useAppDispatch, useAppSelector } from "../storeTypes";
-import {
-  planSaved,
-  selectIsPlanSaved,
-  selectPlanEditor,
-} from "./slice";
+import { planSaved, selectIsPlanSaved, selectPlanEditor } from "./slice";
 import { usePatchPlanMutation } from "../api/slice";
 
 export function SaveButton() {
@@ -32,11 +28,7 @@ export function SaveButton() {
     } finally {
       setIsSaving(false);
     }
-  }, [
-    editor.plan?.id,
-    editor.plan?.revision,
-    editor.unsavedAccumulatedPatch,
-  ]);
+  }, [editor.plan?.id, editor.plan?.revision, editor.unsavedAccumulatedPatch]);
 
   return (
     <Button

@@ -15,7 +15,6 @@ from sqlalchemy.dialects.postgresql import (
     INTEGER,
     JSONB,
     TIMESTAMP,
-    UUID,
     VARCHAR,
 )
 from sqlalchemy.sql import func
@@ -32,7 +31,7 @@ def upgrade() -> None:
     op.execute("CREATE SCHEMA projects")
     op.create_table(
         "projects",
-        Column("id", UUID(), primary_key=True),
+        Column("id", VARCHAR(256), primary_key=True),
         Column("account_id", VARCHAR(256), nullable=False),
         Column("name", VARCHAR(256), nullable=False),
         Column("description", VARCHAR(2048), nullable=False),
@@ -49,8 +48,8 @@ def upgrade() -> None:
     )
     op.create_table(
         "plans",
-        Column("id", UUID(), primary_key=True),
-        Column("project_id", UUID(), ForeignKey("projects.projects.id", ondelete="CASCADE"), nullable=False),
+        Column("id", VARCHAR(256), primary_key=True),
+        Column("project_id", VARCHAR(256), ForeignKey("projects.projects.id", ondelete="CASCADE"), nullable=False),
         Column("name", VARCHAR(256), nullable=False),
         Column("revision", INTEGER, nullable=False),
         Column("content", JSONB(), nullable=False),

@@ -44,10 +44,12 @@ export const RawProjectSchema = z.object({
       z.string(),
       z.object({
         id: z.string(),
-        points: z.array(z.object({
-          x: z.number(),
-          y: z.number(),
-        }))
+        points: z.array(
+          z.object({
+            x: z.number(),
+            y: z.number(),
+          }),
+        ),
       }),
     ),
   }),
@@ -75,11 +77,19 @@ export const RawPlanSchema = z.object({
       z.string(),
       z.object({
         id: z.string(),
-        type: z.literal(["kitchen", "livingroom", "bedroom", "bathroom", "hallway"]),
-        points: z.array(z.object({
-          x: z.number(),
-          y: z.number(),
-        }))
+        type: z.literal([
+          "kitchen",
+          "livingroom",
+          "bedroom",
+          "bathroom",
+          "hallway",
+        ]),
+        points: z.array(
+          z.object({
+            x: z.number(),
+            y: z.number(),
+          }),
+        ),
       }),
     ),
   }),
@@ -98,9 +108,21 @@ export const RawFurnitureSchema = z.object({
   meta: z.record(z.string(), z.any()),
 });
 
+export const RawPromptSchema = z.object({
+  id: z.string(),
+  text: z.string(),
+  project_id: z.string(),
+  base_plan_id: z.string().nullable(),
+  generated_plans_ids: z.array(z.string()),
+  status: z.literal(["pending", "success", "failed"]),
+  dt_created: z.string(),
+  dt_done: z.string().nullable(),
+});
+
 export const RawProjectsArraySchema = z.array(RawProjectSchema);
 export const RawPlansArraySchema = z.array(RawPlanSchema);
 export const RawFurnitureArraySchema = z.array(RawFurnitureSchema);
+export const RawPromptsArraySchema = z.array(RawPromptSchema);
 
 export const FurnitureCatalogResponseSchema = z.object({
   furniture: RawFurnitureArraySchema,
@@ -112,6 +134,7 @@ export const FurnitureCatalogResponseSchema = z.object({
 export type RawProject = z.infer<typeof RawProjectSchema>;
 export type RawPlan = z.infer<typeof RawPlanSchema>;
 export type RawFurniture = z.infer<typeof RawFurnitureSchema>;
+export type RawPrompt = z.infer<typeof RawPromptSchema>;
 export type FurnitureCatalogResponse = z.infer<
   typeof FurnitureCatalogResponseSchema
 >;

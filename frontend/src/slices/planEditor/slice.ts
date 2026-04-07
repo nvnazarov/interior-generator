@@ -13,12 +13,12 @@ type Tool = "hand" | "furniture" | "area";
 type PlanChange = {
   patch: PlanPatch;
   inversePatch: PlanPatch;
-}
+};
 
 type FurnitureDrag = {
   furnitureId: string;
   furnitureOnPlanId?: string;
-}
+};
 
 type FurniturePreview = {
   furnitureId: string;
@@ -26,7 +26,7 @@ type FurniturePreview = {
   y: number;
   z: number;
   yaw: number;
-}
+};
 
 type PlanEditorState = {
   plan: Plan | null;
@@ -47,7 +47,7 @@ type PlanEditorState = {
     area?: number;
     x?: number;
     y?: number;
-  },
+  };
 };
 
 const planEditorSlice = createSlice({
@@ -101,7 +101,9 @@ const planEditorSlice = createSlice({
       if (state.plan) {
         state.plan = applyJsonMergePatch(state.plan, patch);
       } else {
-        throw new Error("error: plan undoably changed: plan is not initialized");
+        throw new Error(
+          "error: plan undoably changed: plan is not initialized",
+        );
       }
       state.unsavedAccumulatedPatch = combineJsonMergePatches(
         state.unsavedAccumulatedPatch,
@@ -172,9 +174,15 @@ const planEditorSlice = createSlice({
       state.furnitureDrag = null;
       state.furniturePreview = null;
     },
-    furniturePreviewUpdated: (state, action: PayloadAction<Partial<FurniturePreview>>) => {
+    furniturePreviewUpdated: (
+      state,
+      action: PayloadAction<Partial<FurniturePreview>>,
+    ) => {
       if (state.furniturePreview) {
-        state.furniturePreview = { ...state.furniturePreview, ...action.payload };
+        state.furniturePreview = {
+          ...state.furniturePreview,
+          ...action.payload,
+        };
       } else {
         // throw new Error("error: furniture preview update: preview is not enabled")
       }
@@ -185,24 +193,32 @@ const planEditorSlice = createSlice({
     hideFurniturePreview: (state) => {
       state.furniturePreview = null;
     },
-    showHint: (state, action: PayloadAction<Omit<PlanEditorState['hint'], "hidden">>) => {
+    showHint: (
+      state,
+      action: PayloadAction<Omit<PlanEditorState["hint"], "hidden">>,
+    ) => {
       state.hint = { hidden: false, ...action.payload };
     },
     hideHint: (state) => {
-      state.hint = { hidden: true }
+      state.hint = { hidden: true };
     },
   },
 });
 
 export const selectPlanEditor = (state: AppState) => state.planEditor;
-export const selectCanUndoChange = (state: AppState) => state.planEditor.undoableChanges.length !== 0;
-export const selectCanRedoChange = (state: AppState) => state.planEditor.redoableChanges.length !== 0;
+export const selectCanUndoChange = (state: AppState) =>
+  state.planEditor.undoableChanges.length !== 0;
+export const selectCanRedoChange = (state: AppState) =>
+  state.planEditor.redoableChanges.length !== 0;
 export const selectPlanEditorView = (state: AppState) => state.planEditor.view;
 export const selectPlanEditorTool = (state: AppState) => state.planEditor.tool;
-export const selectIsPlanSaved = (state: AppState) => Object.keys(state.planEditor.unsavedAccumulatedPatch).length === 0;
+export const selectIsPlanSaved = (state: AppState) =>
+  Object.keys(state.planEditor.unsavedAccumulatedPatch).length === 0;
 export const selectPlan = (state: AppState) => state.planEditor.plan;
-export const selectIsCatalogOpen = (state: AppState) => state.planEditor.isCatalogOpen;
-export const selectFurnitureDrag = (state: AppState) => state.planEditor.furnitureDrag;
+export const selectIsCatalogOpen = (state: AppState) =>
+  state.planEditor.isCatalogOpen;
+export const selectFurnitureDrag = (state: AppState) =>
+  state.planEditor.furnitureDrag;
 export const selectHint = (state: AppState) => state.planEditor.hint;
 
 export default planEditorSlice.reducer;

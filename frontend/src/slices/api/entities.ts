@@ -25,7 +25,7 @@ export interface Door {
 
 export interface WetArea {
   id: string;
-  points: { x: number, y: number }[]
+  points: { x: number; y: number }[];
 }
 
 export interface Project {
@@ -59,7 +59,7 @@ export interface ProjectPatch {
 export interface FunctionalArea {
   id: string;
   type: "kitchen" | "livingroom" | "bedroom" | "bathroom" | "hallway";
-  points: { x: number, y: number }[]
+  points: { x: number; y: number }[];
 }
 
 export interface FurnitureInPlan {
@@ -76,7 +76,7 @@ export interface PlanPatch {
   content?: {
     furniture?: Record<string, Partial<FurnitureInPlan> | null>;
     areas?: Record<string, Partial<FunctionalArea> | null>;
-  }
+  };
 }
 
 export interface Plan {
@@ -103,4 +103,15 @@ export interface Furniture {
   iconPath: string;
   mount: string;
   meta: Record<string, any>;
+}
+
+export interface Prompt {
+  id: string;
+  text: string;
+  projectId: string;
+  basePlanId: string | null;
+  generatedPlansIds: string[];
+  status: "pending" | "success" | "failed";
+  dtCreated: string;
+  dtDone: string | null;
 }

@@ -1,5 +1,4 @@
 from typing import Annotated
-from uuid import UUID
 
 import uvicorn
 from fastapi import Depends, FastAPI, Header, HTTPException, status
@@ -40,7 +39,7 @@ class ASGI(FastAPI):
 
         @self.post("/projects/{project_id}/export/pdf")
         async def export_project_pdf(
-            project_id: UUID,
+            project_id: str,
             account_id: Annotated[str, Depends(get_account_id)],
             opts: PDFExportOptions,
         ):
@@ -55,13 +54,13 @@ class ASGI(FastAPI):
                     buffer,
                     media_type=MIME_PDF,
                     headers={
-                        "Content-Disposition": f"attachment; filename=project-{project_id.hex}.pdf"
+                        "Content-Disposition": f"attachment; filename=project-{project_id}.pdf"
                     },
                 )
 
         @self.post("/plans/{plan_id}/export/dxf")
         async def export_plan_dxf(
-            plan_id: UUID,
+            plan_id: str,
             account_id: Annotated[str, Depends(get_account_id)],
             opts: DXFExportOptions,
         ):
@@ -76,7 +75,7 @@ class ASGI(FastAPI):
                     buffer,
                     media_type=MIME_DXF,
                     headers={
-                        "Content-Disposition": f"attachment; filename=plans-{plan_id.hex}.dxf"
+                        "Content-Disposition": f"attachment; filename=plans-{plan_id}.dxf"
                     },
                 )
 

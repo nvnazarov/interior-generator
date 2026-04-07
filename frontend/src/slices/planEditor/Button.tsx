@@ -29,10 +29,7 @@ export function Button({
       disabled={disabled || loading}
     >
       {icon && (
-        <img
-          className="plan-editor__button__icon"
-          src={`/app/icons/${icon}`}
-        />
+        <img className="plan-editor__button__icon" src={`/app/icons/${icon}`} />
       )}
       {title}
     </button>

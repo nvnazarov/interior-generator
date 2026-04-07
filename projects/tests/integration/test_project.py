@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from uuid import UUID
 
 import pytest
 from fastapi import status
@@ -10,13 +9,13 @@ from httpx import AsyncClient
 @pytest.mark.project
 @pytest.mark.integration
 async def test_create_project(client: AsyncClient):
-    account_id = UUID("022f51f9-98bb-40af-9d30-0b3c03819212")
+    account_id = "022f51f9-98bb-40af-9d30-0b3c03819212"
 
     start_time = datetime.now(tz=timezone.utc)
     resp = await client.post(
         "/projects",
         headers={
-            "x-account-id": account_id.hex,
+            "x-account-id": account_id,
         },
     )
     finish_time = datetime.now(tz=timezone.utc)
@@ -38,18 +37,18 @@ async def test_create_project(client: AsyncClient):
         <= finish_time
     )
     assert resp.json()["updated_at"] == resp.json()["created_at"]
-    assert resp.headers.get("etag") == f"project-{UUID(resp.json()['id']).hex}-0"
+    assert resp.headers.get("etag") == f"project-{resp.json()['id']}-0"
 
 
 @pytest.mark.asyncio
 @pytest.mark.project
 @pytest.mark.integration
 async def test_get_project(client: AsyncClient):
-    account_id = UUID("022f51f9-98bb-40af-9d30-0b3c03819212")
+    account_id = "022f51f9-98bb-40af-9d30-0b3c03819212"
     resp = await client.post(
         "/projects",
         headers={
-            "x-account-id": account_id.hex,
+            "x-account-id": account_id,
         },
     )
     project = resp.json()
@@ -57,18 +56,18 @@ async def test_get_project(client: AsyncClient):
     resp = await client.get(
         f"/projects/{project['id']}",
         headers={
-            "x-account-id": account_id.hex,
+            "x-account-id": account_id,
         },
     )
     assert resp.status_code == status.HTTP_200_OK
     assert resp.json() == project
-    assert resp.headers.get("etag") == f"project-{UUID(project['id']).hex}-0"
+    assert resp.headers.get("etag") == f"project-{project['id']}-0"
 
     resp = await client.get(
         f"/projects/{project['id']}",
         headers={
-            "x-account-id": account_id.hex,
-            "if-none-match": f"project-{UUID(project['id']).hex}-0",
+            "x-account-id": account_id,
+            "if-none-match": f"project-{project['id']}-0",
         },
     )
     assert resp.status_code == status.HTTP_304_NOT_MODIFIED
@@ -77,44 +76,45 @@ async def test_get_project(client: AsyncClient):
     resp = await client.get(
         f"/projects/{project['id']}",
         headers={
-            "x-account-id": account_id.hex,
-            "if-none-match": f"project-{UUID(project['id']).hex}-1",
+            "x-account-id": account_id,
+            "if-none-match": f"project-{project['id']}-1",
         },
     )
     assert resp.status_code == status.HTTP_200_OK
     assert resp.json() == project
-    assert resp.headers.get("etag") == f"project-{UUID(project['id']).hex}-0"
+    assert resp.headers.get("etag") == f"project-{project['id']}-0"
 
 
 @pytest.mark.asyncio
 @pytest.mark.project
 @pytest.mark.integration
 async def test_delete_project(client: AsyncClient):
-    account_id = UUID("022f51f9-98bb-40af-9d30-0b3c03819212")
-    other_account_id = UUID("022f51f9-98bb-40af-9d30-0b3c03819213")
+    account_id = "022f51f9-98bb-40af-9d30-0b3c03819212"
+    other_account_id = "022f51f9-98bb-40af-9d30-0b3c03819213"
+
     resp = await client.post(
         "/projects",
         headers={
-            "x-account-id": account_id.hex,
+            "x-account-id": account_id,
         },
     )
-    project_id = UUID(resp.json()["id"])
+    project_id = resp.json()["id"]
 
     # Account that does not own the project gets 404 error.
     resp = await client.delete(
-        f"/projects/{project_id}", headers={"x-account-id": other_account_id.hex}
+        f"/projects/{project_id}", headers={"x-account-id": other_account_id}
     )
     assert resp.status_code == status.HTTP_404_NOT_FOUND
     assert resp.json() == {"detail": "project not found"}
 
     resp = await client.delete(
-        f"/projects/{project_id}", headers={"x-account-id": account_id.hex}
+        f"/projects/{project_id}", headers={"x-account-id": account_id}
     )
     assert resp.status_code == status.HTTP_204_NO_CONTENT
     assert resp.text == ""
 
     resp = await client.delete(
-        f"/projects/{project_id}", headers={"x-account-id": account_id.hex}
+        f"/projects/{project_id}", headers={"x-account-id": account_id}
     )
     assert resp.status_code == status.HTTP_404_NOT_FOUND
     assert resp.json() == {"detail": "project not found"}
@@ -124,17 +124,17 @@ async def test_delete_project(client: AsyncClient):
 @pytest.mark.project
 @pytest.mark.integration
 async def test_patch_project(client: AsyncClient):
-    account_id = UUID("022f51f9-98bb-40af-9d30-0b3c03819212")
+    account_id = "022f51f9-98bb-40af-9d30-0b3c03819212"
 
-    resp = await client.post("/projects", headers={"x-account-id": account_id.hex})
+    resp = await client.post("/projects", headers={"x-account-id": account_id})
     project = resp.json()
-    project_id = UUID(project["id"])
+    project_id = project["id"]
 
     # Cannot patch without providing a revision (through If-Match header).
     resp = await client.patch(
         f"/projects/{project_id}",
         headers={
-            "x-account-id": account_id.hex,
+            "x-account-id": account_id,
         },
         json={},
     )
@@ -144,8 +144,8 @@ async def test_patch_project(client: AsyncClient):
     resp = await client.patch(
         f"/projects/{project_id}",
         headers={
-            "x-account-id": account_id.hex,
-            "if-match": f"project-{project_id.hex}-1",  # server expects 0
+            "x-account-id": account_id,
+            "if-match": f"project-{project_id}-1",  # server expects 0
         },
         json={},
     )
@@ -156,8 +156,8 @@ async def test_patch_project(client: AsyncClient):
     resp = await client.patch(
         f"/projects/{project_id}",
         headers={
-            "x-account-id": account_id.hex,
-            "if-match": f"project-{project_id.hex}-0",
+            "x-account-id": account_id,
+            "if-match": f"project-{project_id}-0",
         },
         json={
             "name": "test name",
@@ -171,11 +171,11 @@ async def test_patch_project(client: AsyncClient):
     )
     assert resp.status_code == status.HTTP_204_NO_CONTENT
     assert resp.text == ""
-    assert resp.headers.get("etag") == f"project-{project_id.hex}-1"
+    assert resp.headers.get("etag") == f"project-{project_id}-1"
 
     resp = await client.get(
         f"/projects/{project_id}",
-        headers={"x-account-id": account_id.hex},
+        headers={"x-account-id": account_id},
     )
     assert resp.status_code == status.HTTP_200_OK
     assert resp.json()["name"] == "test name"
@@ -185,7 +185,7 @@ async def test_patch_project(client: AsyncClient):
         "doors": {},
         "wet_areas": {},
     }
-    assert resp.headers.get("etag") == f"project-{project_id.hex}-1"
+    assert resp.headers.get("etag") == f"project-{project_id}-1"
 
 
 @pytest.mark.asyncio
