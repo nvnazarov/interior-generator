@@ -1,8 +1,8 @@
 services:
-  gateway:
+  public-gateway:
     image: "nginx:1.29"
     volumes:
-      - "./nginx.conf:/etc/nginx/nginx.conf"
+      - "./nginx.public.conf:/etc/nginx/nginx.conf"
     ports:
       - "8080:80"
     networks:
@@ -20,8 +20,26 @@ services:
         condition: "service_healthy"
       assets:
         condition: "service_healthy"
-      # frontend:
-      #   condition: "service_healthy"
+  
+  private-gateway:
+    image: "nginx:1.29"
+    volumes:
+      - "./nginx.private.conf:/etc/nginx/nginx.conf"
+    networks:
+      - "private"
+    depends_on:
+      auth:
+        condition: "service_healthy"
+      catalog:
+        condition: "service_healthy"
+      generator:
+        condition: "service_healthy"
+      exporter:
+        condition: "service_healthy"
+      projects:
+        condition: "service_healthy"
+      assets:
+        condition: "service_healthy"
 
   postgres:
     image: "postgres"
@@ -63,6 +81,13 @@ services:
     environment:
       - "discovery.type=single-node"
       - "xpack.security.enabled=false"
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "bootstrap.memory_lock=true"
+    mem_limit: "2g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     volumes:
       - "elastic:/usr/share/elasticsearch/data"
     networks:
@@ -75,8 +100,8 @@ services:
           "-f",
           "http://localhost:9200/_cluster/health?local=true",
         ]
-      interval: 30s
-      timeout: 10s
+      interval: "30s"
+      timeout: "10s"
       retries: 3
 
   auth:
@@ -96,8 +121,8 @@ services:
       - "private"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 15s
-      timeout: 5s
+      interval: "15s"
+      timeout: "5s"
       retries: 3
 
   catalog:
@@ -114,8 +139,8 @@ services:
       - "private"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 15s
-      timeout: 5s
+      interval: "15s"
+      timeout: "5s"
       retries: 3
     depends_on:
       elastic:
@@ -136,13 +161,14 @@ services:
       - "GENERATOR__POSTGRES__USER=postgres"
       - "GENERATOR__POSTGRES__PASSWORD=postgres"
       - "GENERATOR__POSTGRES__DB=postgres"
+      - "GENERATOR__GATEWAY__BASE_URL=http://private-gateway/api"
       - "GENERATOR__LOGGING__LEVEL=INFO"
     networks:
       - "private"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 15s
-      timeout: 5s
+      interval: "15s"
+      timeout: "5s"
       retries: 3
 
   exporter:
@@ -159,8 +185,8 @@ services:
       - "private"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 15s
-      timeout: 5s
+      interval: "15s"
+      timeout: "5s"
       retries: 3
 
   projects:
@@ -183,8 +209,8 @@ services:
       - "private"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 15s
-      timeout: 5s
+      interval: "15s"
+      timeout: "5s"
       retries: 3
     depends_on:
       postgres:
@@ -205,8 +231,8 @@ services:
       - "private"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 15s
-      timeout: 5s
+      interval: "15s"
+      timeout: "5s"
       retries: 3
     depends_on:
       minio:

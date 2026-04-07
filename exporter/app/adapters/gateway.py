@@ -22,6 +22,7 @@ class APIGatewayAdapter(Repository):
         )
         if resp.status_code == 404:
             return None
+        resp.raise_for_status()
         project = Project.model_validate(resp.json())
         return project
 
@@ -32,6 +33,7 @@ class APIGatewayAdapter(Repository):
         )
         if resp.status_code == 404:
             return None
+        resp.raise_for_status()
         plan = Plan.model_validate(resp.json())
         return plan
 
@@ -42,6 +44,7 @@ class APIGatewayAdapter(Repository):
             f"/projects/{project_id}/plans",
             headers={"x-account-id": account_id},
         )
+        resp.raise_for_status()
         plans_meta = RootModel[list[Plan]].model_validate(resp.json()).root
         for meta in plans_meta:
             resp = await self.client.get(

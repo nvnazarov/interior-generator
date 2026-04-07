@@ -1,4 +1,118 @@
 .prompts__chat {
+  & > ::-webkit-scrollbar {
+    width: 0px;
+  }
+
+  position: absolute;
+  top: 70px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  border: 1px solid #ddd;
+  box-shadow: rgba(17, 17, 26, 0.1) 0px 0px 16px;
+  border-radius: 10px;
+  background-color: white;
+  height: 500px;
+  z-index: 10;
+
+  & > p {
+    padding: 10px;
+    font-size: 0.9em;
+    opacity: 0.8;
+  }
+
+  &__history {
+    flex: 1;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    overflow-y: scroll;
+  }
+
   &__prompt {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 300px;
+    background-color: #eee;
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+
+    &__pending {
+      background-color: #ffb;
+      border: 1px solid #dda;
+    }
+
+    &__failed {
+      background-color: #fbb;
+      border: 1px solid #daa;
+    }
+
+    & > div {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      font-size: 0.8em;
+      opacity: 0.8;
+      gap: 10px;
+
+      & > span {
+        font-size: 0.9em;
+      }
+
+      & > button {
+        background: transparent;
+        border: none;
+        outline: none;
+        opacity: 0.8;
+      }
+
+      & img {
+        width: 15px;
+        height: 15px;
+      }
+    }
+  }
+
+  &__input {
+    min-width: 200px;
+    border-top: 1px solid #ddd;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    & > textarea {
+      border: none;
+      outline: none;
+      background-color: #eee;
+      padding: 5px;
+      border-radius: 5px;
+      resize: vertical;
+      min-height: 40px;
+      width: 300px;
+    }
+  }
+
+  &__loader {
+    border: 2px solid black;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    animation: spin 2s linear infinite;
+    opacity: 0.8;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 }

@@ -13,6 +13,9 @@ local:
 up:
 	@docker compose up --build
 
+migration:
+	@uv run alembic upgrade head --sql
+
 format:
 	@uv run ruff format
 	@uv run isort app/ tests/

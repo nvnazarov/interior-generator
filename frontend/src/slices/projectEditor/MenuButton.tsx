@@ -92,7 +92,7 @@ export function MenuButton({ projectId }: { projectId: string }) {
             }
           },
         },
-        ...(data
+        ...(data && data.length > 0
           ? [
               {
                 divider: true,
@@ -106,7 +106,7 @@ export function MenuButton({ projectId }: { projectId: string }) {
           : []),
       ],
     });
-  }, [menu, editor, projectId, dispatch]);
+  }, [menu, editor, projectId, data]);
 
   return (
     <Button icon="menu.png" onClick={handleClick} disabled={!editor.project} />

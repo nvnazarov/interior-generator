@@ -5,13 +5,11 @@ import { catalogSwitched, selectIsCatalogOpen } from "./slice";
 
 export function FurnitureCatalogSwitch() {
   const dispatch = useAppDispatch();
-  const isCatalogOpen = useAppSelector(selectIsCatalogOpen);
+  const isOpen = useAppSelector(selectIsCatalogOpen);
 
   const handleClick = useCallback(() => {
-    dispatch(catalogSwitched(!isCatalogOpen));
-  }, [isCatalogOpen]);
+    dispatch(catalogSwitched());
+  }, []);
 
-  return (
-    <Button icon="furniture.png" onClick={handleClick} active={isCatalogOpen} />
-  );
+  return <Button icon="furniture.png" onClick={handleClick} active={isOpen} />;
 }

@@ -36,6 +36,7 @@ type PlanEditorState = {
   view: View;
   tool: Tool;
   isCatalogOpen: boolean;
+  isChatOpen: boolean;
   furnitureDrag: FurnitureDrag | null;
   furniturePreview: FurniturePreview | null;
   hint: {
@@ -60,6 +61,7 @@ const planEditorSlice = createSlice({
     view: "2D",
     tool: "hand",
     isCatalogOpen: false,
+    isChatOpen: false,
     furnitureDrag: null,
     furniturePreview: null,
     hint: {
@@ -164,8 +166,17 @@ const planEditorSlice = createSlice({
       }
       state.unsavedAccumulatedPatch = {};
     },
-    catalogSwitched: (state, action: PayloadAction<boolean>) => {
-      state.isCatalogOpen = action.payload;
+    catalogSwitched: (state) => {
+      state.isCatalogOpen = !state.isCatalogOpen;
+      if (state.isCatalogOpen) {
+        state.isChatOpen = false;
+      }
+    },
+    chatSwitched: (state) => {
+      state.isChatOpen = !state.isChatOpen;
+      if (state.isChatOpen) {
+        state.isCatalogOpen = false;
+      }
     },
     startedDraggingFurniture: (state, action: PayloadAction<FurnitureDrag>) => {
       state.furnitureDrag = action.payload;
@@ -217,6 +228,8 @@ export const selectIsPlanSaved = (state: AppState) =>
 export const selectPlan = (state: AppState) => state.planEditor.plan;
 export const selectIsCatalogOpen = (state: AppState) =>
   state.planEditor.isCatalogOpen;
+export const selectIsChatOpen = (state: AppState) =>
+  state.planEditor.isChatOpen;
 export const selectFurnitureDrag = (state: AppState) =>
   state.planEditor.furnitureDrag;
 export const selectHint = (state: AppState) => state.planEditor.hint;
@@ -231,6 +244,7 @@ export const {
   planChanged,
   planOpened,
   catalogSwitched,
+  chatSwitched,
   startedDraggingFurniture,
   finishedDraggingFurniture,
   furniturePreviewUpdated,

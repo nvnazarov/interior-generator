@@ -1,8 +1,7 @@
 from typing import Annotated
-from uuid import UUID
 
 import uvicorn
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Body, Depends, FastAPI, Header, HTTPException
 
 from app.core.models import Prompt
 from app.core.server import Server
@@ -27,19 +26,29 @@ class ASGI(FastAPI):
 
         @self.post("/projects/{project_id}/prompts")
         async def generate_plans(
-            project_id: UUID,
+            project_id: str,
             account_id: Annotated[str, Depends(get_account_id)],
-            base_plan_id: UUID | None = None,
-            n: int = 5,
-        ) -> list[UUID]:
-            plans = await server.generate_plans(account_id, project_id, base_plan_id, n)
-            return [plan.id for plan in plans]
+            text: Annotated[str, Body()],
+            base_plan_id: Annotated[str | None, Body()] = None,
+            count: Annotated[int, Body()] = 5,
+        ) -> Prompt:
+            prompt = await server.generate_plans(
+                account_id, project_id, text, base_plan_id, count
+            )
+            return prompt
 
         @self.get("/projects/{project_id}/prompts")
         async def get_prompts_for_project(
-            project_id: UUID, account_id: Annotated[str, Depends(get_account_id)]
+            project_id: str, account_id: Annotated[str, Depends(get_account_id)]
         ) -> list[Prompt]:
             return await server.get_prompts_for_project(account_id, project_id)
+
+        @self.delete("/prompts/{prompt_id}", status_code=204)
+        async def delete_prompt(
+            prompt_id: str,
+            account_id: Annotated[str, Depends(get_account_id)],
+        ):
+            await server.delete_prompt(account_id, prompt_id)
 
         @self.get("/health", status_code=204)
         async def healthcheck():

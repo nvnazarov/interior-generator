@@ -3,7 +3,6 @@ import {
   useCallback,
   useState,
   type ChangeEvent,
-  type DragEvent,
   type MouseEvent,
   type UIEvent,
 } from "react";

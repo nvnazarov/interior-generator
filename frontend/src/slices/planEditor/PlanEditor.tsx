@@ -5,7 +5,7 @@ import { RedoChangeButton } from "./RedoChangeButton";
 import { SaveButton } from "./SaveButton";
 import { UndoChangeButton } from "./UndoChangeButton";
 import { useAppDispatch, useAppSelector } from "../storeTypes";
-import { planOpened, selectIsCatalogOpen } from "./slice";
+import { planOpened, selectIsCatalogOpen, selectIsChatOpen } from "./slice";
 import { Button, ContextMenuProvider } from "../../shared/components";
 import { Scene } from "./Scene";
 import { ChangeViewButton } from "./ChangeViewButton";
@@ -15,6 +15,8 @@ import { FurnitureCatalog } from "./FurnitureCatalog";
 import { FurnitureCatalogSwitch } from "./FurnitureCatalogSwitch";
 import { NameInput } from "./NameInput";
 import { Hint } from "./Hint";
+import { ChatButton } from "./ChatButton";
+import { Chat } from "../prompts/Chat";
 
 export function PlanEditor({
   projectId,
@@ -26,6 +28,7 @@ export function PlanEditor({
   const [getPlanById, { error }] = useLazyGetPlanByIdQuery();
   const dispatch = useAppDispatch();
   const isCatalogOpen = useAppSelector(selectIsCatalogOpen);
+  const isChatOpen = useAppSelector(selectIsChatOpen);
 
   useEffect(() => {
     async function loadPlan() {
@@ -70,10 +73,12 @@ export function PlanEditor({
         </div>
         <span />
         <div>
+          <ChatButton />
           <FurnitureCatalogSwitch />
         </div>
       </div>
-      <div>{isCatalogOpen && <FurnitureCatalog />}</div>
+      {isCatalogOpen && <FurnitureCatalog />}
+      {isChatOpen && <Chat projectId={projectId} />}
       <Scene />
       <Hint />
     </ContextMenuProvider>
