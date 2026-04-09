@@ -1,0 +1,26 @@
+@use "sass:color";
+
+$font-size-sm: 0.85rem;
+$font-size-md: 1rem;
+$font-size-lg: 2rem;
+
+$gap-sm: 5px;
+$padding-sm: 5px;
+$radius-sm: 5px;
+
+$shadow-0: rgba(17, 17, 26, 0.05) 0px 0px 2px;
+$shadow-1: rgba(17, 17, 26, 0.1) 0px 0px 16px;
+
+@mixin bbox($color: white, $radius: $radius-sm, $padding: $padding-sm) {
+  border-radius: $radius;
+  border: 1px solid color.change($color, $blackness: 20%);
+  background-color: $color;
+  padding: $padding;
+}
+
+@mixin highlighted-bbox($radius: $radius-sm, $padding: $padding-sm) {
+  border-radius: $radius;
+  border: 1px solid hotpink;
+  background-color: #fcafd5;
+  padding: $padding;
+}

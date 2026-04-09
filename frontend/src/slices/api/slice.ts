@@ -477,7 +477,7 @@ const api = createApi({
         method: "POST",
         body: {
           text,
-          basePlanId,
+          base_plan_id: basePlanId,
           count,
         },
       }),
@@ -512,6 +512,7 @@ export const {
   usePatchProjectMutation,
   useGetAllPlansInProjectQuery,
   useLazyGetPlanByIdQuery,
+  useGetPlanByIdQuery,
   useCreatePlanMutation,
   useDeletePlanMutation,
   usePatchPlanMutation,

@@ -1,6 +1,10 @@
+import logging
+
 from app.core.db import PromptsRepository
 from app.core.facade import SystemFacade
 from app.core.models import Plan, Prompt
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_PLANS_COUNT = 5
 
@@ -39,17 +43,22 @@ class Server:
             raise PlanNotFoundError
         prompt = Prompt.create(project_id, text, base_plan_id)
         await self.prompts.save(prompt)
-        # TODO: generate plans
-        # TODO: save updated prompt
-        import asyncio
 
-        await asyncio.sleep(2)
-        import random
+        try:
+            plan, etag = await self.facade.create_plan(account_id, project_id)
+            _ = await self.facade.patch_plan(
+                account_id, plan.id, etag, Plan.Patch(name="generated-1")
+            )
 
-        if random.randint(0, 1) == 0:
-            prompt.success([])
-        else:
+            import asyncio
+
+            await asyncio.sleep(2)
+
+            prompt.success([plan.id])
+        except Exception as e:
+            logger.error({"error": str(e)})
             prompt.fail()
+
         await self.prompts.save(prompt)
         return prompt
 

@@ -72,10 +72,10 @@ class Project(BaseModel):
             id: str
             points: list[Point]
 
-        walls: dict[str, Wall] = {}
-        doors: dict[str, Door] = {}
-        windows: dict[str, Window] = {}
-        wet_areas: dict[str, WetArea] = {}
+        walls: dict[str, Wall] = Field(default_factory=dict)
+        doors: dict[str, Door] = Field(default_factory=dict)
+        windows: dict[str, Window] = Field(default_factory=dict)
+        wet_areas: dict[str, WetArea] = Field(default_factory=dict)
 
     id: str
     account_id: str
@@ -103,13 +103,37 @@ class Plan(BaseModel):
             type: str
             points: list[Point]
 
-        furniture: dict[str, Furniture] = {}
-        areas: dict[str, Area] = {}
+        furniture: dict[str, Furniture] = Field(default_factory=dict)
+        areas: dict[str, Area] = Field(default_factory=dict)
+
+    class Patch(BaseModel):
+        class Content(BaseModel):
+            class Furniture(BaseModel):
+                furniture_id: str | None = None
+                x: int | None = None
+                y: int | None = None
+                z: int | None = None
+                yaw: float | None = None
+
+            class Area(BaseModel):
+                class Point(BaseModel):
+                    x: int
+                    y: int
+
+                type: str | None = None
+                points: list[Point] | None = None
+
+            furniture: dict[str, Furniture | None] = Field(default_factory=dict)
+            areas: dict[str, Area | None] = Field(default_factory=dict)
+
+        name: str | None = None
+        content: Content = Field(default_factory=Content)
 
     id: str
     project_id: str
     content: Content = Field(default_factory=Content)
     name: str = Field("", max_length=256)
+    revision: int
 
 
 class Furniture(BaseModel):

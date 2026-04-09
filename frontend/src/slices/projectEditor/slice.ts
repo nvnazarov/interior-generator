@@ -22,6 +22,7 @@ type ProjectEditorState = {
   redoableChanges: ProjectChange[];
   view: View;
   tool: Tool;
+  isChatOpen: boolean;
 };
 
 const projectEditorSlice = createSlice({
@@ -33,6 +34,7 @@ const projectEditorSlice = createSlice({
     redoableChanges: [],
     view: "2D",
     tool: "hand",
+    isChatOpen: false,
   } as ProjectEditorState,
   reducers: {
     projectOpened: (state, action: PayloadAction<Project>) => {
@@ -131,6 +133,9 @@ const projectEditorSlice = createSlice({
       }
       state.unsavedAccumulatedPatch = {};
     },
+    chatSwitched: (state) => {
+      state.isChatOpen = !state.isChatOpen;
+    },
   },
 });
 
@@ -146,6 +151,7 @@ export const selectProjectEditorTool = (state: AppState) =>
 export const selectIsProjectSaved = (state: AppState) =>
   Object.keys(state.projectEditor.unsavedAccumulatedPatch).length === 0;
 export const selectProject = (state: AppState) => state.projectEditor.project;
+export const selectIsChatOpen = (state: AppState) => state.projectEditor.isChatOpen;
 
 export default projectEditorSlice.reducer;
 export const {
@@ -157,4 +163,5 @@ export const {
   projectChanged,
   projectOpened,
   projectUndoablyChanged,
+  chatSwitched,
 } = projectEditorSlice.actions;

@@ -7,3 +7,4 @@ export {
   type ContextMenu,
   type ContextMenuOptions,
 } from "./ContextMenu";
+export { Spinner } from "./Spinner";

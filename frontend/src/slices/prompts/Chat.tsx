@@ -1,94 +1,26 @@
 import moment from "moment";
-import type { Prompt } from "../api/entities";
+import type { Prompt as PromptEntity } from "../api/entities";
 import {
-  useDeletePromptMutation,
   useGeneratePlansMutation,
   useLazyGetPromptsForProjectQuery,
 } from "../api/slice";
 import "./Chat.scss";
-import { Link } from "react-router";
-import { useCallback, useEffect, useState, type ChangeEvent } from "react";
-import { human } from "./lib";
+import { useCallback, useEffect, useState } from "react";
 import { v4 } from "uuid";
-
-function PromptComponent({
-  prompt,
-  onDelete,
-}: {
-  prompt: Prompt;
-  onDelete: (promptId: string) => void;
-}) {
-  const [deletePrompt] = useDeletePromptMutation();
-
-  const handleDeletePrompt = useCallback(async () => {
-    await deletePrompt(prompt.id)
-      .unwrap()
-      .then(() => onDelete(prompt.id));
-  }, [prompt.id]);
-
-  const classes = ["prompts__chat__prompt"];
-  switch (prompt.status) {
-    case "pending": {
-      classes.push("prompts__chat__prompt__pending");
-      break;
-    }
-    case "failed": {
-      classes.push("prompts__chat__prompt__failed");
-      break;
-    }
-  }
-  return (
-    <div className={classes.join(" ")}>
-      <div>
-        <p>{prompt.text}</p>
-        <button onClick={handleDeletePrompt}>
-          <img src="/app/icons/trash.png" />
-        </button>
-      </div>
-      {prompt.status === "success" && (
-        <>
-          <div>
-            {prompt.basePlanId && (
-              <>
-                <Link
-                  to={`/editor/projects/${prompt.projectId}/plans/${prompt.basePlanId}`}
-                >
-                  Base plan
-                </Link>
-                <div></div>
-              </>
-            )}
-            {prompt.generatedPlansIds.map((idx, planId) => (
-              <Link
-                key={idx}
-                to={`/editor/projects/${prompt.projectId}/plans/${planId}`}
-              >
-                {idx + 1}
-              </Link>
-            ))}
-          </div>
-        </>
-      )}
-      <div>
-        <span>{moment(prompt.dtCreated).fromNow()}</span>
-        {prompt.status === "success" ? (
-          <span>{human(moment(prompt.dtDone!).diff(prompt.dtCreated))}</span>
-        ) : prompt.status === "pending" ? (
-          <span className="prompts__chat__loader"></span>
-        ) : (
-          prompt.status === "failed" && <span>FAILED</span>
-        )}
-      </div>
-    </div>
-  );
-}
+import { PromptInput } from "./PromptInput";
+import { Spinner } from "../../shared/components";
+import { Prompt } from "./Prompt";
 
 export function Chat({ projectId }: { projectId: string }) {
+  const [count, setCount] = useState(1);
   const [text, setText] = useState("");
-  const [getPromptsForProject, { isSuccess }] =
+  const [basePlanId, setBasePlanId] = useState<string | null>(null);
+
+  const [getPromptsForProject, { isLoading, isSuccess }] =
     useLazyGetPromptsForProjectQuery();
   const [generatePlans] = useGeneratePlansMutation();
-  const [prompts, setPrompts] = useState<Prompt[]>([]);
+
+  const [prompts, setPrompts] = useState<PromptEntity[]>([]);
   const [isBusy, setIsBusy] = useState(false);
 
   useEffect(() => {
@@ -108,16 +40,16 @@ export function Chat({ projectId }: { projectId: string }) {
           id: placeholderId,
           projectId,
           text,
-          basePlanId: null,
+          basePlanId: basePlanId,
           dtCreated: moment().toISOString(),
           status: "pending",
-        } as Prompt,
+        } as PromptEntity,
       ]);
       await generatePlans({
         projectId,
         text,
-        basePlanId: null,
-        count: 5,
+        basePlanId,
+        count,
       })
         .unwrap()
         .then((prompt) =>
@@ -129,14 +61,7 @@ export function Chat({ projectId }: { projectId: string }) {
     } finally {
       setIsBusy(false);
     }
-  }, [projectId, text]);
-
-  const handleTextChange = useCallback(
-    (e: ChangeEvent<HTMLTextAreaElement>) => {
-      setText(e.target.value);
-    },
-    [],
-  );
+  }, [projectId, text, basePlanId, count]);
 
   const handlePromptDeleted = useCallback((promptId: string) => {
     setPrompts((prompts) => prompts.filter((p) => p.id !== promptId));
@@ -144,27 +69,35 @@ export function Chat({ projectId }: { projectId: string }) {
 
   return (
     <div className="prompts__chat">
-      {isSuccess ? (
+      {isLoading ? (
+        <Spinner />
+      ) : isSuccess ? (
         <div className="prompts__chat__history">
           {prompts.map((prompt) => (
-            <PromptComponent
+            <Prompt
               key={prompt.id}
               prompt={prompt}
-              onDelete={handlePromptDeleted}
+              onAfterDeleted={handlePromptDeleted}
             />
           ))}
         </div>
       ) : (
-        <p>Unable to load chat history</p>
+        <div className="prompts__chat__history">
+          Unable to load chat history
+        </div>
       )}
       <div className="prompts__chat__input">
-        <textarea
-          placeholder="Type your thoughts..."
-          value={text}
-          onChange={handleTextChange}
+        <PromptInput
+          projectId={projectId}
+          text={text}
+          setText={setText}
+          count={count}
+          setCount={setCount}
+          basePlanId={basePlanId}
+          setBasePlanId={setBasePlanId}
         />
-        <button onClick={handleGenerate} disabled={isBusy}>
-          Generate
+        <button onClick={handleGenerate} disabled={isBusy || text.length === 0}>
+          Generate {isBusy && <Spinner />}
         </button>
       </div>
     </div>

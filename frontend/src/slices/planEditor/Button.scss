@@ -1,6 +1,6 @@
 .plan-editor__button {
   outline: none;
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   border-radius: 5px;
   display: flex;
   align-items: center;
@@ -16,7 +16,7 @@
 
   &__active {
     outline: none;
-    border: 2px solid hotpink;
+    border: 1px solid hotpink;
     border-radius: 5px;
     display: flex;
     align-items: center;
@@ -24,12 +24,12 @@
     width: 40px;
     height: 40px;
     transition-duration: 0.2s;
-    background-color: white;
+    background-color: #fcafd5;
   }
 
   &__disabled {
     outline: 2px solid transparent;
-    border: none;
+    border: 1px solid transparent;
     border-radius: 5px;
     display: flex;
     align-items: center;
