@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router";
 import { authClient } from "../../shared/betterAuth";
 import { useAppDispatch } from "../storeTypes";
 import { userSignedUp } from "./slice";
+import { notify } from "../notifications/slice";
 
 export function SignUpForm() {
   const dispatch = useAppDispatch();
@@ -38,7 +39,7 @@ export function SignUpForm() {
         setIsSigningUp(true);
         const result = await authClient.signUp.email({ name, email, password });
         if (result.error) {
-          // TODO
+          dispatch(notify({ text: result.error.message, severity: "error" }));
           return;
         }
         const data = result.data;
@@ -53,7 +54,7 @@ export function SignUpForm() {
         );
         navigate("/profile");
       } catch (e) {
-        // TODO
+        dispatch(notify({ text: "Something wrong", severity: "error" }));
       } finally {
         setIsSigningUp(false);
       }
@@ -63,13 +64,20 @@ export function SignUpForm() {
 
   return (
     <form className="account__sign-up-form">
-      <input value={name} onChange={handleNameChange} />
-      <input value={email} onChange={handleEmailChange} />
-      <input value={password} onChange={handlePasswordChange} />
+      <p>
+        Already have an account? <Link to="/sign-in">Sign in</Link>
+      </p>
+
+      <input value={name} onChange={handleNameChange} placeholder="Name" />
+      <input value={email} onChange={handleEmailChange} placeholder="Email" />
+      <input
+        value={password}
+        onChange={handlePasswordChange}
+        placeholder="Password"
+      />
       <button onClick={handleSignUp} disabled={isSigningUp}>
         Sign Up
       </button>
-      <Link to="/sign-in">Sign in</Link>
     </form>
   );
 }

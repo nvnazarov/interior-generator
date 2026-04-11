@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router";
 import { authClient } from "../../shared/betterAuth";
 import { useAppDispatch } from "../storeTypes";
 import { userSignedIn } from "./slice";
+import { notify } from "../notifications/slice";
 
 export function SignInForm() {
   const dispatch = useAppDispatch();
@@ -33,7 +34,7 @@ export function SignInForm() {
         setIsSigningIn(true);
         const result = await authClient.signIn.email({ email, password });
         if (result.error) {
-          // TODO
+          dispatch(notify({ text: result.error.message, severity: "error" }));
           return;
         }
         const data = result.data;
@@ -48,7 +49,7 @@ export function SignInForm() {
         );
         navigate("/profile");
       } catch (e) {
-        // TODO
+        dispatch(notify({ text: "Something wrong", severity: "error" }));
       } finally {
         setIsSigningIn(false);
       }
@@ -58,12 +59,18 @@ export function SignInForm() {
 
   return (
     <form className="account__sign-in-form">
-      <input value={email} onChange={handleEmailChange} />
-      <input value={password} onChange={handlePasswordChange} />
+      <p>
+        Do not have an account? <Link to="/sign-up">Sign up</Link>
+      </p>
+      <input value={email} onChange={handleEmailChange} placeholder="Email" />
+      <input
+        value={password}
+        onChange={handlePasswordChange}
+        placeholder="Password"
+      />
       <button onClick={handleSignIn} disabled={isSigningIn}>
         Sign In
       </button>
-      <Link to="/sign-up">Sign up</Link>
     </form>
   );
 }

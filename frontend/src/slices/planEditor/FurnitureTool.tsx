@@ -25,19 +25,17 @@ export function FurnitureTool() {
       if (furnitureDrag && furniture) {
         e.stopPropagation();
         let point = e.point;
-        // switch (furniture.mount) {
-        //   case "floor": {
-        //     point.y = furniture.height / 2;
-        //     break;
-        //   }
-        //   case "ceiling": {
-        //     point.y = 3 * M - furniture.height / 2;
-        //     break;
-        //   }
-        //   case "wall": {
-        //     return;
-        //   }
-        // }
+        switch (furniture.mount) {
+          case "wall":
+          case "floor": {
+            point.y = furniture.height / 2;
+            break;
+          }
+          case "ceiling": {
+            point.y = 3 * M - furniture.height / 2;
+            break;
+          }
+        }
         point = snapToGridVector3(point, CM);
         dispatch(
           furniturePreviewUpdated({
@@ -63,7 +61,7 @@ export function FurnitureTool() {
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
     );
-  }, [furnitureDrag, furniture]);
+  }, []);
 
   return mesh;
 }

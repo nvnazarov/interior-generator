@@ -64,7 +64,11 @@ export function Prompt({
         ) : prompt.status === "pending" ? (
           <Spinner />
         ) : (
-          prompt.status === "failed" && <div>Failed</div>
+          prompt.status === "failed" && (
+            <div>
+              Failed after {human(moment(prompt.dtDone!).diff(prompt.dtCreated))}
+            </div>
+          )
         )}
       </div>
     </div>

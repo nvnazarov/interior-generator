@@ -27,6 +27,7 @@ import { FurniturePreview } from "./FurniturePreview";
 import { useEffect } from "react";
 import type { FurnitureInPlan } from "../api/entities";
 import { v4 as uuidv4 } from "uuid";
+import { FurnitureTool } from "./FurnitureTool";
 
 const { ACTION } = CameraControlsImpl;
 
@@ -165,7 +166,7 @@ export function Scene() {
         </GizmoHelper>
       )}
       {toolIsArea && <AreaTool />}
-      {/* {toolIsFurinture && <FurnitureTool />} */}
+      {toolIsFurinture && <FurnitureTool />}
     </Canvas>
   );
 }

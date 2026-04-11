@@ -16,7 +16,10 @@ export function SignOutButton() {
     }
     try {
       setIsSigningOut(true);
-      await authClient.signOut();
+      const result = await authClient.signOut();
+      if (result.error) {
+        // Ignore the error.
+      }
       dispatch(userSignedOut());
       navigate("/sign-in");
     } finally {

@@ -10,6 +10,7 @@ import { Client } from "../../shared/client";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../shared/components";
 import i18next from "i18next";
+import { notify } from "../notifications/slice";
 
 const MAX_AVATAR_FILE_SIZE_BYTES = 512 * 1024;
 
@@ -41,7 +42,7 @@ export function Profile() {
       .updateUser(userUpdate)
       .then((data) => {
         if (data.error) {
-          // TODO
+          dispatch(notify({ text: data.error.message, severity: "error" }));
         } else {
           dispatch(
             accountUpdated({ name: editedName, avatarUrl: userUpdate.image }),
@@ -86,6 +87,7 @@ export function Profile() {
         return;
       }
       if (file.size > MAX_AVATAR_FILE_SIZE_BYTES) {
+        dispatch(notify({ text: "Max file size is 512KB", severity: "error" }));
         return;
       }
       setAvatarFile(file);
