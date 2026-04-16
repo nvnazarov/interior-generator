@@ -9,7 +9,8 @@ Create Date: 2026-04-07 16:25:50.984213
 from typing import Sequence, Union
 
 from alembic import op
-from sqlalchemy import Column, VARCHAR, TIMESTAMP, ARRAY, BOOLEAN, text, func
+from sqlalchemy import Column, VARCHAR, TIMESTAMP, BOOLEAN, text, func
+from sqlalchemy.dialects.postgresql import JSONB
 
 
 # revision identifiers, used by Alembic.
@@ -24,8 +25,8 @@ def upgrade() -> None:
         "prompts",
         Column("id", VARCHAR(256), primary_key=True),
         Column("project_id", VARCHAR(256), nullable=False),
-        Column("base_plan_id", VARCHAR(256)),
-        Column("generated_plans_ids", ARRAY(VARCHAR(256))),
+        Column("base", JSONB(none_as_null=True)),
+        Column("patches", JSONB),
         Column("text", VARCHAR(256), nullable=False),
         Column("status", VARCHAR(8)),
         Column(

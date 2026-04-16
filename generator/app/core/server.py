@@ -2,7 +2,8 @@ import logging
 
 from app.core.db import PromptsRepository
 from app.core.facade import SystemFacade
-from app.core.models import Plan, Prompt
+from app.core.generator import Generator
+from app.core.models import Prompt
 
 logger = logging.getLogger(__name__)
 
@@ -19,9 +20,12 @@ class PromptNotFoundError(Exception): ...
 
 
 class Server:
-    def __init__(self, prompts: PromptsRepository, facade: SystemFacade):
+    def __init__(
+        self, prompts: PromptsRepository, facade: SystemFacade, generator: Generator
+    ):
         self.prompts = prompts
         self.facade = facade
+        self.generator = generator
 
     async def generate_plans(
         self,
@@ -41,20 +45,14 @@ class Server:
         )
         if base_plan_id is not None and base_plan is None:
             raise PlanNotFoundError
-        prompt = Prompt.create(project_id, text, base_plan_id)
+        prompt = Prompt.create(
+            project_id, text, base_plan.content if base_plan else None
+        )
         await self.prompts.save(prompt)
 
         try:
-            plan, etag = await self.facade.create_plan(account_id, project_id)
-            _ = await self.facade.patch_plan(
-                account_id, plan.id, etag, Plan.Patch(name="generated-1")
-            )
-
-            import asyncio
-
-            await asyncio.sleep(2)
-
-            prompt.success([plan.id])
+            patches = await self.generator.generate_patches(project, base_plan, text, count)
+            prompt.success(patches)
         except Exception as e:
             logger.error({"error": str(e)})
             prompt.fail()

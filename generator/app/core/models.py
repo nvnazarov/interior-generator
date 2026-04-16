@@ -7,39 +7,6 @@ from uuid import uuid4
 from app.utils.datetime import current_time
 
 
-class Prompt(BaseModel):
-    id: str
-    project_id: str
-    base_plan_id: str | None
-    text: str
-    generated_plans_ids: list[str]
-    dt_created: datetime
-    dt_done: datetime | None
-    status: Literal["pending", "success", "failed"]
-
-    @staticmethod
-    def create(project_id: str, text: str, base_plan_id: str | None = None) -> "Prompt":
-        return Prompt(
-            id=uuid4().hex,
-            project_id=project_id,
-            base_plan_id=base_plan_id,
-            text=text,
-            generated_plans_ids=[],
-            dt_created=current_time(),
-            dt_done=None,
-            status="pending",
-        )
-
-    def success(self, generated_plans_ids: list[str]):
-        self.status = "success"
-        self.dt_done = current_time()
-        self.generated_plans_ids = generated_plans_ids
-
-    def fail(self):
-        self.status = "failed"
-        self.dt_done = current_time()
-
-
 class Project(BaseModel):
     class Content(BaseModel):
         class Door(BaseModel):
@@ -134,6 +101,39 @@ class Plan(BaseModel):
     content: Content = Field(default_factory=Content)
     name: str = Field("", max_length=256)
     revision: int
+
+
+class Prompt(BaseModel):
+    id: str
+    project_id: str
+    base: Plan.Content | None
+    text: str
+    patches: list[Plan.Patch]
+    dt_created: datetime
+    dt_done: datetime | None
+    status: Literal["pending", "success", "failed"]
+
+    @staticmethod
+    def create(project_id: str, text: str, base: Plan.Content | None) -> "Prompt":
+        return Prompt(
+            id=uuid4().hex,
+            project_id=project_id,
+            base=base,
+            text=text,
+            patches=[],
+            dt_created=current_time(),
+            dt_done=None,
+            status="pending",
+        )
+
+    def success(self, patches: list[Plan.Patch]):
+        self.status = "success"
+        self.dt_done = current_time()
+        self.patches = patches
+
+    def fail(self):
+        self.status = "failed"
+        self.dt_done = current_time()
 
 
 class Furniture(BaseModel):

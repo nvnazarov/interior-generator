@@ -1,6 +1,8 @@
 import {
   CameraControls,
   CameraControlsImpl,
+  GizmoHelper,
+  GizmoViewport,
   Grid,
   OrbitControls,
   OrthographicCamera,
@@ -90,6 +92,14 @@ export function Scene() {
         infiniteGrid
       />
       <ProjectMesh />
+      {view === "3D" && (
+        <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
+          <GizmoViewport
+            axisColors={["red", "green", "blue"]}
+            labelColor="black"
+          />
+        </GizmoHelper>
+      )}
       {toolIsWall && <WallTool />}
       {toolIsWetArea && <WetAreaTool />}
     </Canvas>

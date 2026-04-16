@@ -109,8 +109,8 @@ export interface Prompt {
   id: string;
   text: string;
   projectId: string;
-  basePlanId: string | null;
-  generatedPlansIds: string[];
+  base: Plan["content"] | null;
+  patches: PlanPatch[];
   status: "pending" | "success" | "failed";
   dtCreated: string;
   dtDone: string | null;

@@ -2,7 +2,7 @@
 @use "../../styles/colors";
 
 .notifications__notification-popup {
-  @include base.bbox();
+  @include base.bbox($color: white);
 
   &__error {
     @include base.bbox($color: hotpink);

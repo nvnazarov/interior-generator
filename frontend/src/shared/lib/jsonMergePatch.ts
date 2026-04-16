@@ -50,3 +50,44 @@ export function combineManyJsonMergePatches(patches: any[]): any {
   }
   return result;
 }
+
+export function computeJsonMergePatch<T>(source: T, target: T): any {
+  if (source === target) {
+    return {};
+  }
+  if (target === null) {
+    return null;
+  }
+  if (source === null) {
+    return target;
+  }
+  const sourceIsObject = source !== null && typeof source === "object" && !Array.isArray(source);
+  const targetIsObject = target !== null && typeof target === "object" && !Array.isArray(target)
+  if (!sourceIsObject || !targetIsObject) {
+    return target;
+  }
+  const result: any = {};
+  const allKeys = new Set([...Object.keys(source), ...Object.keys(target)]);
+  for (const key of allKeys) {
+    const sourceValue = (source as any)[key];
+    const targetValue = (target as any)[key];
+    if (sourceValue === targetValue) {
+      continue;
+    }
+    if (!(key in source)) {
+      if (targetValue !== undefined) {
+        result[key] = targetValue;
+      }
+      continue;
+    }
+    if (!(key in target)) {
+      result[key] = null;
+      continue;
+    }
+    const nestedPatch = computeJsonMergePatch(sourceValue, targetValue);
+    if (nestedPatch !== undefined) {
+      result[key] = nestedPatch;
+    }
+  }
+  return Object.keys(result).length > 0 ? result : {};
+}

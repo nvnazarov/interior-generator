@@ -1,11 +1,13 @@
 import "./Prompt.scss";
-import type { Prompt } from "../api/entities";
+import type { PlanPatch, Prompt } from "../api/entities";
 import moment from "moment";
 import { human } from "./lib";
-import { Link } from "react-router";
 import { Spinner } from "../../shared/components";
 import { useCallback, useState } from "react";
 import { useDeletePromptMutation } from "../api/slice";
+import { useAppDispatch } from "../storeTypes";
+import { planChangedTo } from "../planEditor/slice";
+import { applyJsonMergePatch } from "../../shared/lib/jsonMergePatch";
 
 export function Prompt({
   prompt,
@@ -14,6 +16,7 @@ export function Prompt({
   prompt: Prompt;
   onAfterDeleted: (id: string) => void;
 }) {
+  const dispatch = useAppDispatch();
   const [deletePrompt] = useDeletePromptMutation();
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -28,6 +31,26 @@ export function Prompt({
     }
   }, []);
 
+  const handleShowBase = useCallback(() => {
+    if (prompt.base) {
+      dispatch(planChangedTo(prompt.base));
+    }
+  }, []);
+
+  const handleShowPlan = useCallback((patch: PlanPatch) => {
+    const plan = applyJsonMergePatch(prompt.base, patch);
+    dispatch(
+      planChangedTo(
+        plan !== null
+          ? plan
+          : {
+              areas: {},
+              furniture: {},
+            },
+      ),
+    );
+  }, []);
+
   return (
     <div className="prompts__prompt">
       <div>
@@ -37,22 +60,15 @@ export function Prompt({
         </button>
       </div>
       <div>
-        {prompt.basePlanId !== null && (
-          <Link
-            to={`/editor/projects/${prompt.projectId}/plans/${prompt.basePlanId}`}
-          >
-            Base
-          </Link>
+        {prompt.base !== null && (
+          <span onClick={() => handleShowBase()}>Base</span>
         )}
         {prompt.status === "success" && (
           <div>
-            {prompt.generatedPlansIds.map((planId, idx) => (
-              <Link
-                key={idx}
-                to={`/editor/project/${prompt.projectId}/plan/${planId}`}
-              >
+            {prompt.patches.map((patch, idx) => (
+              <span key={idx} onClick={() => handleShowPlan(patch)}>
                 P{idx + 1}
-              </Link>
+              </span>
             ))}
           </div>
         )}
@@ -66,7 +82,8 @@ export function Prompt({
         ) : (
           prompt.status === "failed" && (
             <div>
-              Failed after {human(moment(prompt.dtDone!).diff(prompt.dtCreated))}
+              Failed after{" "}
+              {human(moment(prompt.dtDone!).diff(prompt.dtCreated))}
             </div>
           )
         )}

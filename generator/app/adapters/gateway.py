@@ -1,6 +1,7 @@
 from httpx import AsyncClient
 from urllib.parse import quote
 from pydantic import RootModel
+from functools2 import async_lru_cache  # type: ignore
 
 from app.core.facade import SystemFacade
 from app.core.models import Furniture, Plan, Project
@@ -54,10 +55,21 @@ class GatewayFacade(SystemFacade):
         new_etag = resp.headers["etag"]
         return new_etag
 
-    async def find_furniture(self, description: str, count: int) -> list[Furniture]:
+    async def match_furniture(self, description: str, count: int) -> list[Furniture]:
         resp = await self.client.get(
             f"/catalog/like?description={quote(description)}&k={count}",
         )
         resp.raise_for_status()
         model = RootModel[list[Furniture]].model_validate(resp.json())
         return model.root
+
+    @async_lru_cache(maxsize=100, ttl=3600)
+    async def find_furniture(self, furniture_id: str) -> Furniture | None:
+        resp = await self.client.get(
+            f"/catalog/furniture/{furniture_id}",
+        )
+        if resp.status_code == 404:
+            return None
+        resp.raise_for_status()
+        model = Furniture.model_validate(resp.json())
+        return model

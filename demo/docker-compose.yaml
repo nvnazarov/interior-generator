@@ -162,7 +162,7 @@ services:
       - "GENERATOR__POSTGRES__PASSWORD=postgres"
       - "GENERATOR__POSTGRES__DB=postgres"
       - "GENERATOR__GATEWAY__BASE_URL=http://private-gateway/api"
-      - "GENERATOR__LOGGING__LEVEL=INFO"
+      - "GENERATOR__LOGGING__LEVEL=DEBUG"
     networks:
       - "private"
     healthcheck:

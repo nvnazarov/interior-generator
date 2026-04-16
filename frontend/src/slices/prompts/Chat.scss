@@ -17,6 +17,8 @@
   border-radius: 10px;
   background-color: white;
   height: 500px;
+  max-width: 400px;
+  min-width: 300px;
   z-index: 10;
 
   & > p {

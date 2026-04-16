@@ -10,8 +10,11 @@ import { v4 } from "uuid";
 import { PromptInput } from "./PromptInput";
 import { Spinner } from "../../shared/components";
 import { Prompt } from "./Prompt";
+import { useAppDispatch } from "../storeTypes";
+import { notify } from "../notifications/slice";
 
 export function Chat({ projectId }: { projectId: string }) {
+  const dispatch = useAppDispatch();
   const [count, setCount] = useState(1);
   const [text, setText] = useState("");
   const [basePlanId, setBasePlanId] = useState<string | null>(null);
@@ -30,17 +33,24 @@ export function Chat({ projectId }: { projectId: string }) {
   }, [projectId]);
 
   const handleGenerate = useCallback(async () => {
+    const placeholderId = v4();
     try {
       setIsBusy(true);
       setText("");
-      const placeholderId = v4();
       setPrompts((prompts) => [
         ...prompts,
         {
           id: placeholderId,
           projectId,
           text,
-          basePlanId: basePlanId,
+          base: basePlanId
+            ? {
+                furniture: {},
+                areas: {},
+              }
+            : null,
+          patches: [],
+          dtDone: null,
           dtCreated: moment().toISOString(),
           status: "pending",
         } as PromptEntity,
@@ -58,6 +68,13 @@ export function Chat({ projectId }: { projectId: string }) {
             prompt,
           ]),
         );
+    } catch {
+      dispatch(notify({ text: "Something went wrong", severity: "error" }));
+      setPrompts((prompts) =>
+        prompts.map((p) =>
+          p.id !== placeholderId ? p : { ...p, status: "failed" },
+        ),
+      );
     } finally {
       setIsBusy(false);
     }

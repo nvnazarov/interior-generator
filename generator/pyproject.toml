@@ -5,6 +5,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.133.1",
+    "functools2>=0.1.1",
+    "numpy>=2.2.6",
     "openai>=2.24.0",
     "psycopg[binary]>=3.3.3",
     "pydantic-settings>=2.13.1",

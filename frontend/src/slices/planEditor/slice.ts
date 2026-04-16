@@ -3,6 +3,7 @@ import type { Plan, PlanPatch } from "../api/entities";
 import {
   applyJsonMergePatch,
   combineJsonMergePatches,
+  computeJsonMergePatch,
 } from "../../shared/lib/jsonMergePatch";
 import type { AppState } from "../store";
 
@@ -126,6 +127,24 @@ const planEditorSlice = createSlice({
       state.undoableChanges.push(change);
       state.redoableChanges = [];
     },
+    planChangedTo: (state, action: PayloadAction<Plan["content"]>) => {
+      if (state.plan) {
+        const patch = computeJsonMergePatch(state.plan.content, action.payload);
+        if (!patch || Object.keys(patch).length === 0) {
+          return;
+        }
+        const oldPlan = { ...state.plan }
+        state.plan = applyJsonMergePatch(state.plan, patch);
+        const inversePatch = computeJsonMergePatch(state.plan, oldPlan);
+        const change = { patch, inversePatch } as PlanChange;
+        state.unsavedAccumulatedPatch = combineJsonMergePatches(
+          state.unsavedAccumulatedPatch,
+          change.patch,
+        );
+        state.undoableChanges.push(change);
+        state.redoableChanges = [];
+      }
+    },
     changeUndone: (state) => {
       const change = state.undoableChanges.pop();
       if (!change) {
@@ -242,6 +261,7 @@ export const {
   changeUndone,
   planSaved,
   planChanged,
+  planChangedTo,
   planOpened,
   catalogSwitched,
   chatSwitched,

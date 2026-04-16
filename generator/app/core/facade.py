@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Awaitable
 
 from app.core.models import Furniture, Plan, Project
 
@@ -23,4 +24,9 @@ class SystemFacade(ABC):
     ) -> str: ...
 
     @abstractmethod
-    async def find_furniture(self, description: str, count: int) -> list[Furniture]: ...
+    async def match_furniture(
+        self, description: str, count: int
+    ) -> list[Furniture]: ...
+
+    @abstractmethod
+    def find_furniture(self, furniture_id: str) -> Awaitable[Furniture | None]: ...

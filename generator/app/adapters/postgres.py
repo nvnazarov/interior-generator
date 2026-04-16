@@ -1,15 +1,17 @@
-from sqlalchemy import text
+from sqlalchemy import text, bindparam
 from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.dialects.postgresql import JSONB
+from pydantic import RootModel
 
 from app.core.db import PromptsRepository
-from app.core.models import Prompt
+from app.core.models import Prompt, Plan
 
 STMT_GET_PROMPTS_FOR_PROJECT = text(
     "SELECT "
     "   id, "
     "   text, "
-    "   base_plan_id, "
-    "   generated_plans_ids, "
+    "   base, "
+    "   patches, "
     "   status, "
     "   dt_created, "
     "   dt_done "
@@ -26,8 +28,8 @@ STMT_SAVE_PROMPT = text(
     "   id, "
     "   project_id, "
     "   text, "
-    "   base_plan_id, "
-    "   generated_plans_ids, "
+    "   base, "
+    "   patches, "
     "   status, "
     "   dt_created, "
     "   dt_done "
@@ -36,8 +38,8 @@ STMT_SAVE_PROMPT = text(
     "   :id, "
     "   :project_id, "
     "   :text, "
-    "   :base_plan_id, "
-    "   :generated_plans_ids, "
+    "   :base, "
+    "   :patches, "
     "   :status, "
     "   :dt_created, "
     "   :dt_done "
@@ -45,12 +47,12 @@ STMT_SAVE_PROMPT = text(
     "ON CONFLICT (id) DO UPDATE SET "
     "   project_id = excluded.project_id, "
     "   text = excluded.text, "
-    "   base_plan_id = excluded.base_plan_id, "
-    "   generated_plans_ids = excluded.generated_plans_ids, "
+    "   base = excluded.base, "
+    "   patches = excluded.patches, "
     "   status = excluded.status, "
     "   dt_created = excluded.dt_created, "
     "   dt_done = excluded.dt_done"
-)
+).bindparams(bindparam("base", type_=JSONB), bindparam("patches", type_=JSONB))
 STMT_DELETE_PROMPT = text(
     "UPDATE "
     "   generator.prompts "
@@ -63,8 +65,8 @@ STMT_GET_PROMPT = text(
     "SELECT "
     "   project_id, "
     "   text, "
-    "   base_plan_id, "
-    "   generated_plans_ids, "
+    "   base, "
+    "   patches, "
     "   status, "
     "   dt_created, "
     "   dt_done "
@@ -90,8 +92,8 @@ class PostgresPromptsRepository(PromptsRepository):
                     id=row[0],
                     project_id=project_id,
                     text=row[1],
-                    base_plan_id=row[2],
-                    generated_plans_ids=row[3],
+                    base=Plan.Content.model_validate(row[2]),
+                    patches=RootModel[list[Plan.Patch]].model_validate(row[3]).root,
                     status=row[4],
                     dt_created=row[5],
                     dt_done=row[6],
@@ -118,8 +120,8 @@ class PostgresPromptsRepository(PromptsRepository):
                 id=prompt_id,
                 project_id=row[0],
                 text=row[1],
-                base_plan_id=row[2],
-                generated_plans_ids=row[3],
+                base=Plan.Content.model_validate(row[2]),
+                patches=RootModel[list[Plan.Patch]].model_validate(row[3]).root,
                 status=row[4],
                 dt_created=row[5],
                 dt_done=row[6],

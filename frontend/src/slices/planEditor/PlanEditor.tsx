@@ -17,6 +17,7 @@ import { NameInput } from "./NameInput";
 import { Hint } from "./Hint";
 import { ChatButton } from "./ChatButton";
 import { Chat } from "../prompts/Chat";
+import { MyAvatar } from "../account/MyAvatar";
 
 export function PlanEditor({
   projectId,
@@ -76,6 +77,7 @@ export function PlanEditor({
           <ChatButton />
           <FurnitureCatalogSwitch />
         </div>
+        <MyAvatar />
       </div>
       {isCatalogOpen && <FurnitureCatalog />}
       {isChatOpen && <Chat projectId={projectId} />}

@@ -112,8 +112,73 @@ export const RawPromptSchema = z.object({
   id: z.string(),
   text: z.string(),
   project_id: z.string(),
-  base_plan_id: z.string().nullable(),
-  generated_plans_ids: z.array(z.string()),
+  base: z.object({
+    furniture: z.record(
+      z.string(),
+      z.object({
+        id: z.string(),
+        furniture_id: z.string(),
+        x: z.number(),
+        y: z.number(),
+        z: z.number(),
+        yaw: z.number(),
+      }),
+    ),
+    areas: z.record(
+      z.string(),
+      z.object({
+        id: z.string(),
+        type: z.literal([
+          "kitchen",
+          "livingroom",
+          "bedroom",
+          "bathroom",
+          "hallway",
+        ]),
+        points: z.array(
+          z.object({
+            x: z.number(),
+            y: z.number(),
+          }),
+        ),
+      }),
+    ),
+  }).nullable(),
+  patches: z.array(z.object({
+    name: z.string(),
+    content: z.object({
+      furniture: z.record(
+        z.string(),
+        z.object({
+          id: z.string().optional(),
+          furniture_id: z.string().optional(),
+          x: z.number().optional(),
+          y: z.number().optional(),
+          z: z.number().optional(),
+          yaw: z.number().optional(),
+        }).nullable(),
+      ),
+      areas: z.record(
+        z.string(),
+        z.object({
+          id: z.string(),
+          type: z.literal([
+            "kitchen",
+            "livingroom",
+            "bedroom",
+            "bathroom",
+            "hallway",
+          ]).optional(),
+          points: z.array(
+            z.object({
+              x: z.number(),
+              y: z.number(),
+            }),
+          ).optional(),
+        }).nullable(),
+      )
+    })
+  })),
   status: z.literal(["pending", "success", "failed"]),
   dt_created: z.string(),
   dt_done: z.string().nullable(),
