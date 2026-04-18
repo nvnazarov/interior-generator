@@ -21,9 +21,12 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@prisma/adapter-pg": "^7.7.0",
+    "@prisma/client": "^7.7.0",
     "better-auth": "^1.4.17",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "pg": "^8.18.0"
+    "pg": "^8.20.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -31,13 +34,14 @@
     "@tsconfig/node22": "^22.0.5",
     "@types/express": "^5.0.6",
     "@types/node": "^25.0.10",
-    "@types/pg": "^8.16.0",
+    "@types/pg": "^8.20.0",
     "@types/supertest": "^6.0.3",
     "@vitest/coverage-v8": "^4.0.18",
     "@vitest/eslint-plugin": "^1.6.6",
     "eslint": "^9.39.2",
     "eslint-plugin-perfectionist": "^5.4.0",
     "prettier": "^3.8.1",
+    "prisma": "^7.7.0",
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",

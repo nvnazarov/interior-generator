@@ -115,3 +115,8 @@ export interface Prompt {
   dtCreated: string;
   dtDone: string | null;
 }
+
+export interface Account {
+  name: string;
+  image: string | null;
+}

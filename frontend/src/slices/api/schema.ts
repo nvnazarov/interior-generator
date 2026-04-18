@@ -184,6 +184,11 @@ export const RawPromptSchema = z.object({
   dt_done: z.string().nullable(),
 });
 
+export const AccountSchema = z.object({
+  name: z.string(),
+  image: z.string().nullable(),
+})
+
 export const RawProjectsArraySchema = z.array(RawProjectSchema);
 export const RawPlansArraySchema = z.array(RawPlanSchema);
 export const RawFurnitureArraySchema = z.array(RawFurnitureSchema);

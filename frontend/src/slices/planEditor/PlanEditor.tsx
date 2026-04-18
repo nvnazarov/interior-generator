@@ -1,6 +1,6 @@
 import "./PlanEditor.scss";
 import { useEffect } from "react";
-import { useLazyGetPlanByIdQuery } from "../api/slice";
+import { useGetProjectByIdQuery, useLazyGetPlanByIdQuery } from "../api/slice";
 import { RedoChangeButton } from "./RedoChangeButton";
 import { SaveButton } from "./SaveButton";
 import { UndoChangeButton } from "./UndoChangeButton";
@@ -17,7 +17,7 @@ import { NameInput } from "./NameInput";
 import { Hint } from "./Hint";
 import { ChatButton } from "./ChatButton";
 import { Chat } from "../prompts/Chat";
-import { MyAvatar } from "../account/MyAvatar";
+import { SmartAvatar } from "../account";
 
 export function PlanEditor({
   projectId,
@@ -30,6 +30,7 @@ export function PlanEditor({
   const dispatch = useAppDispatch();
   const isCatalogOpen = useAppSelector(selectIsCatalogOpen);
   const isChatOpen = useAppSelector(selectIsChatOpen);
+  const { data: project, isSuccess } = useGetProjectByIdQuery(projectId);
 
   useEffect(() => {
     async function loadPlan() {
@@ -77,7 +78,7 @@ export function PlanEditor({
           <ChatButton />
           <FurnitureCatalogSwitch />
         </div>
-        <MyAvatar />
+        {isSuccess && <SmartAvatar accountId={project.accountId} />}
       </div>
       {isCatalogOpen && <FurnitureCatalog />}
       {isChatOpen && <Chat projectId={projectId} />}

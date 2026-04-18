@@ -6,8 +6,10 @@ import type {
   ProjectPatch,
   PlanPatch,
   Prompt,
+  Account,
 } from "./entities";
 import {
+  AccountSchema,
   FurnitureCatalogResponseSchema,
   RawFurnitureSchema,
   RawPlansArraySchema,
@@ -604,6 +606,10 @@ const api = createApi({
         { type: "Prompts", id: `LIST:${projectId}` },
       ],
     }),
+    findAccountById: builder.query<Account, string>({
+      query: (id) => `accounts/${id}`,
+      rawResponseSchema: AccountSchema,
+    }),
   }),
 });
 
@@ -630,4 +636,5 @@ export const {
   useGetPromptsForProjectQuery,
   useLazyGetPromptsForProjectQuery,
   useDeletePromptMutation,
+  useFindAccountByIdQuery,
 } = api;
