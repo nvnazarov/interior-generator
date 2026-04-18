@@ -38,7 +38,7 @@ export function Prompt({
   }, []);
 
   const handleShowPlan = useCallback((patch: PlanPatch) => {
-    const plan = applyJsonMergePatch(prompt.base, patch);
+    const plan = applyJsonMergePatch(prompt.base, patch.content);
     dispatch(
       planChangedTo(
         plan !== null
@@ -55,7 +55,7 @@ export function Prompt({
     <div className="prompts__prompt">
       <div>
         <p>{prompt.text}</p>
-        <button onClick={handleDeletion} disabled={isDeleting}>
+        <button onClick={handleDeletion} disabled={isDeleting || prompt.status === "pending"}>
           <img src="/app/icons/trash.png" />
         </button>
       </div>

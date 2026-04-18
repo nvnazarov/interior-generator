@@ -1,6 +1,6 @@
-export function applyJsonMergePatch<T>(target: T, patch: any): T {
+export function applyJsonMergePatch(target: any, patch: any): any {
   if (patch === null || typeof patch !== "object" || Array.isArray(patch)) {
-    return patch as T;
+    return patch;
   }
   const result: any =
     target !== null && typeof target === "object" && !Array.isArray(target)
@@ -8,6 +8,9 @@ export function applyJsonMergePatch<T>(target: T, patch: any): T {
       : {};
   for (const key of Object.keys(patch)) {
     const patchValue = patch[key];
+    if (patchValue === undefined) {
+      continue;
+    }
     if (patchValue === null) {
       delete result[key];
     } else if (typeof patchValue === "object" && !Array.isArray(patchValue)) {
@@ -17,7 +20,7 @@ export function applyJsonMergePatch<T>(target: T, patch: any): T {
       result[key] = patchValue;
     }
   }
-  return result as T;
+  return result;
 }
 
 export function combineJsonMergePatches(a: any, b: any): any {
@@ -51,9 +54,70 @@ export function combineManyJsonMergePatches(patches: any[]): any {
   return result;
 }
 
-export function computeJsonMergePatch<T>(source: T, target: T): any {
+// function isEmptyObject(v: any): boolean {
+//   return typeof v === "object" && v !== null && !Array.isArray(v) && Object.keys(v).length === 0
+// }
+
+// function optimize(patch: any): any {
+//   if (typeof patch === "object" && patch !== null && !Array.isArray(patch)) {
+//     const keys = Object.keys(patch);
+//     if (keys.length === 0) {
+//       return {};
+//     }
+//     const result: any = {};
+//     for (const key of keys) {
+//       const optimized = optimize(patch[key]);
+//       if (!isEmptyObject(optimized)) {
+//         result[key] = optimized;
+//       }
+//     }
+//     return result;
+//   }
+//   return patch;
+// }
+
+/**
+ * Compares two objects. Arrays are compared element-wise.
+ * Objects are compared field-wise. In other cases, objects
+ * are compared using the "===".
+ * 
+ * @param a - The first object.
+ * @param b - The second object.
+ * @returns `true` if objects are equal, else `false`.
+ */
+function equal(a: any, b: any): boolean {
+  if (a === null && b === null) {
+    return true;
+  }
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((v, i) => equal(v, b[i]));
+  }
+  if (typeof a === "object" && typeof b === "object") {
+    return Object.keys(a).every((k) => equal(a[k], b[k])) && Object.keys(b).length == Object.keys(a).length;
+  }
+  return a === b;
+}
+
+/**
+ * Computes minimal JSON Merge Patch that should be applied to
+ * the `source` to transform it into the `target`.
+ * 
+ * Note: when no patch should be applied, i.e. source and target
+ * objects have the same values, `undefined` is returned.
+ * 
+ * Note: only JSON types are supported plus the function type
+ * (this includes classes and functions).
+ *  
+ * @param source - The source object. 
+ * @param target - The target object.
+ * @returns JSON Merge Patch.
+ */
+export function computeJsonMergePatch(source: any, target: any): any {
+  if (typeof source === "undefined" || typeof target === "undefined") {
+    throw new Error("undefined is not allowed in json merge patch");
+  }
   if (source === target) {
-    return {};
+    return undefined;
   }
   if (target === null) {
     return null;
@@ -61,33 +125,33 @@ export function computeJsonMergePatch<T>(source: T, target: T): any {
   if (source === null) {
     return target;
   }
-  const sourceIsObject = source !== null && typeof source === "object" && !Array.isArray(source);
-  const targetIsObject = target !== null && typeof target === "object" && !Array.isArray(target)
+  const sourceIsObject = typeof source === "object" && source !== null && !Array.isArray(source);
+  const targetIsObject = typeof target === "object" && target !== null && !Array.isArray(target);
   if (!sourceIsObject || !targetIsObject) {
-    return target;
+    return equal(source, target) ? undefined : target;
   }
   const result: any = {};
-  const allKeys = new Set([...Object.keys(source), ...Object.keys(target)]);
-  for (const key of allKeys) {
+  const keys = new Set([...Object.keys(source), ...Object.keys(target)]);
+  for (const key of keys) {
     const sourceValue = (source as any)[key];
     const targetValue = (target as any)[key];
-    if (sourceValue === targetValue) {
+    const sourceValueIsUndefined = typeof sourceValue === "undefined";
+    const targetValueIsUndefined = typeof targetValue === "undefined";
+    if (sourceValueIsUndefined && targetValueIsUndefined) {
       continue;
     }
-    if (!(key in source)) {
-      if (targetValue !== undefined) {
-        result[key] = targetValue;
-      }
-      continue;
+    if (sourceValueIsUndefined) {
+      result[key] = targetValue;
+      continue
     }
-    if (!(key in target)) {
+    if (targetValueIsUndefined) {
       result[key] = null;
-      continue;
+      continue
     }
-    const nestedPatch = computeJsonMergePatch(sourceValue, targetValue);
-    if (nestedPatch !== undefined) {
-      result[key] = nestedPatch;
+    const patch = computeJsonMergePatch(sourceValue, targetValue);
+    if (patch !== undefined) {
+      result[key] = patch;
     }
   }
-  return Object.keys(result).length > 0 ? result : {};
+  return Object.keys(result).length === 0 ? undefined : result;
 }

@@ -19,6 +19,7 @@ from app.core.generator.scene import (
 from app.core.generator.prompts import (
     SPATIAL_ANALYSIS_PROMPT,
     SPATIAL_RELATIONSHIP_PROMPT,
+    IDENTIFY_ACTIONS_PROMPT,
 )
 
 logger = logging.getLogger(__name__)
@@ -103,10 +104,16 @@ class GenerationContext:
         )
         await self._parse_furniture_and_relations(spatial_relations_description)
 
-        # mutated = self.scene.mutate()
-        # mutated.to_plan()
+        patches = list[Plan.Patch]()
+        for _ in range(self.count):
+            self.scene.rearrange()
+            patches.append(self.scene.as_patch_to(self.base_plan))
 
-        return [Plan.Patch(name="patched-1"), Plan.Patch(name="patched-2")]
+        logger.debug(
+            {"msg": "generated patches", "patches": [p.model_dump() for p in patches]}
+        )
+
+        return patches
 
     async def _parse_furniture_and_relations(self, spatial_relations_description: str):
         completion = await self.ai.chat.completions.create(
@@ -155,7 +162,7 @@ class GenerationContext:
                 return object
 
             object = get_or_create(semantic_name)
-            for constraint in constraints:
+            for constraint in constraints[1:]:
                 constraint = constraint.strip()
                 match constraint:
                     case "on floor":
@@ -199,6 +206,7 @@ class GenerationContext:
         # For the new objects, add appropriate furniture choices.
         # TODO: generate descriptions for these objects and use them to
         # search appropriate furniture in the catalog.
+        logger.info({"msg": "new objects", "count": len(new_objects)})
         for object in new_objects:
             if not object.semantic_name:
                 # TODO
@@ -251,7 +259,7 @@ class GenerationContext:
         completion = await self.ai.chat.completions.create(
             model="google/gemma-4-31b-it",
             messages=[
-                {"role": "system", "content": SPATIAL_ANALYSIS_PROMPT},
+                {"role": "system", "content": IDENTIFY_ACTIONS_PROMPT},
                 {
                     "role": "user",
                     "content": f"Apartment: {scene_description}\nInstruction: {instruction}",

@@ -106,7 +106,7 @@ class PostgresPromptsRepository(PromptsRepository):
         async with self.engine.connect() as conn:
             _ = await conn.execute(
                 STMT_SAVE_PROMPT,
-                prompt.model_dump(),
+                prompt.model_dump(exclude_unset=True),
             )
             await conn.commit()
 

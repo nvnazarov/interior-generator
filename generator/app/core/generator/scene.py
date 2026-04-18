@@ -122,6 +122,7 @@ class SceneObject:
 
     def __init__(self, id: str):
         self.id = id
+        self.choice: Furniture | None = None
         self.choices = list[Furniture]()
         self.semantic_name = ""
         self.description = ""
@@ -131,11 +132,20 @@ class SceneObject:
         self.z: int = 0
         self.yaw: float = 0
 
+    def choose(self, furniture: Furniture):
+        if furniture not in self.choices:
+            raise ValueError("furniture is not among the choices")
+        self.choice = furniture
+
     def add_choice(self, furniture: Furniture):
         self.choices.append(furniture)
+        if self.choice is None:
+            self.choice = furniture
 
     def add_choices(self, furniture: Iterable[Furniture]):
         self.choices.extend(furniture)
+        if self.choice is None and len(self.choices) > 0:
+            self.choice = self.choices[0]
 
     def get_choices(self) -> list[Furniture]:
         return self.choices
@@ -153,18 +163,30 @@ class SceneObject:
         self.yaw = yaw
         self.flags = self.flags | SceneObject.LOCKED
 
+    def set_location(self, x: int, y: int, z: int, yaw: float):
+        if self.locked():
+            raise RuntimeError("object is locked")
+        self.x = x
+        self.y = y
+        self.z = z
+        self.yaw = yaw
+
     def describe(self, description: str):
         self.description = description
 
     def set_semantic_name(self, name: str):
         self.semantic_name = name.lower()
 
+    def locked(self) -> bool:
+        return bool(self.flags & SceneObject.LOCKED)
+
 
 class SceneGraph:
     def __init__(self, project: Project):
         self.project = project
         self.objects = dict[str, SceneObject]()
-        self.constraints = dict[str, list[Constraint]]()
+        self.constraints_by_object = dict[str, list[Constraint]]()
+        self.constraints = list[Constraint]()
 
     def get_or_create_object(self, id: str) -> SceneObject:
         object = self.objects.get(id)
@@ -193,15 +215,34 @@ class SceneGraph:
         return None
 
     def add_constraint(self, constraint: Constraint):
+        if constraint in self.constraints:
+            return
         for object_id in constraint.objects():
-            current = self.constraints.get(object_id, [])
+            current = self.constraints_by_object.get(object_id, [])
             current.append(constraint)
-            self.constraints[object_id] = current
+            self.constraints_by_object[object_id] = current
+            self.constraints.append(constraint)
 
     def iter_objects(self) -> Iterable[SceneObject]:
         return self.objects.values()
 
-    def mutate(self) -> "SceneGraph": ...
+    def rearrange(self):
+        objects_weights = dict[str, float]()
+        for constraint in self.constraints:
+            for object_id, weight in constraint.weights().items():
+                current = objects_weights.get(object_id, 0.0)
+                objects_weights[object_id] = current + weight
+
+        order = sorted(
+            list(self.objects.keys()),
+            key=lambda object_id: objects_weights.get(object_id, 10),
+        )
+        for object_id in order:
+            object = self.objects[object_id]
+            if not object.locked():
+                object.set_location(0, 0, 0, 0)
+
+    def loss(self) -> float: ...
 
     def describe(self) -> str:
         # TODO: more spatial description (which objects are around, near or far from
@@ -219,4 +260,29 @@ class SceneGraph:
             map(lambda d: f" - {d}", furniture_descriptions)
         )
 
-    def to_plan(self) -> Plan: ...
+    def as_patch_to(self, base_plan: Plan | None) -> Plan.Patch:
+        patch = Plan.Patch()
+        for object in self.objects.values():
+            if not object.choice:
+                logger.warning({"msg": "no choice for object", "object_id": object.id})
+                continue
+            if base_plan:
+                old_object = base_plan.content.furniture.get(object.id)
+                if (
+                    old_object is not None
+                    and old_object.model_dump() == object.choice.model_dump()
+                ):
+                    logger.debug({"msg": "object unchanged", "object_id": object.id})
+                    continue
+            logger.debug({"msg": "object changed", "object_id": object.id})
+            patch.content.furniture[object.id] = Plan.Patch.Content.Furniture(
+                furniture_id=object.choice.id,
+                x=object.x,
+                y=object.y,
+                z=object.z,
+                yaw=object.yaw,
+            )
+        # Mark "furniture" field as "set".
+        patch.content = patch.content
+        patch.content.furniture = patch.content.furniture
+        return patch

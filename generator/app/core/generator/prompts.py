@@ -95,18 +95,25 @@ tvstand, coffeetable, island, diningtable, or cocktailtable.
 Format:
 The output format must be:object-x | global constraint | side constraint | on constraint
 For example:
-sofa-0 | on floor | against wall; coffee table-0 | on floor | sofa, in front of; armchair-0 | on floor | coffee table, face 
-to face; side table-0 | on floor | bed, left/right to; floor lamp-0 | on floor | armchair, left/right to; cup-0 | coffee table, 
-on top; cup-1 | coffee table, on top;…
+sofa-0 | on floor | against wall
+coffee table-0 | on floor | sofa, in front of
+armchair-0 | on floor | coffee table, face to face
+side table-0 | on floor | bed, left/right to
+floor lamp-0 | on floor | armchair, left/right to
+cup-0 | coffee table, on top
+cup-1 | coffee table, on top
 
 Requirement:
 Here are some principles you must follow:
-1. For each object, there must be a global constraint or an on constraint, and there can be a side constraint, but a 
-side constraint is not required.
-2. Situations where side constraint cannot appear: The furniture itself has “against wall” constraint
-3. Situations where on constraint appears: This furniture cannot have global constraint or side constraint
-4. Please follow the desired format *strictly* (do not add any additional text at the beginning or end) to provide the 
-constraints for each object.
+1. For each object, there must be a global constraint or an on constraint, and there can
+be a side constraint, but a side constraint is not required.
+2. Situations where side constraint cannot appear: The furniture itself has “against wall”
+constraint.
+3. Situations where on constraint appears: This furniture cannot have global constraint
+or side constraint.
+4. Please follow the desired format *strictly* (do not add any additional text at the
+beginning or end) to provide the constraints for each object. Place each constraint in
+its own line.
 
 Example:
 Instruction:

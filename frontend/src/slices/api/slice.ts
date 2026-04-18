@@ -478,7 +478,7 @@ const api = createApi({
           return {
             name: patch.name,
             content: {
-              furniture: Object.entries(patch.content.furniture)
+              furniture: Object.entries(patch.content?.furniture ?? {})
                 .map(([id, f]): [string, any] =>
                   f
                     ? [
@@ -498,7 +498,7 @@ const api = createApi({
                   acc[curr[0]] = curr[1];
                   return acc;
                 }, {} as any),
-              areas: patch.content.areas,
+              areas: patch.content?.areas,
             },
           }
         }),
@@ -572,7 +572,7 @@ const api = createApi({
           return {
             name: patch.name,
             content: {
-              furniture: Object.entries(patch.content.furniture)
+              furniture: Object.entries(patch.content?.furniture ?? {})
                 .map(([id, f]): [string, any] =>
                   f
                     ? [
@@ -592,7 +592,7 @@ const api = createApi({
                   acc[curr[0]] = curr[1];
                   return acc;
                 }, {} as any),
-              areas: patch.content.areas,
+              areas: patch.content?.areas,
             },
           }
         }),

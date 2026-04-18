@@ -24,7 +24,7 @@ class ASGI(FastAPI):
                 raise HTTPException(status_code=401)
             return account_id
 
-        @self.post("/projects/{project_id}/prompts")
+        @self.post("/projects/{project_id}/prompts", response_model_exclude_unset=True)
         async def generate_plans(
             project_id: str,
             account_id: Annotated[str, Depends(get_account_id)],
@@ -37,7 +37,7 @@ class ASGI(FastAPI):
             )
             return prompt
 
-        @self.get("/projects/{project_id}/prompts")
+        @self.get("/projects/{project_id}/prompts", response_model_exclude_unset=True)
         async def get_prompts_for_project(
             project_id: str, account_id: Annotated[str, Depends(get_account_id)]
         ) -> list[Prompt]:

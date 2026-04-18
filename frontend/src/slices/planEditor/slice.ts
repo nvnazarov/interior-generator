@@ -1,4 +1,4 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, current, original, type PayloadAction } from "@reduxjs/toolkit";
 import type { Plan, PlanPatch } from "../api/entities";
 import {
   applyJsonMergePatch,
@@ -129,14 +129,15 @@ const planEditorSlice = createSlice({
     },
     planChangedTo: (state, action: PayloadAction<Plan["content"]>) => {
       if (state.plan) {
-        const patch = computeJsonMergePatch(state.plan.content, action.payload);
+        const oldContent = original(state.plan.content) ?? current(state.plan.content)
+        const patch = computeJsonMergePatch(oldContent, action.payload);
         if (!patch || Object.keys(patch).length === 0) {
           return;
         }
-        const oldPlan = { ...state.plan }
-        state.plan = applyJsonMergePatch(state.plan, patch);
-        const inversePatch = computeJsonMergePatch(state.plan, oldPlan);
-        const change = { patch, inversePatch } as PlanChange;
+        const newContent = applyJsonMergePatch(oldContent, patch)
+        state.plan.content = newContent;
+        const inversePatch = computeJsonMergePatch(newContent, oldContent);
+        const change = { patch: { content: patch }, inversePatch: { content: inversePatch } } as PlanChange;
         state.unsavedAccumulatedPatch = combineJsonMergePatches(
           state.unsavedAccumulatedPatch,
           change.patch,
@@ -151,7 +152,10 @@ const planEditorSlice = createSlice({
         throw new Error("error: change undone: no undoable changes");
       }
       if (state.plan) {
-        state.plan = applyJsonMergePatch(state.plan, change.inversePatch);
+        const oldPlan = current(state.plan);
+        const patch = current(change.inversePatch);
+        const newPlan = applyJsonMergePatch(oldPlan, patch);
+        state.plan = newPlan;
       } else {
         throw new Error("error: change undone: plan is not initialized");
       }

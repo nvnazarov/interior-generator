@@ -145,7 +145,7 @@ export const RawPromptSchema = z.object({
     ),
   }).nullable(),
   patches: z.array(z.object({
-    name: z.string(),
+    name: z.string().optional(),
     content: z.object({
       furniture: z.record(
         z.string(),
@@ -157,7 +157,7 @@ export const RawPromptSchema = z.object({
           z: z.number().optional(),
           yaw: z.number().optional(),
         }).nullable(),
-      ),
+      ).optional(),
       areas: z.record(
         z.string(),
         z.object({
@@ -176,8 +176,8 @@ export const RawPromptSchema = z.object({
             }),
           ).optional(),
         }).nullable(),
-      )
-    })
+      ).optional()
+    }).optional()
   })),
   status: z.literal(["pending", "success", "failed"]),
   dt_created: z.string(),
