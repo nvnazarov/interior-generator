@@ -2,6 +2,18 @@ import logging
 from typing import Iterable
 from abc import ABC, abstractmethod
 from uuid import uuid4
+import random
+from pydantic import BaseModel
+from app.core.generator.geometry import (
+    vec2,
+    direction,
+    yaw,
+    scale,
+    left,
+    right,
+    norm,
+    distance_point_to_segment,
+)
 
 from app.core.models import Furniture, Project, Plan
 
@@ -22,16 +34,42 @@ class Constraint(ABC):
         """Get objects that are constrained by this constraint."""
         pass
 
+    @abstractmethod
+    def locations(self, scene: "SceneGraph", object_id: str) -> "LocationsCollection":
+        """
+        Computes possible locations for the object in
+        the scene according to this constraint.
+        """
+        pass
+
 
 class OnFloor(Constraint):
     def __init__(self, object_id: str):
         self.object_id = object_id
 
     def weights(self) -> dict[str, float]:
-        return {self.object_id: 1}
+        return {self.object_id: 0}
 
     def objects(self) -> list[str]:
         return [self.object_id]
+
+    def locations(self, scene: "SceneGraph", object_id: str) -> "LocationsCollection":
+        if self.object_id == object_id:
+            object = scene.objects.get(object_id)
+            if not object:
+                raise ValueError("Object does not exist on scene")
+            bounds = scene.bounds()
+            return SampleLocationsCollection(
+                [
+                    Location(x=x, y=object.height // 2, z=z, yaw=0)
+                    for x in range(bounds[0], bounds[0] + bounds[2], 10)
+                    for z in range(bounds[1], bounds[1] + bounds[3], 10)
+                ]
+            )
+        return AnyLocation()
+
+    def __str__(self):
+        return f"[on floor({self.object_id})]"
 
 
 class FarWall(Constraint):
@@ -39,10 +77,38 @@ class FarWall(Constraint):
         self.object_id = object_id
 
     def weights(self) -> dict[str, float]:
-        return {self.object_id: 1}
+        return {self.object_id: 0.1}
 
     def objects(self) -> list[str]:
         return [self.object_id]
+
+    def locations(self, scene: "SceneGraph", object_id: str) -> "LocationsCollection":
+        if self.object_id == object_id:
+            object = scene.objects.get(object_id)
+            if not object:
+                raise ValueError("Object does not exist on scene")
+            bounds = scene.bounds()
+            locations = list[Location]()
+            for x in range(bounds[0], bounds[0] + bounds[2], 20):
+                for z in range(bounds[1], bounds[1] + bounds[3], 20):
+                    p = vec2(x, z)
+                    close_to_wall = False
+                    for wall in scene.project.content.walls.values():
+                        a = vec2(wall.x1, wall.y1)
+                        b = vec2(wall.x2, wall.y2)
+                        if distance_point_to_segment(p, a, b) < 100:
+                            close_to_wall = True
+                            break
+                    if close_to_wall:
+                        continue
+                    # TODO: verify that point is inside the apartment (not only
+                    # inside the bbox).
+                    locations.append(Location(x=x, y=object.height // 2, z=z, yaw=0))
+            return SampleLocationsCollection(locations)
+        return AnyLocation()
+
+    def __str__(self):
+        return f"[far wall({self.object_id})]"
 
 
 class AgainstWall(Constraint):
@@ -50,10 +116,34 @@ class AgainstWall(Constraint):
         self.object_id = object_id
 
     def weights(self) -> dict[str, float]:
-        return {self.object_id: 2}
+        return {self.object_id: 0}
 
     def objects(self) -> list[str]:
         return [self.object_id]
+
+    def locations(self, scene: "SceneGraph", object_id: str) -> "LocationsCollection":
+        if self.object_id == object_id:
+            object = scene.objects.get(object_id)
+            if not object:
+                raise ValueError("Object does not exist on scene")
+            locations = list[Location]()
+            h = object.depth // 2 + 10
+            for wall in scene.project.content.walls.values():
+                v = vec2(wall.x1, wall.x2)
+                w = vec2(wall.x2 - wall.x1, wall.y2 - wall.y1)
+                step = scale(w, 50)
+                l_yaw = yaw(left(step))
+                r_yaw = yaw(right(step))
+                for _ in range(round(norm(w) / norm(step))):
+                    anchor = Location(x=int(v[0]), y=object.height // 2, z=int(v[1]))
+                    locations.append(anchor.left(h).modify(yaw=l_yaw))
+                    locations.append(anchor.right(h).modify(yaw=r_yaw))
+                    v += step
+            return SampleLocationsCollection(locations)
+        return AnyLocation()
+
+    def __str__(self):
+        return f"[against wall({self.object_id})]"
 
 
 class InFrontOf(Constraint):
@@ -62,10 +152,23 @@ class InFrontOf(Constraint):
         self.b = b_object_id
 
     def weights(self) -> dict[str, float]:
-        return {self.a: 1, self.b: 1}
+        return {self.a: 0, self.b: 0}
 
     def objects(self) -> list[str]:
         return [self.a, self.b]
+
+    def locations(self, scene: "SceneGraph", object_id: str) -> "LocationsCollection":
+        if self.a == object_id or self.b == object_id:
+            object = scene.objects.get(object_id)
+            if not object:
+                raise ValueError("Object does not exist on scene")
+            return SampleLocationsCollection(
+                [Location(x=0, y=object.height // 2, z=0, yaw=0)]
+            )
+        return AnyLocation()
+
+    def __str__(self):
+        return f"[in front of(a={self.a},b={self.b})]"
 
 
 class OnTopOf(Constraint):
@@ -74,10 +177,35 @@ class OnTopOf(Constraint):
         self.top = top_object_id
 
     def weights(self) -> dict[str, float]:
-        return {self.bottom: 1, self.top: 0}
+        return {self.bottom: 0, self.top: 10}
 
     def objects(self) -> list[str]:
         return [self.bottom, self.top]
+
+    def locations(self, scene: "SceneGraph", object_id: str) -> "LocationsCollection":
+        if self.top == object_id:
+            bottom_object = scene.objects.get(self.bottom)
+            top_object = scene.objects.get(object_id)
+            if not top_object or not bottom_object:
+                raise ValueError("Object does not exist on scene")
+            if not bottom_object.placed():
+                return AnyLocation()
+            return SampleLocationsCollection(
+                [
+                    Location(
+                        x=bottom_object.location.x,
+                        y=top_object.height // 2
+                        + bottom_object.location.y
+                        + bottom_object.height // 2,
+                        z=bottom_object.location.z,
+                        yaw=bottom_object.location.yaw,
+                    )
+                ]
+            )
+        return AnyLocation()
+
+    def __str__(self):
+        return f"[on top of(b={self.bottom},t={self.top})]"
 
 
 class FaceToFace(Constraint):
@@ -86,10 +214,23 @@ class FaceToFace(Constraint):
         self.b = b_object_id
 
     def weights(self) -> dict[str, float]:
-        return {self.a: 1, self.b: 1}
+        return {self.a: 0, self.b: 0}
 
     def objects(self) -> list[str]:
         return [self.a, self.b]
+
+    def locations(self, scene: "SceneGraph", object_id: str) -> "LocationsCollection":
+        if self.a == object_id or self.b == object_id:
+            object = scene.objects.get(object_id)
+            if not object:
+                raise ValueError("Object does not exist on scene")
+            return SampleLocationsCollection(
+                [Location(x=0, y=object.height // 2, z=0, yaw=0)]
+            )
+        return AnyLocation()
+
+    def __str__(self):
+        return f"[face to face(a={self.a},b={self.b})]"
 
 
 class BackToBack(Constraint):
@@ -98,10 +239,23 @@ class BackToBack(Constraint):
         self.b = b_object_id
 
     def weights(self) -> dict[str, float]:
-        return {self.a: 1, self.b: 1}
+        return {self.a: 0, self.b: 0}
 
     def objects(self) -> list[str]:
         return [self.a, self.b]
+
+    def locations(self, scene: "SceneGraph", object_id: str) -> "LocationsCollection":
+        if self.a == object_id or self.b == object_id:
+            object = scene.objects.get(object_id)
+            if not object:
+                raise ValueError("Object does not exist on scene")
+            return SampleLocationsCollection(
+                [Location(x=0, y=object.height // 2, z=0, yaw=0)]
+            )
+        return AnyLocation()
+
+    def __str__(self):
+        return f"[back to back(a={self.a},b={self.b})]"
 
 
 class SideBySide(Constraint):
@@ -110,27 +264,78 @@ class SideBySide(Constraint):
         self.b = b_object_id
 
     def weights(self) -> dict[str, float]:
-        return {self.a: 1, self.b: 1}
+        return {self.a: 0, self.b: 0}
 
     def objects(self) -> list[str]:
         return [self.a, self.b]
 
+    def locations(self, scene: "SceneGraph", object_id: str) -> "LocationsCollection":
+        if self.a == object_id or self.b == object_id:
+            anchor = scene.objects.get(self.b if self.a == object_id else self.a)
+            object = scene.objects.get(object_id)
+            if not object or not anchor:
+                raise ValueError("Object does not exist on scene")
+            if not anchor.placed():
+                return AnyLocation()
+            anchor_location = anchor.location.model_copy()
+            anchor_location.y = object.height // 2
+            d = (anchor.width + object.width) / 2
+            return SampleLocationsCollection(
+                [anchor_location.left(d), anchor_location.right(d)]
+            )
+        return AnyLocation()
+
+    def __str__(self):
+        return f"[side by side(a={self.a},b={self.b})]"
+
+
+class Aligned(Constraint):
+    def __init__(self, target: str, anchor: str):
+        self.target = target
+        self.anchor = anchor
+
+    def weights(self) -> dict[str, float]:
+        return {self.target: 3, self.anchor: 0}
+
+    def objects(self) -> list[str]:
+        return [self.target, self.anchor]
+
+    def locations(self, scene: "SceneGraph", object_id: str) -> "LocationsCollection":
+        if self.target == object_id:
+            anchor = scene.objects.get(self.anchor)
+            object = scene.objects.get(object_id)
+            if not object or not anchor:
+                raise ValueError("Object does not exist on scene")
+            if not anchor.placed():
+                return AnyLocation()
+            ws = [(anchor.width + object.width) / 2 + i * 10 for i in range(5)]
+            ds = [(anchor.depth + object.depth) / 2 + i * 10 for i in range(5)]
+            anchor_location = anchor.location.model_copy()
+            anchor_location.y = object.height // 2
+            return SampleLocationsCollection(
+                [anchor_location.left(w) for w in ws]
+                + [anchor_location.right(w) for w in ws]
+                + [anchor_location.forward(d) for d in ds]
+                + [anchor_location.backward(d) for d in ds]
+            )
+        return AnyLocation()
+
+    def __str__(self):
+        return f"[aligned(t={self.target},a={self.anchor})]"
+
 
 class SceneObject:
-    LOCKED = 0b01
-    REMOVED = 0b10
+    _LOCKED = 0b1
+    _REMOVED = 0b10
+    _PLACED = 0b100
 
     def __init__(self, id: str):
         self.id = id
         self.choice: Furniture | None = None
         self.choices = list[Furniture]()
-        self.semantic_name = ""
-        self.description = ""
-        self.flags = 0
-        self.x: int = 0
-        self.y: int = 0
-        self.z: int = 0
-        self.yaw: float = 0
+        self._semantic_name = ""
+        self._flags: int = 0
+        self._location = Location(x=0, y=0, z=0, yaw=0)
 
     def choose(self, furniture: Furniture):
         if furniture not in self.choices:
@@ -150,35 +355,59 @@ class SceneObject:
     def get_choices(self) -> list[Furniture]:
         return self.choices
 
-    def mark_removed(self):
-        self.flags = self.flags | SceneObject.REMOVED
+    def remove(self):
+        self._flags = self._flags | self._REMOVED
 
-    def unlock_location(self):
-        self.flags = self.flags & ~SceneObject.LOCKED
+    def removed(self) -> bool:
+        return bool(self._flags & self._REMOVED)
 
-    def lock_at_location(self, x: int, y: int, z: int, yaw: float):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.yaw = yaw
-        self.flags = self.flags | SceneObject.LOCKED
+    def unlock(self):
+        self._flags = self._flags & ~self._LOCKED
 
-    def set_location(self, x: int, y: int, z: int, yaw: float):
-        if self.locked():
-            raise RuntimeError("object is locked")
-        self.x = x
-        self.y = y
-        self.z = z
-        self.yaw = yaw
-
-    def describe(self, description: str):
-        self.description = description
-
-    def set_semantic_name(self, name: str):
-        self.semantic_name = name.lower()
+    def lock(self):
+        self._flags = self._flags | self._LOCKED
 
     def locked(self) -> bool:
-        return bool(self.flags & SceneObject.LOCKED)
+        return bool(self._flags & self._LOCKED)
+
+    def placed(self) -> bool:
+        return bool(self._flags & self._PLACED)
+
+    @property
+    def semantic_name(self) -> str:
+        return self._semantic_name
+
+    @semantic_name.setter
+    def semantic_name(self, value: str):
+        self._semantic_name = value.lower()
+
+    @property
+    def location(self) -> "Location":
+        return self._location
+
+    @location.setter
+    def location(self, value: "Location"):
+        if self.locked():
+            raise RuntimeError("Object is locked")
+        self._location = value
+        self._flags = self._flags | self._PLACED
+
+    @property
+    def width(self) -> int:
+        return self.choice.width if self.choice else 0
+
+    @property
+    def height(self) -> int:
+        return self.choice.height if self.choice else 0
+
+    @property
+    def depth(self) -> int:
+        return self.choice.depth if self.choice else 0
+
+    def __str__(self):
+        if self.semantic_name != "":
+            return f"[{self.semantic_name}(id={self.id})]"
+        return f"[Object(id={self.id})]"
 
 
 class SceneGraph:
@@ -187,6 +416,25 @@ class SceneGraph:
         self.objects = dict[str, SceneObject]()
         self.constraints_by_object = dict[str, list[Constraint]]()
         self.constraints = list[Constraint]()
+        self._bounds: tuple[int, int, int, int] | None = None
+
+    def bounds(self) -> tuple[int, int, int, int]:
+        if self._bounds:
+            return self._bounds
+        if len(self.project.content.walls) == 0:
+            return -1000, -1000, 2000, 2000
+        wall0 = next(iter(self.project.content.walls.values()))
+        min_x = wall0.x1
+        max_x = wall0.x1
+        min_y = wall0.y1
+        max_y = wall0.y1
+        for wall in self.project.content.walls.values():
+            min_x = min(min_x, wall.x1, wall.x2)
+            max_x = max(max_x, wall.x1, wall.x2)
+            min_y = min(min_y, wall.y1, wall.y2)
+            max_y = max(max_y, wall.y1, wall.y2)
+        self._bounds = (min_x, min_y, max_x - min_x, max_y - min_y)
+        return self._bounds
 
     def get_or_create_object(self, id: str) -> SceneObject:
         object = self.objects.get(id)
@@ -205,7 +453,7 @@ class SceneGraph:
         id = uuid4().hex
         object = SceneObject(id)
         self.objects[id] = object
-        object.set_semantic_name(name)
+        object.semantic_name = name
         return object, False
 
     def find_object_by_semantic_name(self, name: str) -> SceneObject | None:
@@ -227,6 +475,11 @@ class SceneGraph:
         return self.objects.values()
 
     def rearrange(self):
+        """
+        Rearrange all furniture from scratch (locked furniture is not
+        moved).
+        """
+
         objects_weights = dict[str, float]()
         for constraint in self.constraints:
             for object_id, weight in constraint.weights().items():
@@ -237,12 +490,61 @@ class SceneGraph:
             list(self.objects.keys()),
             key=lambda object_id: objects_weights.get(object_id, 10),
         )
+        logger.debug(
+            {
+                "msg": "placement order",
+                "order": [str(self.objects[object_id]) for object_id in order],
+            }
+        )
         for object_id in order:
             object = self.objects[object_id]
             if not object.locked():
-                object.set_location(0, 0, 0, 0)
+                logger.debug({"msg": "placing object", "object": str(object)})
+                locations = AnyLocation()
+                for constraint in self.constraints_by_object.get(object.id, []):
+                    good_locations = constraint.locations(self, object.id)
+                    locations = locations.intersect(good_locations, 5)
+                    logger.debug(
+                        {
+                            "msg": "possible locations after applying constraint",
+                            "object": str(object),
+                            "locations": str(locations),
+                            "constraint": str(constraint),
+                        }
+                    )
+                some_location = locations.pick()
+                if some_location:
+                    object.location = some_location
+                    logger.debug(
+                        {
+                            "msg": "placed object",
+                            "object": str(object),
+                            "location": str(some_location),
+                        }
+                    )
+                else:
+                    # TODO: just put the object somewhere.
+                    object.location = Location()
+                    logger.warning(
+                        {
+                            "msg": "suitable position for object were not found",
+                            "object": str(object),
+                        }
+                    )
+            else:
+                logger.debug({"msg": "skipping object (locked)", "object": str(object)})
 
-    def loss(self) -> float: ...
+    def loss(self) -> float:
+        total = 0
+
+        # Collisions.
+        for object in self.objects.values():
+            for other in self.objects.values():
+                pass
+
+        # TODO: add other rules.
+
+        return total
 
     def describe(self) -> str:
         # TODO: more spatial description (which objects are around, near or far from
@@ -263,6 +565,9 @@ class SceneGraph:
     def as_patch_to(self, base_plan: Plan | None) -> Plan.Patch:
         patch = Plan.Patch()
         for object in self.objects.values():
+            if object.removed():
+                patch.content.furniture[object.id] = None
+                continue
             if not object.choice:
                 logger.warning({"msg": "no choice for object", "object_id": object.id})
                 continue
@@ -277,12 +582,129 @@ class SceneGraph:
             logger.debug({"msg": "object changed", "object_id": object.id})
             patch.content.furniture[object.id] = Plan.Patch.Content.Furniture(
                 furniture_id=object.choice.id,
-                x=object.x,
-                y=object.y,
-                z=object.z,
-                yaw=object.yaw,
+                x=object.location.x,
+                y=object.location.y,
+                z=object.location.z,
+                yaw=object.location.yaw,
             )
         # Mark "furniture" field as "set".
         patch.content = patch.content
         patch.content.furniture = patch.content.furniture
         return patch
+
+
+class Location(BaseModel):
+    x: int = 0
+    y: int = 0
+    z: int = 0
+    yaw: float = 0
+
+    def left(self, d: float) -> "Location":
+        v = vec2(self.x, self.z)
+        u = v + left(direction(self.yaw)) * d
+        return Location(x=int(u[0]), y=self.y, z=int(u[1]), yaw=self.yaw)
+
+    def right(self, d: float) -> "Location":
+        v = vec2(self.x, self.z)
+        u = v + right(direction(self.yaw)) * d
+        return Location(x=int(u[0]), y=self.y, z=int(u[1]), yaw=self.yaw)
+
+    def forward(self, d: float) -> "Location":
+        v = vec2(self.x, self.z)
+        u = v + direction(self.yaw) * d
+        return Location(x=int(u[0]), y=self.y, z=int(u[1]), yaw=self.yaw)
+
+    def backward(self, d: float) -> "Location":
+        v = vec2(self.x, self.z)
+        u = v - direction(self.yaw) * d
+        return Location(x=int(u[0]), y=self.y, z=int(u[1]), yaw=self.yaw)
+
+    def close_to(self, p: "Location", eps: float) -> bool:
+        return (p.x - self.x) ** 2 + (p.y - self.y) ** 2 + (p.z - self.z) ** 2 < eps**2
+
+    def modify(
+        self,
+        *,
+        x: int | None = None,
+        y: int | None = None,
+        z: int | None = None,
+        yaw: float | None = None,
+    ) -> "Location":
+        if x is not None:
+            self.x = x
+        if y is not None:
+            self.y = y
+        if z is not None:
+            self.z = z
+        if yaw is not None:
+            self.yaw = yaw
+        return self
+
+    def __str__(self):
+        return f"Location[x={self.x},y={self.y},z={self.z},yaw={round(self.yaw, 2)}]"
+
+
+class LocationsCollection(ABC):
+    @abstractmethod
+    def pick(self) -> Location | None: ...
+
+    @abstractmethod
+    def intersect(
+        self, locations: "LocationsCollection", eps: float
+    ) -> "LocationsCollection": ...
+
+
+class AnyLocation(LocationsCollection):
+    def pick(self) -> Location | None:
+        return Location(x=0, y=0, z=0, yaw=0)
+
+    def intersect(
+        self, locations: "LocationsCollection", eps: float
+    ) -> LocationsCollection:
+        return locations
+
+    def __str__(self):
+        return "[any location]"
+
+
+class NoLocation(LocationsCollection):
+    def pick(self) -> Location | None:
+        return None
+
+    def intersect(
+        self, locations: "LocationsCollection", eps: float
+    ) -> LocationsCollection:
+        return self
+
+    def __str__(self):
+        return "[no location]"
+
+
+class SampleLocationsCollection(LocationsCollection):
+    def __init__(self, locations: list[Location]):
+        self.locations = locations
+
+    def pick(self) -> Location | None:
+        if len(self.locations) == 0:
+            return None
+        return random.choice(self.locations)
+
+    def intersect(
+        self, locations: LocationsCollection, eps: float
+    ) -> LocationsCollection:
+        if isinstance(locations, SampleLocationsCollection):
+            result = list[Location]()
+            for a in self.locations:
+                for b in locations.locations:
+                    if a.close_to(b, eps):
+                        result.append(a)
+                        result.append(b)
+            return SampleLocationsCollection(result)
+        if isinstance(locations, NoLocation):
+            return locations
+        if isinstance(locations, AnyLocation):
+            return self
+        return self
+
+    def __str__(self):
+        return f"[sample(size={len(self.locations)})]"

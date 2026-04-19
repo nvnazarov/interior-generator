@@ -36,6 +36,7 @@ export function Chat({ projectId }: { projectId: string }) {
     const placeholderId = v4();
     try {
       setIsBusy(true);
+      // TODO: sync plan
       setText("");
       setPrompts((prompts) => [
         ...prompts,

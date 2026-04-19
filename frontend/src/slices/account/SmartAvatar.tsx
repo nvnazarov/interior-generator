@@ -21,8 +21,10 @@ export function SmartAvatar({ accountId }: { accountId: string }) {
   }
 
   return (
-    <div onClick={handleClick} title={account.name}>
-      <Avatar name={account.name} avatarUrl={account.image} />
-    </div>
+    <Avatar
+      onClick={handleClick}
+      name={account.name}
+      avatarUrl={account.image}
+    />
   );
 }

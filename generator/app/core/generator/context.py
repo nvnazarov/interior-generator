@@ -1,6 +1,7 @@
 from openai import AsyncOpenAI
 import logging
 from uuid import uuid4
+import time
 
 from app.core.models import Plan, Project
 from app.core.facade import SystemFacade
@@ -14,7 +15,9 @@ from app.core.generator.scene import (
     FaceToFace,
     BackToBack,
     SideBySide,
+    Aligned,
     SceneObject,
+    Location,
 )
 from app.core.generator.prompts import (
     SPATIAL_ANALYSIS_PROMPT,
@@ -82,38 +85,46 @@ class GenerationContext:
                     continue
                 object = self.scene.get_or_create_object(plan_furniture.id)
                 object.add_choice(furniture)
-                object.lock_at_location(
-                    plan_furniture.x,
-                    plan_furniture.y,
-                    plan_furniture.z,
-                    plan_furniture.yaw,
+                object.location = Location(
+                    x=plan_furniture.x,
+                    y=plan_furniture.y,
+                    z=plan_furniture.z,
+                    yaw=plan_furniture.yaw,
                 )
                 count = name_counts.get(furniture.name, 0)
-                object.set_semantic_name(furniture.name + semantic_suffix(count))
+                object.semantic_name = furniture.name + semantic_suffix(count)
+                object.lock()
                 name_counts[furniture.name] = count + 1
         base_scene_description = self.scene.describe()
         logger.debug({"msg": "built base scene", "description": base_scene_description})
 
-        # Identify which objects should be removed or moved. Record this
-        # information in scene graph.
-        await self._identify_furniture_actions(base_scene_description, self.text)
-
         # Analyze spatial relations.
+        start = time.perf_counter()
         spatial_relations_description = await self._describe_spatial_relations(
             base_scene_description, self.text
         )
-        await self._parse_furniture_and_relations(spatial_relations_description)
-
-        patches = list[Plan.Patch]()
-        for _ in range(self.count):
-            self.scene.rearrange()
-            patches.append(self.scene.as_patch_to(self.base_plan))
-
-        logger.debug(
-            {"msg": "generated patches", "patches": [p.model_dump() for p in patches]}
+        # Identify which objects should be removed or moved and
+        # record this information in scene graph.
+        await self._identify_furniture_actions(
+            base_scene_description, spatial_relations_description, self.text
         )
+        await self._parse_furniture_and_relations(spatial_relations_description)
+        end = time.perf_counter()
+        logger.info({"msg": "analysis time", "t": f"{(end - start) * 1e3:.3f}ms"})
 
-        return patches
+        start = time.perf_counter()
+        patches = list[tuple[Plan.Patch, float]]()
+        for _ in range(20):
+            self.scene.rearrange()
+            patch = self.scene.as_patch_to(self.base_plan)
+            loss = self.scene.loss()
+            patches.append((patch, loss))
+        patches.sort(key=lambda p: p[1])
+        best_patches = list(map(lambda p: p[0], patches[: self.count]))
+        end = time.perf_counter()
+        logger.info({"msg": "arrangement time", "t": f"{(end - start) * 1e3:.3f}ms"})
+
+        return best_patches
 
     async def _parse_furniture_and_relations(self, spatial_relations_description: str):
         completion = await self.ai.chat.completions.create(
@@ -193,6 +204,9 @@ class GenerationContext:
                     case [semantic_name, "side by side"]:
                         other = get_or_create(semantic_name)
                         self.scene.add_constraint(SideBySide(object.id, other.id))
+                    case [semantic_name, "aligned with"]:
+                        other = get_or_create(semantic_name)
+                        self.scene.add_constraint(Aligned(object.id, other.id))
                     # TODO: other constraints
                     case _:
                         logger.warning(
@@ -254,7 +268,10 @@ class GenerationContext:
         return choice.message.content or user_instruction
 
     async def _identify_furniture_actions(
-        self, scene_description: str, instruction: str
+        self,
+        scene_description: str,
+        spatial_relationship_description: str,
+        instruction: str,
     ):
         completion = await self.ai.chat.completions.create(
             model="google/gemma-4-31b-it",
@@ -262,7 +279,11 @@ class GenerationContext:
                 {"role": "system", "content": IDENTIFY_ACTIONS_PROMPT},
                 {
                     "role": "user",
-                    "content": f"Apartment: {scene_description}\nInstruction: {instruction}",
+                    "content": (
+                        f"Apartment: {scene_description}\n"
+                        f"Instruction: {instruction}\n"
+                        f"Result: {spatial_relationship_description}"
+                    ),
                 },
             ],
         )
@@ -277,6 +298,9 @@ class GenerationContext:
         if choice.message.content is None:
             logger.warning({"msg": "llm did not generate any content"})
             return
+        logger.debug(
+            {"msg": "llm generated content", "content": choice.message.content}
+        )
         lines = choice.message.content.split("\n")
         match lines:
             case [removed, moved]:
@@ -286,12 +310,12 @@ class GenerationContext:
                     semantic_name = semantic_name.strip()
                     object = self.scene.find_object_by_semantic_name(semantic_name)
                     if object is not None:
-                        object.mark_removed()
+                        object.remove()
                 for semantic_name in moved.split(","):
                     semantic_name = semantic_name.strip()
                     object = self.scene.find_object_by_semantic_name(semantic_name)
                     if object is not None:
-                        object.unlock_location()
+                        object.unlock()
             case _:
                 logger.warning(
                     {"msg": "invalid actions", "content": choice.message.content}

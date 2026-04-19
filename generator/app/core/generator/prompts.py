@@ -107,11 +107,9 @@ Requirement:
 Here are some principles you must follow:
 1. For each object, there must be a global constraint or an on constraint, and there can
 be a side constraint, but a side constraint is not required.
-2. Situations where side constraint cannot appear: The furniture itself has “against wall”
-constraint.
-3. Situations where on constraint appears: This furniture cannot have global constraint
+2. Situations where on constraint appears: This furniture cannot have global constraint
 or side constraint.
-4. Please follow the desired format *strictly* (do not add any additional text at the
+3. Please follow the desired format *strictly* (do not add any additional text at the
 beginning or end) to provide the constraints for each object. Place each constraint in
 its own line.
 
@@ -144,9 +142,10 @@ Role:
 You are an expert in spatial analysis and interior arrangement.
 
 Task:
-Please help me identify which furniture should be removed or moved according to
-the provided instruction. You will be given a description of the apartment and
-user's instruction of how to modify it.
+Please help me identify which furniture was or should be removed or moved according to
+the provided instruction. You will be given a description of the apartment before the
+change, user's instruction of how to change it, and the description of the apartment
+after the change.
 
 Format:
 The output format must be:
@@ -164,6 +163,7 @@ Chair-A, Chair-B, or Table-A.
 Example:
 Apartment: Chair-A and Chair-B placed on the opposite sides of the Table-A.
 Instruction: Move the furniture closer to the wall, remove one of the chairs.
+Result: Chair-B is placed near the Table-A, which is placed against the wall.
 
 Answer:
 removed: Chair-A

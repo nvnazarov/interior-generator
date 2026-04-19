@@ -11,6 +11,38 @@ EAST = np.asarray([1, 0])
 WEST = np.asarray([-1, 0])
 
 
+def random_yaw() -> float:
+    return np.random.random() * 2 * np.pi
+
+
+def yaw(d: Vec2) -> float:
+    return np.arctan2(d[1], d[0])
+
+
+def vec2(x: float, y: float) -> Vec2:
+    return np.asarray([x, y], dtype=np.float64)  # type: ignore
+
+
+def norm(v: Vec2) -> float:
+    return np.linalg.norm(v)  # type: ignore
+
+
+def scale(v: Vec2, d: float) -> Vec2:
+    return v / np.linalg.norm(v) * d  # type: ignore
+
+
+def direction(yaw: float) -> Vec2:
+    return vec2(np.sin(yaw), np.cos(yaw))
+
+
+def left(v: Vec2) -> Vec2:
+    return vec2(-v[1], v[0])
+
+
+def right(v: Vec2) -> Vec2:
+    return vec2(v[1], -v[0])
+
+
 def distance_point_to_segment_along_direction(p: Vec2, a: Vec2, b: Vec2, d: Vec2):
     x = projection_point_to_line(p, a, b)
     h = x - p
@@ -23,6 +55,15 @@ def projection_point_to_line(p: Vec2, a: Vec2, b: Vec2) -> Vec2:
     ap = p - a
     t = np.dot(ap, ab) / np.dot(ab, ab)
     return a + t * ab
+
+
+def distance_point_to_segment(p: Vec2, a: Vec2, b: Vec2):
+    if np.allclose(a, b, atol=1e-3):
+        return np.linalg.norm(a - p)
+    h = projection_point_to_line(p, a, b)
+    if np.dot(a - h, b - h) <= 0:
+        return np.linalg.norm(h - p)
+    return min(np.linalg.norm(a - p), np.linalg.norm(b - p))
 
 
 def distance_point_to_line(p: Vec2, a: Vec2, b: Vec2):
@@ -53,3 +94,7 @@ def direction_to_nswe(d: Vec2) -> Literal["north", "south", "west", "east"]:
 
 def location_as_text() -> Literal["to the left", "to the right", "above", "under"]:
     return "above"
+
+
+def ray_intersects_segment(ray: Vec2, a: Vec2, b: Vec2) -> bool:
+    return True
