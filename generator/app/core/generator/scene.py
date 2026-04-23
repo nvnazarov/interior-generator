@@ -6,6 +6,7 @@ import random
 from pydantic import BaseModel
 from app.core.generator.geometry import (
     vec2,
+    vec3,
     direction,
     yaw,
     scale,
@@ -13,7 +14,9 @@ from app.core.generator.geometry import (
     right,
     norm,
     distance_point_to_segment,
+    intersect_par_seg,
 )
+from itertools import pairwise
 
 from app.core.models import Furniture, Project, Plan
 
@@ -537,9 +540,58 @@ class SceneGraph:
     def loss(self) -> float:
         total = 0
 
-        # Collisions.
+        # Collisions (furniture with furniture, furniture with walls,
+        # furniture with doorways, furniture with windows).
         for object in self.objects.values():
+            if object.removed():
+                continue
             for other in self.objects.values():
+                if other.removed() or other.id == object.id:
+                    continue
+                object_center = vec2(object.location.x, object.location.z)
+                object_forward = direction(object.location.yaw) * object.depth / 2
+                object_left = left(direction(object.location.yaw)) * object.width / 2
+                # object_up = vec2()
+                other_center = vec2(other.location.x, other.location.z)
+                other_forward = direction(other.location.yaw) * other.depth / 2
+                other_left = left(direction(other.location.yaw)) * other.width / 2
+                object_vertices = [
+                    object_center + a + b
+                    for a in [object_forward, -object_forward]
+                    for b in [object_left, -object_left]
+                    for c in []
+                ]
+                other_vertices = [
+                    other_center + a + b
+                    for a in [other_forward, -other_forward]
+                    for b in [other_left, -other_left]
+                ]
+            object_pivot = vec3(object.location.x, object.location.y, object.location.z)
+            object_size = vec3(object.width, object.height, object.depth)
+            object_dir = direction(object.location.yaw)
+            for wall in self.project.content.walls.values():
+                a = vec2(wall.x1, wall.y1)
+                b = vec2(wall.x2, wall.y2)
+                if intersect_par_seg(object_pivot, object_size, object_dir, a, b):
+                    total += 1
+            for door in self.project.content.doors.values():
+                wall = self.project.content.walls.get(door.wall_id)
+                if wall:
+                    a = vec2(wall.x1, wall.y1)
+                    b = vec2(wall.x2, wall.y2)
+                    d = b - a
+                    h = scale(left(d), door.w)  # type: ignore
+                    t = scale(d, door.w / 2)  # type: ignore
+                    c = a + scale(d, door.x + door.w / 2)  # type: ignore
+                    for u, v in pairwise([c + m + n for m in [h, -h] for n in [t, -t]]):
+                        if intersect_par_seg(
+                            object_pivot, object_size, object_dir, u, v  # type: ignore
+                        ):
+                            total += 1
+                            break
+                else:
+                    logger.warning({"msg": "door is attached to the non-existing wall"})
+            for window in self.project.content.windows.values():
                 pass
 
         # TODO: add other rules.
@@ -653,6 +705,9 @@ class LocationsCollection(ABC):
         self, locations: "LocationsCollection", eps: float
     ) -> "LocationsCollection": ...
 
+    @abstractmethod
+    def empty(self) -> bool: ...
+
 
 class AnyLocation(LocationsCollection):
     def pick(self) -> Location | None:
@@ -662,6 +717,9 @@ class AnyLocation(LocationsCollection):
         self, locations: "LocationsCollection", eps: float
     ) -> LocationsCollection:
         return locations
+
+    def empty(self):
+        return False
 
     def __str__(self):
         return "[any location]"
@@ -676,6 +734,9 @@ class NoLocation(LocationsCollection):
     ) -> LocationsCollection:
         return self
 
+    def empty(self):
+        return True
+
     def __str__(self):
         return "[no location]"
 
@@ -685,7 +746,7 @@ class SampleLocationsCollection(LocationsCollection):
         self.locations = locations
 
     def pick(self) -> Location | None:
-        if len(self.locations) == 0:
+        if self.empty():
             return None
         return random.choice(self.locations)
 
@@ -706,5 +767,34 @@ class SampleLocationsCollection(LocationsCollection):
             return self
         return self
 
+    def empty(self):
+        return len(self.locations) == 0
+
     def __str__(self):
         return f"[sample(size={len(self.locations)})]"
+
+
+class LocationsGroup(LocationsCollection):
+    def __init__(self, collections: list[LocationsCollection] = []):
+        self.collections = collections
+
+    def add(self, collection: LocationsCollection):
+        if not collection.empty():
+            self.collections.append(collection)
+
+    def pick(self) -> Location | None:
+        if self.empty():
+            return None
+        return random.choice(self.collections).pick()
+
+    def intersect(
+        self, locations: LocationsCollection, eps: float
+    ) -> LocationsCollection:
+        # TODO
+        return self
+
+    def empty(self):
+        return all([c.empty() for c in self.collections])
+
+    def __str__(self):
+        return "[group(...)]"

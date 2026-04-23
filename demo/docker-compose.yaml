@@ -175,7 +175,7 @@ services:
       - "EXPORTER__API__HOST=0.0.0.0"
       - "EXPORTER__API__PORT=80"
       - "EXPORTER__API__HEADER_FOR_ACCOUNT_ID=x-account-id"
-      - "EXPORTER__API_GATEWAY__BASE_URL=http://projects"
+      - "EXPORTER__API_GATEWAY__BASE_URL=http://private-gateway/api"
       - "EXPORTER__LOGGING__LEVEL=INFO"
     networks:
       - "private"

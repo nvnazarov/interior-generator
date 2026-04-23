@@ -1,54 +1,27 @@
-from abc import ABC, abstractmethod
 from io import BytesIO
-from typing import AsyncIterable, TextIO
 
-from app.core.dxf import export_dxf
-from app.core.models import Plan, Project
-from app.core.pdf import export_pdf
+from app.core.projects import ProjectsService
+from app.core.catalog import Catalog
+from app.core.pdf import PDFRenderer
 
 
 class ProjectNotFoundError(Exception): ...
 
 
-class PlanNotFoundError(Exception): ...
-
-
-class Catalog(ABC):
-    @abstractmethod
-    async def get_furniture(self, furniture_id: str) -> None: ...
-
-
-class Repository(ABC):
-    @abstractmethod
-    async def get_project(self, account_id: str, project_id: str) -> Project | None: ...
-
-    @abstractmethod
-    async def get_plan(self, account_id: str, plan_id: str) -> Plan | None: ...
-
-    @abstractmethod
-    def get_plans_of_project(
-        self, account_id: str, project_id: str
-    ) -> AsyncIterable[Plan]: ...
-
-
 class Exporter:
-    def __init__(self, db: Repository):
-        self.db = db
+    def __init__(self, projects: ProjectsService, catalog: Catalog):
+        self.projects = projects
+        self.catalog = catalog
 
     async def export_project_pdf(self, project_id: str, account_id: str) -> BytesIO:
-        project = await self.db.get_project(account_id, project_id)
+        project = await self.projects.find_project_by_id(account_id, project_id)
         if project is None:
             raise ProjectNotFoundError
-        plans = self.db.get_plans_of_project(account_id, project_id)
-        bytes = await export_pdf(project, plans)
-        return bytes
-
-    async def export_plan_dxf(self, plan_id: str, account_id: str) -> TextIO:
-        plan = await self.db.get_plan(account_id, plan_id)
-        if plan is None:
-            raise PlanNotFoundError
-        project = await self.db.get_project(account_id, plan.project_id)
-        if project is None:
-            raise RuntimeError("plan exists but its project does not")
-        bytes = export_dxf(project, plan)
-        return bytes
+        buffer = BytesIO()
+        renderer = PDFRenderer(buffer)
+        renderer.draw_project(project)
+        async for plan in self.projects.iter_plans_in_project(account_id, project_id):
+            await renderer.draw_plan(project, plan, self.catalog)
+        renderer.close()
+        buffer.seek(0)
+        return buffer

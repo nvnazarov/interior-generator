@@ -142,4 +142,4 @@ class Furniture(BaseModel):
     width: int
     height: int
     depth: int
-    mount: Literal["floor", "wall", "ceiling"]
+    mount: Literal["floor", "wall", "ceiling", "surface"]

@@ -1,8 +1,9 @@
 import numpy as np
 from typing import Literal, Any
 
+Vec = np.ndarray[Any, np.dtype[np.float64]]
 Vec2 = np.ndarray[tuple[int, int], np.dtype[np.float64]]
-Vec3 = np.ndarray[tuple[int, int, int], np.dtype[np.float64]]
+Vec3 = np.ndarray[Any, np.dtype[np.float64]]
 
 
 NORTH = np.asarray([0, 1])
@@ -21,6 +22,10 @@ def yaw(d: Vec2) -> float:
 
 def vec2(x: float, y: float) -> Vec2:
     return np.asarray([x, y], dtype=np.float64)  # type: ignore
+
+
+def vec3(x: float, y: float, z: float) -> Vec3:
+    return np.asarray([x, y, z], dtype=np.float64)
 
 
 def norm(v: Vec2) -> float:
@@ -98,3 +103,24 @@ def location_as_text() -> Literal["to the left", "to the right", "above", "under
 
 def ray_intersects_segment(ray: Vec2, a: Vec2, b: Vec2) -> bool:
     return True
+
+
+def par_intersection_volume(
+    a_pivot: Vec3,
+    a_size: Vec3,
+    a_dir: Vec2,
+    b_pivot: Vec3,
+    b_size: Vec3,
+    b_dir: Vec2,
+) -> float:
+    return 0
+
+
+def intersect_par_seg(
+    p_pivot: Vec3,
+    p_size: Vec3,
+    p_dir: Vec2,
+    a: Vec2,
+    b: Vec2,
+) -> bool:
+    return False

@@ -1,33 +1,99 @@
 import logging
 from io import BytesIO
-from typing import AsyncIterable, Iterable, NamedTuple
+from typing import NamedTuple
 
 import numpy as np
-from reportlab.lib.colors import Color, black, blue, brown, green, red, yellow
+from reportlab.lib.colors import (
+    Color,
+    black,
+    blue,
+    brown,
+    green,
+    red,
+    yellow,
+    grey,
+    white,
+)
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import cm, mm
 from reportlab.pdfgen import canvas
 
-from app.core.models import AreaType, Plan, Point, Project, Wall, Window
+from app.core.models import Plan, Project
+from app.core.catalog import Catalog
 
 logger = logging.getLogger(__name__)
 
-AREA_COLORS = {
-    AreaType.KITCHEN: red,
-    AreaType.BATHROOM: yellow,
-    AreaType.BEDROOM: green,
-    AreaType.LIVINGROOM: brown,
-}
+
+def get_area_color(type: str) -> Color:
+    match type:
+        case "kitchen":
+            return red
+        case "bathroom":
+            return blue
+        case "bedroom":
+            return green
+        case "livingroom":
+            return yellow
+        case "hallway":
+            return grey
+        case _:
+            logger.warning({"msg": "unknow area type", "type": type})
+            return grey
+
+
+def get_area_name(type: str) -> str:
+    match type:
+        case "kitchen":
+            return "Kitchen"
+        case "bathroom":
+            return "Bathroom"
+        case "bedroom":
+            return "Bedroom"
+        case "livingroom":
+            return "Living room"
+        case "hallway":
+            return "Hallway"
+        case _:
+            logger.warning({"msg": "unknow area type", "type": type})
+            return "Unknown"
+
+
+def calc_polygon_area(
+    points: list[Plan.Content.Area.Point] | list[Project.Content.WetArea.Point],
+) -> float:
+    """
+    Shoelace formula with trapezoids.
+    """
+
+    area = 0
+    for i in range(len(points)):
+        a = points[i]
+        b = points[(i + 1) % len(points)]
+        area += (a.y + b.y) * (a.x - b.x) / 2
+    return abs(area) / 10000
+
 
 WALL_COLOR = black
 WINDOW_COLOR = blue
 DOOR_COLOR = brown
 
+WALL_WIDTH = 20
 
-class LegendRecord(NamedTuple):
-    name: str
-    area_sqm: float
-    color: Color
+
+class Legend:
+    class Record(NamedTuple):
+        type: str
+        area: float
+
+    def __init__(self):
+        self._areas = dict[str, float]()
+
+    def add(self, type: str, area: float):
+        if area != 0:
+            self._areas[type] = self._areas.get(type, 0) + area
+
+    def records(self) -> list[Record]:
+        return [Legend.Record(type, area) for type, area in self._areas.items()]
 
 
 class PDFRenderer:
@@ -36,12 +102,10 @@ class PDFRenderer:
         self.c = canvas.Canvas(buffer, pagesize=pagesize)
         self.width, self.height = pagesize
         self.padding = cm
-        # self.plan_box = Vec4(cm, cm, self.width - 11 * cm, self.height - 2 * cm)
 
     def draw_project(self, project: Project):
-        self.c.saveState()
-
-        # Calculate the transformation needed to fit the project on a page.
+        # Calculate bounds.
+        h = WALL_WIDTH / 2
         min_x = 1e6
         min_y = 1e6
         max_x = -1e6
@@ -53,228 +117,347 @@ class PDFRenderer:
                 min_y = min(point.y, min_y)
                 max_y = max(point.y, max_y)
         for wall in project.content.walls.values():
-            min_x = min(wall.x1, wall.x2, min_x)
-            max_x = max(wall.x1, wall.x2, max_x)
-            min_y = min(wall.y1, wall.y2, min_y)
-            max_y = max(wall.y1, wall.y2, max_y)
-        scale = max(max_x - min_x, max_y - min_y)
-        min_side = min(self.width, self.height)
-        self.c.translate(-min_x, -min_y)
-        self.c.scale(min_side / scale, -min_side / scale)
+            min_x = min(wall.x1 - h, wall.x2 - h, min_x)
+            max_x = max(wall.x1 + h, wall.x2 + h, max_x)
+            min_y = min(wall.y1 - h, wall.y2 - h, min_y)
+            max_y = max(wall.y1 + h, wall.y2 + h, max_y)
 
+        # Apply padding transforms.
+        self.c.saveState()
+        self.c.translate(self.padding, self.padding)
+        self.c.rect(0, 0, self.width - 2 * self.padding, self.height - 2 * self.padding)
+
+        # Apply project transforms.
+        self.c.saveState()
+        w = max_x - min_x
+        h = max_y - min_y
+        real_w = w * cm
+        real_h = h * cm
+        available_w = self.width - 2 * self.padding
+        available_h = self.height - 2 * self.padding - 1 * cm
+        real_scale = int(np.ceil(max(1, real_w / available_w, real_h / available_h)))
+        scale = cm / real_scale
+        self.c.scale(scale, scale)
+        self.c.translate(-min_x, -min_y)
+
+        # Draw fuctional areas.
         for area in project.content.wet_areas.values():
-            self._draw_area(area.points)
-        for window in project.content.windows.values():
-            wall = project.content.walls.get(window.wall_id)
-            if wall is None:
-                logger.warning({"msg": "window is attached to an empty wall"})
+            self._draw_area(area.points, blue)
+
+        # Draw walls.
+        self.c.saveState()
+        self.c.setStrokeColor(black)
+        self.c.setLineWidth(20)
+        for wall in project.content.walls.values():
+            if wall.x1 == wall.x2 and wall.y1 == wall.y2:
+                logger.warning({"msg": "wall has 0 length"})
                 continue
-            wall_start = np.asarray([wall.x1, wall.y1])
-            wall_end = np.asarray([wall.x2, wall.y2])
-            wall_length = np.linalg.norm(wall_end - wall_start)
-            if wall_length < 0.01:
-                logger.warning({"msg": "the wall is too short"})
-                continue
-            wall_dir = (wall_end - wall_start) / wall_length
-            window_start = wall_start + wall_dir * window.x
-            window_end = window_start + wall_dir * window.w
-            self._draw_rect(
-                window_start[0],
-                window_start[1],
-                window_end[0],
-                window_end[1],
-                26,
-                WINDOW_COLOR,
-            )
+            a = np.asarray([wall.x1, wall.y1], dtype=np.float64)
+            b = np.asarray([wall.x2, wall.y2], dtype=np.float64)
+            d = b - a
+            d /= np.linalg.norm(d)  # type: ignore
+            b += d * 10
+            a -= d * 10
+            self.c.line(a[0], a[1], b[0], b[1])
+        self.c.restoreState()
+
+        # Draw doors.
+        self.c.saveState()
+        self.c.setStrokeColor(white)
+        self.c.setLineWidth(20.2)
         for door in project.content.doors.values():
             wall = project.content.walls.get(door.wall_id)
             if wall is None:
-                logger.warning({"msg": "door is attached to an empty wall"})
+                logger.warning({"msg": "door is not attached to wall"})
                 continue
-            wall_start = np.asarray([wall.x1, wall.y1])
-            wall_end = np.asarray([wall.x2, wall.y2])
-            wall_length = np.linalg.norm(wall_end - wall_start)
-            if wall_length < 0.01:
-                logger.warning({"msg": "the wall is too short"})
-                continue
-            wall_dir = (wall_end - wall_start) / wall_length
-            door_start = wall_start + wall_dir * door.x
-            door_end = door_start + wall_dir * door.w
-            self._draw_rect(
-                door_start[0],
-                door_start[1],
-                door_end[0],
-                door_end[1],
-                26,
-                DOOR_COLOR,
-            )
-        for wall in project.content.walls.values():
-            self._draw_rect(wall.x1, wall.y1, wall.x2, wall.y2, 20, WALL_COLOR)
+            a = np.asarray([wall.x1, wall.y1], dtype=np.float64)
+            b = np.asarray([wall.x2, wall.y2], dtype=np.float64)
+            d = b - a
+            d /= np.linalg.norm(d)  # type: ignore
+            a += d * door.x
+            b = a + d * door.w
+            self.c.line(a[0], a[1], b[0], b[1])
+        self.c.restoreState()
 
+        # Draw windows.
         self.c.saveState()
-        self.c.rect(
-            self.padding,
-            self.padding,
-            self.width - 2 * self.padding,
-            self.height - 2 * self.padding,
-        )
+        self.c.setStrokeColor(blue)
+        self.c.setLineWidth(16)
+        for window in project.content.windows.values():
+            wall = project.content.walls.get(window.wall_id)
+            if wall is None:
+                logger.warning({"msg": "window is not attached to wall"})
+                continue
+            if window.w == 0 or window.h == 0:
+                logger.warning({"msg": "window has 0 size"})
+                continue
+            a = np.asarray([wall.x1, wall.y1], dtype=np.float64)
+            b = np.asarray([wall.x2, wall.y2], dtype=np.float64)
+            d = b - a
+            d /= np.linalg.norm(d)  # type: ignore
+            a += d * window.x
+            b = a + d * window.w
+            self.c.line(a[0], a[1], b[0], b[1])
+        self.c.restoreState()
+
+        # Drop plan transforms.
+        self.c.restoreState()
+
+        # Draw project's name and scale.
         self.c.setFont("main", 14)
         self.c.drawString(
-            self.width - self.padding + 2,
-            self.padding,
-            project.name or "Untitled Project",
+            2 * mm,
+            self.height - 2 * self.padding - 14 - 2 * mm,
+            project.name or "Untitled",
+        )
+        self.c.drawCentredString(
+            (self.width - 2 * self.padding) / 2,
+            self.height - 2 * self.padding - 14 - 2 * mm,
+            f"SCALE 1:{real_scale}",
         )
 
+        # Drop padding transforms.
         self.c.restoreState()
+
         self.c.showPage()
 
-    def draw_plan(self, plan: Plan):
-        # Calculate the plans scale to fit the page.
-        # boundary = plan.boundary()
-        # scale = max(
-        #     1,
-        #     math.ceil(boundary.w * cm / self.plan_box.w),
-        #     math.ceil(boundary.h * cm / self.plan_box.h),
-        # )
+    async def draw_plan(self, project: Project, plan: Plan, catalog: Catalog):
+        # Calculate bounds and add legend records.
+        h = WALL_WIDTH / 2
+        min_x = 1e6
+        min_y = 1e6
+        max_x = -1e6
+        max_y = -1e6
+        for area in project.content.wet_areas.values():
+            for point in area.points:
+                min_x = min(point.x, min_x)
+                max_x = max(point.x, max_x)
+                min_y = min(point.y, min_y)
+                max_y = max(point.y, max_y)
+        for wall in project.content.walls.values():
+            min_x = min(wall.x1 - h, wall.x2 - h, min_x)
+            max_x = max(wall.x1 + h, wall.x2 + h, max_x)
+            min_y = min(wall.y1 - h, wall.y2 - h, min_y)
+            max_y = max(wall.y1 + h, wall.y2 + h, max_y)
+        for area in plan.content.areas.values():
+            for point in area.points:
+                min_x = min(point.x, min_x)
+                max_x = max(point.x, max_x)
+                min_y = min(point.y, min_y)
+                max_y = max(point.y, max_y)
+        for meta in plan.content.furniture.values():
+            furniture = await catalog.find_furniture_by_id(meta.furniture_id)
+            if furniture is None:
+                logger.warning(
+                    {
+                        "msg": "cannot find furniure in the catalog",
+                        "id": meta.furniture_id,
+                    }
+                )
+                continue
+            cos = np.cos(meta.yaw)
+            sin = np.sin(meta.yaw)
+            w = furniture.width / 2
+            d = furniture.depth / 2
+            min_x = min(meta.x - abs(d * cos), meta.x - abs(w * sin), min_x)
+            max_x = max(meta.x + abs(d * cos), meta.x + abs(w * sin), max_x)
+            min_y = min(meta.z - abs(d * sin), meta.z - abs(w * cos), min_y)
+            max_y = max(meta.z + abs(d * sin), meta.z + abs(w * cos), max_y)
+        if min_x == max_x:
+            min_x -= 1
+        if min_y == max_y:
+            min_y -= 1
 
-        # Draw aside information.
-        # self.c.saveState()
-        # self.c.setDash((1 * mm, 2 * mm))
-        # self.c.setStrokeColor(black)
-        # self.c.setStrokeAlpha(0.2)
-        # self.c.rect(
-        #     self.padding,
-        #     self.padding,
-        #     self.width - 11 * cm,
-        #     self.height - 2 * self.padding,
-        # )
-        # self.c.restoreState()
-        # self.draw_name(plan.name)
-        # self.draw_scale(scale)
-        # legend_records: list[LegendRecord] = []
-        # for area in plan.areas:
-        #     if area.type != AreaType.WET_AREA:
-        #         legend_records.append(
-        #             LegendRecord(
-        #                 area.type, area.area_sqm(), AREA_COLORS.get(area.type, white)
-        #             )
-        #         )
-        # self.draw_legend(legend_records)
+        # Apply padding transforms.
+        self.c.saveState()
+        self.c.translate(self.padding, self.padding)
+        self.c.rect(0, 0, self.width - 2 * self.padding, self.height - 2 * self.padding)
 
-        # Draw the plan itself.
-        # plan.translate(-boundary.x, -boundary.y)
-        # plan.scale(cm / scale)
-        # self.c.saveState()
-        # self.c.translate(self.padding, self.padding)
-        # for area in plan.areas:
-        #     self.draw_area(area, AREA_COLORS.get(area.type, white))
-        # self.draw_walls(plan.walls.values(), scale)
-        # self.c.restoreState()
-        # self.c.showPage()
-        pass
+        # Apply plan transforms.
+        self.c.saveState()
+        w = max_x - min_x
+        h = max_y - min_y
+        real_w = w * cm
+        real_h = h * cm
+        available_w = self.width - 2 * self.padding
+        available_h = self.height - 2 * self.padding - 1 * cm
+        real_scale = int(np.ceil(max(1, real_w / available_w, real_h / available_h)))
+        scale = cm / real_scale
+        self.c.scale(scale, scale)
+        self.c.translate(-min_x, -min_y)
 
-    def _draw_area(self, points: list[Point]):
+        # Draw fuctional areas.
+        for area in plan.content.areas.values():
+            color = get_area_color(area.type)
+            self._draw_area(area.points, color)
+
+        # Draw furniture.
+        ordered_metas = sorted(plan.content.furniture.values(), key=lambda m: m.y)
+        for meta in ordered_metas:
+            furniture = await catalog.find_furniture_by_id(meta.furniture_id)
+            if furniture is None:
+                logger.warning(
+                    {
+                        "msg": "cannot find furniure in the catalog",
+                        "id": meta.furniture_id,
+                    }
+                )
+                continue
+            self.c.saveState()
+            self.c.setLineWidth(1)
+            self.c.setStrokeColor(black)
+            self.c.setFillColor(white)
+            self.c.setFont("main", 7)
+            self.c.translate(meta.x, meta.z)
+            self.c.rotate(meta.yaw * 180 / np.pi)
+            w = furniture.width / 2
+            d = furniture.depth / 2
+            self.c.rect(-w, -d, furniture.width, furniture.depth, fill=1)
+            self.c.setFillColor(black)
+            self.c.drawString(-w + mm, -d + mm, furniture.name)
+            self.c.restoreState()
+
+        # Draw walls.
+        self.c.saveState()
+        self.c.setStrokeColor(black)
+        self.c.setLineWidth(20)
+        for wall in project.content.walls.values():
+            if wall.x1 == wall.x2 and wall.y1 == wall.y2:
+                logger.warning({"msg": "wall has 0 length"})
+                continue
+            a = np.asarray([wall.x1, wall.y1], dtype=np.float64)
+            b = np.asarray([wall.x2, wall.y2], dtype=np.float64)
+            d = b - a
+            d /= np.linalg.norm(d)  # type: ignore
+            b += d * 10
+            a -= d * 10
+            self.c.line(a[0], a[1], b[0], b[1])
+        self.c.restoreState()
+
+        # Draw doors.
+        self.c.saveState()
+        self.c.setStrokeColor(white)
+        self.c.setLineWidth(20.2)
+        for door in project.content.doors.values():
+            wall = project.content.walls.get(door.wall_id)
+            if wall is None:
+                logger.warning({"msg": "door is not attached to wall"})
+                continue
+            a = np.asarray([wall.x1, wall.y1], dtype=np.float64)
+            b = np.asarray([wall.x2, wall.y2], dtype=np.float64)
+            d = b - a
+            d /= np.linalg.norm(d)  # type: ignore
+            a += d * door.x
+            b = a + d * door.w
+            self.c.line(a[0], a[1], b[0], b[1])
+        self.c.restoreState()
+
+        # Draw windows.
+        self.c.saveState()
+        self.c.setStrokeColor(blue)
+        self.c.setLineWidth(16)
+        for window in project.content.windows.values():
+            wall = project.content.walls.get(window.wall_id)
+            if wall is None:
+                logger.warning({"msg": "window is not attached to wall"})
+                continue
+            if window.w == 0 or window.h == 0:
+                logger.warning({"msg": "window has 0 size"})
+                continue
+            a = np.asarray([wall.x1, wall.y1], dtype=np.float64)
+            b = np.asarray([wall.x2, wall.y2], dtype=np.float64)
+            d = b - a
+            d /= np.linalg.norm(d)  # type: ignore
+            a += d * window.x
+            b = a + d * window.w
+            self.c.line(a[0], a[1], b[0], b[1])
+        self.c.restoreState()
+
+        # Drop plan transforms.
+        self.c.restoreState()
+
+        # Draw a legend.
+        legend = Legend()
+        for area in plan.content.areas.values():
+            legend.add(area.type, calc_polygon_area(area.points))
+        records = legend.records()
+        if len(records) != 0:
+            self.c.saveState()
+            self.c.setFont("main", 12)
+            n = len(records)
+            h = 0.5 * cm
+            self.c.setLineWidth(1)
+            self.c.translate(
+                self.width - 2 * self.padding - 8 * cm,
+                self.height - 2 * self.padding - 1 * cm - (n + 1) * h,
+            )
+            self.c.setFillColor(white)
+            self.c.rect(0, 0, 8 * cm, 1 * cm + (n + 1) * h, fill=1)
+            for i in range(1, n + 1):
+                record = records[i - 1]
+                color = get_area_color(record.type)
+                fill = Color(
+                    red=color.red, green=color.green, blue=color.blue, alpha=0.5
+                )
+                self.c.setFillColor(fill)
+                self.c.rect(0, h * i, 8 * cm, h, fill=1)
+                self.c.setFillColor(black)
+                self.c.drawCentredString(0.5 * cm, h * i + mm, str(n - i + 1))
+                self.c.drawString(1.2 * cm, h * i + mm, get_area_name(record.type))
+                self.c.drawCentredString(6.5 * cm, h * i + mm, f"{record.area:.2f}")
+            self.c.setStrokeColor(black)
+            self.c.grid(  # type: ignore
+                [0, 1 * cm, 5 * cm, 8 * cm],
+                [i * h for i in range(n + 2)] + [(n + 1) * h + 1 * cm],
+            )
+            self.c.drawCentredString(0.5 * cm, h * (n + 1) + 3 * mm, "№")
+            self.c.drawCentredString(3 * cm, h * (n + 1) + 3 * mm, "Name")
+            self.c.drawCentredString(6.5 * cm, h * (n + 1) + 3 * mm, "Area, sq.m.")
+            self.c.drawCentredString(
+                6.5 * cm,
+                mm,
+                f"{sum([r.area for r in records]):.2f}",
+            )
+            self.c.restoreState()
+
+        # Draw plan's name and scale.
+        self.c.setFont("main", 14)
+        self.c.drawString(
+            2 * mm,
+            self.height - 2 * self.padding - 14 - 2 * mm,
+            plan.name or "Untitled",
+        )
+        self.c.drawCentredString(
+            (self.width - 2 * self.padding) / 2,
+            self.height - 2 * self.padding - 14 - 2 * mm,
+            f"SCALE 1:{real_scale}",
+        )
+
+        # Drop padding transforms.
+        self.c.restoreState()
+
+        self.c.showPage()
+
+    def _draw_area(
+        self,
+        points: list[Plan.Content.Area.Point] | list[Project.Content.WetArea.Point],
+        color: Color,
+    ):
         if len(points) < 3:
-            logger.warning({"msg": "area has less then 3 points"})
+            logger.warning({"msg": "area has less than 3 points"})
             return
         self.c.saveState()
+        fill = Color(red=color.red, green=color.green, blue=color.blue, alpha=0.5)
+        self.c.setFillColor(fill)
+        self.c.setStrokeColor(color)
+        self.c.setLineWidth(2)
         path = self.c.beginPath()
         path.moveTo(points[0].x, points[0].y)  # type: ignore
         for point in points[1:]:
             path.lineTo(point.x, point.y)  # type: ignore
         path.close()
-        self.c.drawPath(path)  # type: ignore
-        self.c.restoreState()
-
-    def _draw_rect(self, x1: int, y1: int, x2: int, y2: int, width: int, color: Color):
-        self.c.saveState()
-        self.c.setLineWidth(width)
-        self.c.setStrokeColor(color)
-        self.c.line(x1, y1, x2, y2)
-        self.c.restoreState()
-
-    def draw_name(self, name: str):
-        self.c.saveState()
-        self.c.setFont("main", 14)
-        self.c.drawString(self.padding, self.height - self.padding - 14, name)
-        self.c.restoreState()
-
-    def draw_scale(self, ratio: int):
-        self.c.saveState()
-        self.c.setFont("main", 14)
-        self.c.drawRightString(
-            self.width - 9 * cm - self.padding,
-            self.height - self.padding - 14,
-            f"МАСШТАБ 1:{ratio}",
-        )
-        self.c.restoreState()
-
-    def draw_walls(self, walls: Iterable[Wall], scale: int):
-        self.c.saveState()
-        self.c.setLineWidth(cm / scale)
-        self.c.setStrokeColor(black)
-        self.c.lines([(w.x1, w.y1, w.x2, w.y2) for w in walls])  # type: ignore
-        self.c.restoreState()
-
-    def draw_furniture(self):
-        # x, y, _, _ = self._scale(furniture.x, furniture.y, 0, 0)
-        # self.c.setStrokeColor(blue)
-        # self.c.rect(x, y, w, h, stroke=1, fill=0)
-        # self.c.drawString(x + 3, y + h - 12, area.type)
-        pass
-
-    def draw_windows(self, wall: Wall, window: Window):
-        pass
-
-    def draw_doors(self):
-        pass
-
-    def draw_legend(self, records: list[LegendRecord]):
-        self.c.saveState()
-        self.c.setFont("main", 14)
-        if len(records) == 0:
-            return
-        n = len(records)
-        pad = 1 * cm
-        h = 0.5 * cm
-        self.c.setLineWidth(1)
-        self.c.translate(
-            self.width - pad - 8 * cm, self.height - pad - 1 * cm - (n + 1) * h
-        )
-        for i in range(1, n + 1):
-            color = records[i - 1].color
-            fill = Color(red=color.red, green=color.green, blue=color.blue, alpha=0.5)
-            self.c.setFillColor(fill)
-            self.c.rect(0, h * i, 8 * cm, h, fill=1)
-            self.c.setFillColor(black)
-            self.c.drawCentredString(0.5 * cm, h * i + mm, str(n - i + 1))
-            self.c.drawString(1.2 * cm, h * i + mm, records[i - 1].name)
-            self.c.drawCentredString(6.5 * cm, h * i + mm, str(records[i - 1].area_sqm))
-        self.c.setStrokeColor(black)
-        self.c.grid(
-            [0, 1 * cm, 5 * cm, 8 * cm],
-            [i * h for i in range(n + 2)] + [(n + 1) * h + 1 * cm],
-        )  # type: ignore
-        self.c.drawCentredString(0.5 * cm, h * (n + 1) + 3 * mm, "№")
-        self.c.drawCentredString(3 * cm, h * (n + 1) + 3 * mm, "Наименование")
-        self.c.drawCentredString(6.5 * cm, h * (n + 1) + 3 * mm, "Площадь")
-        self.c.drawCentredString(
-            6.5 * cm,
-            mm,
-            str(sum([r.area_sqm for r in records])),
-        )
+        self.c.drawPath(path, fill=1)  # type: ignore
         self.c.restoreState()
 
     def close(self):
         self.c.save()
-
-
-async def export_pdf(project: Project, plans: AsyncIterable[Plan]) -> BytesIO:
-    buffer = BytesIO()
-    renderer = PDFRenderer(buffer)
-    renderer.draw_project(project)
-    async for plan in plans:
-        renderer.draw_plan(plan)
-    renderer.close()
-    buffer.seek(0)
-    return buffer

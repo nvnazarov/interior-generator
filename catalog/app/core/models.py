@@ -24,6 +24,7 @@ class Furniture(BaseModel):
         FLOOR = "floor"
         CEILING = "ceiling"
         WALL = "wall"
+        SURFACE = "surface"
 
     id: str
     name: str

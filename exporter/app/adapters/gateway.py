@@ -1,21 +1,35 @@
-import logging
-from typing import AsyncIterable
-from uuid import UUID
-
 from httpx import AsyncClient
 from pydantic import RootModel
+from functools2 import async_lru_cache  # type: ignore
 
-from app.core.exporter import Repository
-from app.core.models import Plan, Project
+from app.core.catalog import Catalog
+from app.core.projects import ProjectsService
+from app.core.models import Plan, Project, Furniture
 
-logger = logging.getLogger(__name__)
 
-
-class APIGatewayAdapter(Repository):
+class GatewayCatalog(Catalog):
     def __init__(self, client: AsyncClient):
         self.client = client
 
-    async def get_project(self, account_id: str, project_id: str) -> Project | None:
+    @async_lru_cache(maxsize=100, ttl=3600)
+    async def find_furniture_by_id(self, id: str) -> Furniture | None:
+        resp = await self.client.get(
+            f"/catalog/furniture/{id}",
+        )
+        if resp.status_code == 404:
+            return None
+        resp.raise_for_status()
+        model = Furniture.model_validate(resp.json())
+        return model
+
+
+class GatewayProjectsService(ProjectsService):
+    def __init__(self, client: AsyncClient):
+        self.client = client
+
+    async def find_project_by_id(
+        self, account_id: str, project_id: str
+    ) -> Project | None:
         resp = await self.client.get(
             f"/projects/{project_id}",
             headers={"x-account-id": account_id},
@@ -26,36 +40,19 @@ class APIGatewayAdapter(Repository):
         project = Project.model_validate(resp.json())
         return project
 
-    async def get_plan(self, account_id: str, plan_id: str) -> Plan | None:
-        resp = await self.client.get(
-            f"/plans/{plan_id}",
-            headers={"x-account-id": account_id},
-        )
-        if resp.status_code == 404:
-            return None
-        resp.raise_for_status()
-        plan = Plan.model_validate(resp.json())
-        return plan
-
-    async def get_plans_of_project(
-        self, account_id: str, project_id: str
-    ) -> AsyncIterable[Plan]:
+    async def iter_plans_in_project(self, account_id: str, project_id: str):
         resp = await self.client.get(
             f"/projects/{project_id}/plans",
             headers={"x-account-id": account_id},
         )
         resp.raise_for_status()
-        plans_meta = RootModel[list[Plan]].model_validate(resp.json()).root
-        for meta in plans_meta:
+        partial_plans = RootModel[list[Plan]].model_validate(resp.json()).root
+        for partial_plan in partial_plans:
             resp = await self.client.get(
-                f"/plans/{meta.id}",
+                f"/plans/{partial_plan.id}",
                 headers={"x-account-id": account_id},
             )
             if resp.status_code == 404:
                 continue
-            logger.info(resp.json())
             plan = Plan.model_validate(resp.json())
             yield plan
-
-    async def find_furniture(self, id: UUID):
-        pass

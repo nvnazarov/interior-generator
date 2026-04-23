@@ -241,6 +241,21 @@ def seed_elastic():
                     ),
                     "Chair, stool, office chair, kitchen chair",
                 ),
+                (
+                    Furniture(
+                        id="flower",
+                        name="Flower",
+                        width=30,
+                        height=40,
+                        depth=30,
+                        mount=Furniture.Mount.SURFACE,
+                        model_path="",
+                        icon_path="",
+                        thumbnail_path="",
+                        meta=Furniture.Meta(),
+                    ),
+                    "Flower, plant",
+                ),
             ]
         )
     )

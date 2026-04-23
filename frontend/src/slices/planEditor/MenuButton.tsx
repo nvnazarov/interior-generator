@@ -10,8 +10,6 @@ import {
   usePatchPlanMutation,
 } from "../api/slice";
 import { planSaved, selectPlanEditor } from "./slice";
-import { UrlUtil } from "../../shared/util";
-import { Config } from "../../shared/config";
 
 export function MenuButton({
   planId,
@@ -61,33 +59,6 @@ export function MenuButton({
         },
         {
           divider: true,
-        },
-        {
-          name: "Export (DXF)",
-          onClick: async () => {
-            if (editor.plan) {
-              const resp = await fetch(
-                `${UrlUtil.noRightSlash(Config.gateway.baseUrl)}/api/plans/${editor.plan.id}/export/dxf`,
-                {
-                  method: "POST",
-                  body: "{}",
-                  headers: { "Content-Type": "application/json" },
-                },
-              );
-              if (!resp.ok) {
-                throw new Error("error: export plan dxf: response is not ok");
-              }
-              const blob = await resp.blob();
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `${editor.plan.id}.dxf`;
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-              window.URL.revokeObjectURL(url);
-            }
-          },
         },
         {
           name: "Delete plan",
