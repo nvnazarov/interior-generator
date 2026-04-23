@@ -20,6 +20,12 @@ def yaw(d: Vec2) -> float:
     return np.arctan2(d[1], d[0])
 
 
+def opposite_yaw(yaw: float) -> float:
+    if yaw > np.pi:
+        return yaw - np.pi
+    return yaw + np.pi
+
+
 def vec2(x: float, y: float) -> Vec2:
     return np.asarray([x, y], dtype=np.float64)  # type: ignore
 

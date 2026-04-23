@@ -10,6 +10,8 @@ import {
   usePatchPlanMutation,
 } from "../api/slice";
 import { planSaved, selectPlanEditor } from "./slice";
+import { UrlUtil } from "../../shared/util";
+import { Config } from "../../shared/config";
 
 export function MenuButton({
   planId,
@@ -50,10 +52,39 @@ export function MenuButton({
           },
         },
         {
-          name: "Edit project",
+          name: "Edit apartment",
           onClick: async () => {
             if (editor.plan) {
               navigate(`/editor/project/${editor.plan.projectId}`);
+            }
+          },
+        },
+        {
+          name: "Export (PDF)",
+          onClick: async () => {
+            if (editor.plan) {
+              const resp = await fetch(
+                `${UrlUtil.noRightSlash(Config.gateway.baseUrl)}/api/projects/${editor.plan.projectId}/export/pdf`,
+                {
+                  method: "POST",
+                  body: "{}",
+                  headers: { "Content-Type": "application/json" },
+                },
+              );
+              if (!resp.ok) {
+                throw new Error(
+                  "error: export project pdf: response is not ok",
+                );
+              }
+              const blob = await resp.blob();
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `${editor.plan.projectId}.pdf`;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              window.URL.revokeObjectURL(url);
             }
           },
         },

@@ -15,6 +15,8 @@ from app.core.generator.geometry import (
     norm,
     distance_point_to_segment,
     intersect_par_seg,
+    random_yaw,
+    opposite_yaw,
 )
 from itertools import pairwise
 
@@ -67,7 +69,8 @@ class OnFloor(Constraint):
                     Location(x=x, y=object.height // 2, z=z, yaw=0)
                     for x in range(bounds[0], bounds[0] + bounds[2], 10)
                     for z in range(bounds[1], bounds[1] + bounds[3], 10)
-                ]
+                ],
+                any_yaw=True,
             )
         return AnyLocation()
 
@@ -107,7 +110,7 @@ class FarWall(Constraint):
                     # TODO: verify that point is inside the apartment (not only
                     # inside the bbox).
                     locations.append(Location(x=x, y=object.height // 2, z=z, yaw=0))
-            return SampleLocationsCollection(locations)
+            return SampleLocationsCollection(locations, any_yaw=True)
         return AnyLocation()
 
     def __str__(self):
@@ -193,6 +196,10 @@ class OnTopOf(Constraint):
                 raise ValueError("Object does not exist on scene")
             if not bottom_object.placed():
                 return AnyLocation()
+            any_yaw = (
+                bottom_object.width > top_object.width * 1.5
+                and bottom_object.depth > top_object.depth * 1.5
+            )
             return SampleLocationsCollection(
                 [
                     Location(
@@ -203,7 +210,8 @@ class OnTopOf(Constraint):
                         z=bottom_object.location.z,
                         yaw=bottom_object.location.yaw,
                     )
-                ]
+                ],
+                any_yaw=any_yaw,
             )
         return AnyLocation()
 
@@ -225,11 +233,23 @@ class FaceToFace(Constraint):
     def locations(self, scene: "SceneGraph", object_id: str) -> "LocationsCollection":
         if self.a == object_id or self.b == object_id:
             object = scene.objects.get(object_id)
-            if not object:
+            anchor = scene.objects.get(self.b if self.a == object_id else self.a)
+            if not object or not anchor:
                 raise ValueError("Object does not exist on scene")
-            return SampleLocationsCollection(
-                [Location(x=0, y=object.height // 2, z=0, yaw=0)]
-            )
+            if not anchor.placed():
+                return AnyLocation()
+            d = direction(anchor.location.yaw)
+            step = d * object.depth
+            p = vec2(anchor.location.x, anchor.location.z)
+            p += d * (anchor.depth + object.depth) / 2
+            locations = list[Location]()
+            yaw = opposite_yaw(anchor.location.yaw)
+            for _ in range(10):
+                locations.append(
+                    Location(x=int(p[0]), y=object.height // 2, z=int(p[1]), yaw=yaw)
+                )
+                p += step
+            return SampleLocationsCollection(locations)
         return AnyLocation()
 
     def __str__(self):
@@ -250,11 +270,23 @@ class BackToBack(Constraint):
     def locations(self, scene: "SceneGraph", object_id: str) -> "LocationsCollection":
         if self.a == object_id or self.b == object_id:
             object = scene.objects.get(object_id)
-            if not object:
+            anchor = scene.objects.get(self.b if self.a == object_id else self.a)
+            if not object or not anchor:
                 raise ValueError("Object does not exist on scene")
-            return SampleLocationsCollection(
-                [Location(x=0, y=object.height // 2, z=0, yaw=0)]
-            )
+            if not anchor.placed():
+                return AnyLocation()
+            d = -direction(anchor.location.yaw)
+            step = d * object.depth
+            p = vec2(anchor.location.x, anchor.location.z)
+            p += d * (anchor.depth + object.depth) / 2
+            locations = list[Location]()
+            yaw = opposite_yaw(anchor.location.yaw)
+            for _ in range(10):
+                locations.append(
+                    Location(x=int(p[0]), y=object.height // 2, z=int(p[1]), yaw=yaw)
+                )
+                p += step
+            return SampleLocationsCollection(locations)
         return AnyLocation()
 
     def __str__(self):
@@ -376,6 +408,9 @@ class SceneObject:
     def placed(self) -> bool:
         return bool(self._flags & self._PLACED)
 
+    def detach(self):
+        self._flags = self._flags & ~self._PLACED
+
     @property
     def semantic_name(self) -> str:
         return self._semantic_name
@@ -482,6 +517,10 @@ class SceneGraph:
         Rearrange all furniture from scratch (locked furniture is not
         moved).
         """
+
+        for object in self.objects.values():
+            if not object.locked():
+                object.detach()
 
         objects_weights = dict[str, float]()
         for constraint in self.constraints:
@@ -742,13 +781,17 @@ class NoLocation(LocationsCollection):
 
 
 class SampleLocationsCollection(LocationsCollection):
-    def __init__(self, locations: list[Location]):
+    def __init__(self, locations: list[Location], any_yaw: bool = False):
         self.locations = locations
+        self.any_yaw = any_yaw
 
     def pick(self) -> Location | None:
         if self.empty():
             return None
-        return random.choice(self.locations)
+        location = random.choice(self.locations)
+        if self.any_yaw:
+            return location.modify(yaw=random_yaw())
+        return location
 
     def intersect(
         self, locations: LocationsCollection, eps: float
@@ -758,9 +801,17 @@ class SampleLocationsCollection(LocationsCollection):
             for a in self.locations:
                 for b in locations.locations:
                     if a.close_to(b, eps):
-                        result.append(a)
-                        result.append(b)
-            return SampleLocationsCollection(result)
+                        if locations.any_yaw and not self.any_yaw:
+                            result.append(a)
+                        elif self.any_yaw and not locations.any_yaw:
+                            result.append(b)
+                        else:
+                            result.append(a)
+                            result.append(b)
+
+            return SampleLocationsCollection(
+                result, any_yaw=self.any_yaw and locations.any_yaw
+            )
         if isinstance(locations, NoLocation):
             return locations
         if isinstance(locations, AnyLocation):
