@@ -1,5 +1,6 @@
-from typing import Awaitable
 from abc import ABC, abstractmethod
+from typing import Awaitable
+
 from app.core.models import Furniture
 
 

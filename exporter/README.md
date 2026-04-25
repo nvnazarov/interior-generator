@@ -2,8 +2,7 @@
 
 ## Responsibility
 
-The service defines API for exporting projects and plans into
-various file formats, like PDF and DXF.
+The service defines API for exporting projects into PDF.
 
 ## Project structure
 

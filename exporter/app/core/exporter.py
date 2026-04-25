@@ -1,8 +1,8 @@
 from io import BytesIO
 
-from app.core.projects import ProjectsService
 from app.core.catalog import Catalog
 from app.core.pdf import PDFRenderer
+from app.core.projects import ProjectsService
 
 
 class ProjectNotFoundError(Exception): ...

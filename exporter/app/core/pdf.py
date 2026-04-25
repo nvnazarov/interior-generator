@@ -9,17 +9,17 @@ from reportlab.lib.colors import (
     blue,
     brown,
     green,
-    red,
-    yellow,
     grey,
+    red,
     white,
+    yellow,
 )
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import cm, mm
 from reportlab.pdfgen import canvas
 
-from app.core.models import Plan, Project
 from app.core.catalog import Catalog
+from app.core.models import Plan, Project
 
 logger = logging.getLogger(__name__)
 

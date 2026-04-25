@@ -1,6 +1,7 @@
-from typing import AsyncIterable
 from abc import ABC, abstractmethod
-from app.core.models import Project, Plan
+from typing import AsyncIterable
+
+from app.core.models import Plan, Project
 
 
 class ProjectsService(ABC):

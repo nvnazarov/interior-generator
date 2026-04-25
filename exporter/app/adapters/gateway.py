@@ -1,10 +1,10 @@
+from functools2 import async_lru_cache  # type: ignore
 from httpx import AsyncClient
 from pydantic import RootModel
-from functools2 import async_lru_cache  # type: ignore
 
 from app.core.catalog import Catalog
+from app.core.models import Furniture, Plan, Project
 from app.core.projects import ProjectsService
-from app.core.models import Plan, Project, Furniture
 
 
 class GatewayCatalog(Catalog):
