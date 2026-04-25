@@ -14,5 +14,5 @@ export const auth = betterAuth({
   },
   baseURL: config.betterAuth.baseURL,
   trustedOrigins: config.betterAuth.trustedOrigins,
-  database: prismaAdapter(prisma, { provider: "postgresql" })
-})
+  database: prismaAdapter(prisma, { provider: "postgresql" }),
+});

@@ -11,11 +11,10 @@ const r = (key: string): string => {
 export const config = {
   port: process.env.APP_PORT || "8080",
   postgres: {
-    url: r("APP_POSTGRES__URL")
+    url: r("APP_POSTGRES__URL"),
   },
   betterAuth: {
     baseURL: r("BETTER_AUTH_BASE_URL"),
     trustedOrigins: r("BETTER_AUTH_TRUSTED_ORIGINS").split(","),
   },
 };
-
