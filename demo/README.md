@@ -9,5 +9,6 @@ A Docker Compose configuration for running application demo.
 Install Make and Docker. Use the following command:
 
 ```bash
-make up
+make up     # Run application.
+make down   # Shutdown application.
 ```
