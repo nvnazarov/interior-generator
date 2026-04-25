@@ -11,12 +11,14 @@ The service defines API for managing accounts, such as:
 ## Project structure
 
 - `/src` contains project's source code
+- `/prisma` contains database schema for Prisma
 - `/docker` contains Dockerfiles
 
 ## Tech Stack
 
 - Node 20
 - Typescript
+- Prisma
 - express.js
 - better-auth
 
@@ -28,5 +30,4 @@ Install Make and Docker.
 make test       # run all tests
 make up         # start docker compose
 make format     # format the code
-make migration  # shows a db migration script
 ```
