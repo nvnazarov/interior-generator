@@ -151,7 +151,8 @@ export const selectProjectEditorTool = (state: AppState) =>
 export const selectIsProjectSaved = (state: AppState) =>
   Object.keys(state.projectEditor.unsavedAccumulatedPatch).length === 0;
 export const selectProject = (state: AppState) => state.projectEditor.project;
-export const selectIsChatOpen = (state: AppState) => state.projectEditor.isChatOpen;
+export const selectIsChatOpen = (state: AppState) =>
+  state.projectEditor.isChatOpen;
 
 export default projectEditorSlice.reducer;
 export const {

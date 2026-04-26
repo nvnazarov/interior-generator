@@ -112,52 +112,19 @@ export const RawPromptSchema = z.object({
   id: z.string(),
   text: z.string(),
   project_id: z.string(),
-  base: z.object({
-    furniture: z.record(
-      z.string(),
-      z.object({
-        id: z.string(),
-        furniture_id: z.string(),
-        x: z.number(),
-        y: z.number(),
-        z: z.number(),
-        yaw: z.number(),
-      }),
-    ),
-    areas: z.record(
-      z.string(),
-      z.object({
-        id: z.string(),
-        type: z.literal([
-          "kitchen",
-          "livingroom",
-          "bedroom",
-          "bathroom",
-          "hallway",
-        ]),
-        points: z.array(
-          z.object({
-            x: z.number(),
-            y: z.number(),
-          }),
-        ),
-      }),
-    ),
-  }).nullable(),
-  patches: z.array(z.object({
-    name: z.string().optional(),
-    content: z.object({
+  base: z
+    .object({
       furniture: z.record(
         z.string(),
         z.object({
-          id: z.string().optional(),
-          furniture_id: z.string().optional(),
-          x: z.number().optional(),
-          y: z.number().optional(),
-          z: z.number().optional(),
-          yaw: z.number().optional(),
-        }).nullable(),
-      ).optional(),
+          id: z.string(),
+          furniture_id: z.string(),
+          x: z.number(),
+          y: z.number(),
+          z: z.number(),
+          yaw: z.number(),
+        }),
+      ),
       areas: z.record(
         z.string(),
         z.object({
@@ -168,17 +135,68 @@ export const RawPromptSchema = z.object({
             "bedroom",
             "bathroom",
             "hallway",
-          ]).optional(),
+          ]),
           points: z.array(
             z.object({
               x: z.number(),
               y: z.number(),
             }),
-          ).optional(),
-        }).nullable(),
-      ).optional()
-    }).optional()
-  })),
+          ),
+        }),
+      ),
+    })
+    .nullable(),
+  patches: z.array(
+    z.object({
+      name: z.string().optional(),
+      content: z
+        .object({
+          furniture: z
+            .record(
+              z.string(),
+              z
+                .object({
+                  id: z.string().optional(),
+                  furniture_id: z.string().optional(),
+                  x: z.number().optional(),
+                  y: z.number().optional(),
+                  z: z.number().optional(),
+                  yaw: z.number().optional(),
+                })
+                .nullable(),
+            )
+            .optional(),
+          areas: z
+            .record(
+              z.string(),
+              z
+                .object({
+                  id: z.string(),
+                  type: z
+                    .literal([
+                      "kitchen",
+                      "livingroom",
+                      "bedroom",
+                      "bathroom",
+                      "hallway",
+                    ])
+                    .optional(),
+                  points: z
+                    .array(
+                      z.object({
+                        x: z.number(),
+                        y: z.number(),
+                      }),
+                    )
+                    .optional(),
+                })
+                .nullable(),
+            )
+            .optional(),
+        })
+        .optional(),
+    }),
+  ),
   status: z.literal(["pending", "success", "failed"]),
   dt_created: z.string(),
   dt_done: z.string().nullable(),
@@ -187,7 +205,7 @@ export const RawPromptSchema = z.object({
 export const AccountSchema = z.object({
   name: z.string(),
   image: z.string().nullable(),
-})
+});
 
 export const RawProjectsArraySchema = z.array(RawProjectSchema);
 export const RawPlansArraySchema = z.array(RawPlanSchema);

@@ -1,4 +1,9 @@
-import { createSlice, current, original, type PayloadAction } from "@reduxjs/toolkit";
+import {
+  createSlice,
+  current,
+  original,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 import type { Plan, PlanPatch } from "../api/entities";
 import {
   applyJsonMergePatch,
@@ -129,15 +134,19 @@ const planEditorSlice = createSlice({
     },
     planChangedTo: (state, action: PayloadAction<Plan["content"]>) => {
       if (state.plan) {
-        const oldContent = original(state.plan.content) ?? current(state.plan.content)
+        const oldContent =
+          original(state.plan.content) ?? current(state.plan.content);
         const patch = computeJsonMergePatch(oldContent, action.payload);
         if (!patch || Object.keys(patch).length === 0) {
           return;
         }
-        const newContent = applyJsonMergePatch(oldContent, patch)
+        const newContent = applyJsonMergePatch(oldContent, patch);
         state.plan.content = newContent;
         const inversePatch = computeJsonMergePatch(newContent, oldContent);
-        const change = { patch: { content: patch }, inversePatch: { content: inversePatch } } as PlanChange;
+        const change = {
+          patch: { content: patch },
+          inversePatch: { content: inversePatch },
+        } as PlanChange;
         state.unsavedAccumulatedPatch = combineJsonMergePatches(
           state.unsavedAccumulatedPatch,
           change.patch,

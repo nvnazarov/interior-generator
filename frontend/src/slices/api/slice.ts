@@ -60,9 +60,9 @@ const api = createApi({
       providesTags: (result) =>
         result
           ? [
-            ...result.map(({ id }) => ({ type: "Projects", id }) as const),
-            { type: "Projects", id: "LIST" },
-          ]
+              ...result.map(({ id }) => ({ type: "Projects", id }) as const),
+              { type: "Projects", id: "LIST" },
+            ]
           : [{ type: "Projects", id: "LIST" }],
     }),
     getProjectById: builder.query<Project, string>({
@@ -178,52 +178,52 @@ const api = createApi({
               content === undefined
                 ? undefined
                 : {
-                  walls: content.walls,
-                  wet_areas: content.wetAreas,
-                  windows:
-                    windows &&
-                    Object.entries(windows)
-                      .map(([id, window]): [string, any] =>
-                        window
-                          ? [
-                            id,
-                            {
-                              id: id,
-                              wall_id: window?.wallId,
-                              x: window?.x,
-                              y: window?.y,
-                              w: window?.w,
-                              h: window?.h,
-                            },
-                          ]
-                          : [id, null],
-                      )
-                      .reduce((acc, curr) => {
-                        acc[curr[0]] = curr[1];
-                        return acc;
-                      }, {} as any),
-                  doors:
-                    doors &&
-                    Object.entries(doors)
-                      .map(([id, door]): [string, any] =>
-                        door
-                          ? [
-                            id,
-                            {
-                              id: id,
-                              wall_id: door?.wallId,
-                              x: door?.x,
-                              w: door?.w,
-                              h: door?.h,
-                            },
-                          ]
-                          : [id, null],
-                      )
-                      .reduce((acc, curr) => {
-                        acc[curr[0]] = curr[1];
-                        return acc;
-                      }, {} as any),
-                },
+                    walls: content.walls,
+                    wet_areas: content.wetAreas,
+                    windows:
+                      windows &&
+                      Object.entries(windows)
+                        .map(([id, window]): [string, any] =>
+                          window
+                            ? [
+                                id,
+                                {
+                                  id: id,
+                                  wall_id: window?.wallId,
+                                  x: window?.x,
+                                  y: window?.y,
+                                  w: window?.w,
+                                  h: window?.h,
+                                },
+                              ]
+                            : [id, null],
+                        )
+                        .reduce((acc, curr) => {
+                          acc[curr[0]] = curr[1];
+                          return acc;
+                        }, {} as any),
+                    doors:
+                      doors &&
+                      Object.entries(doors)
+                        .map(([id, door]): [string, any] =>
+                          door
+                            ? [
+                                id,
+                                {
+                                  id: id,
+                                  wall_id: door?.wallId,
+                                  x: door?.x,
+                                  w: door?.w,
+                                  h: door?.h,
+                                },
+                              ]
+                            : [id, null],
+                        )
+                        .reduce((acc, curr) => {
+                          acc[curr[0]] = curr[1];
+                          return acc;
+                        }, {} as any),
+                  },
           },
         };
       },
@@ -257,9 +257,9 @@ const api = createApi({
       providesTags: (result, _error, projectId) =>
         result
           ? [
-            ...result.map(({ id }) => ({ type: "Plans", id }) as const),
-            { type: "Plans", id: `LIST:${projectId}` },
-          ]
+              ...result.map(({ id }) => ({ type: "Plans", id }) as const),
+              { type: "Plans", id: `LIST:${projectId}` },
+            ]
           : [{ type: "Plans", id: `LIST:${projectId}` }],
     }),
     getPlanById: builder.query<Plan, string>({
@@ -341,30 +341,30 @@ const api = createApi({
               content === undefined
                 ? undefined
                 : {
-                  areas: content.areas,
-                  furniture:
-                    furniture &&
-                    Object.entries(furniture)
-                      .map(([id, f]): [string, any] =>
-                        f
-                          ? [
-                            id,
-                            {
-                              id: id,
-                              furniture_id: f?.furnitureId,
-                              x: f?.x,
-                              y: f?.y,
-                              z: f?.z,
-                              yaw: f?.yaw,
-                            },
-                          ]
-                          : [id, null],
-                      )
-                      .reduce((acc, curr) => {
-                        acc[curr[0]] = curr[1];
-                        return acc;
-                      }, {} as any),
-                },
+                    areas: content.areas,
+                    furniture:
+                      furniture &&
+                      Object.entries(furniture)
+                        .map(([id, f]): [string, any] =>
+                          f
+                            ? [
+                                id,
+                                {
+                                  id: id,
+                                  furniture_id: f?.furnitureId,
+                                  x: f?.x,
+                                  y: f?.y,
+                                  z: f?.z,
+                                  yaw: f?.yaw,
+                                },
+                              ]
+                            : [id, null],
+                        )
+                        .reduce((acc, curr) => {
+                          acc[curr[0]] = curr[1];
+                          return acc;
+                        }, {} as any),
+                  },
           },
         };
       },
@@ -444,76 +444,77 @@ const api = createApi({
     getPromptsForProject: builder.query<Prompt[], string>({
       query: (projectId: string) => `projects/${projectId}/prompts`,
       rawResponseSchema: RawPromptsArraySchema,
-      transformResponse: (response: RawPrompt[]) => response.map(raw => ({
-        id: raw.id,
-        text: raw.text,
-        projectId: raw.project_id,
-        base: (() => {
-          if (!raw.base) {
-            return null;
-          }
-          return {
-            furniture: Object.entries(raw.base.furniture)
-              .map(([id, f]): [string, any] =>
-                f
-                  ? [
-                    id,
-                    {
-                      id: id,
-                      furnitureId: f?.furniture_id,
-                      x: f?.x,
-                      y: f?.y,
-                      z: f?.z,
-                      yaw: f?.yaw,
-                    },
-                  ]
-                  : [id, null],
-              )
-              .reduce((acc, curr) => {
-                acc[curr[0]] = curr[1];
-                return acc;
-              }, {} as any),
-            areas: raw.base.areas,
-          };
-        })(),
-        patches: raw.patches.map((patch) => {
-          return {
-            name: patch.name,
-            content: {
-              furniture: Object.entries(patch.content?.furniture ?? {})
+      transformResponse: (response: RawPrompt[]) =>
+        response.map((raw) => ({
+          id: raw.id,
+          text: raw.text,
+          projectId: raw.project_id,
+          base: (() => {
+            if (!raw.base) {
+              return null;
+            }
+            return {
+              furniture: Object.entries(raw.base.furniture)
                 .map(([id, f]): [string, any] =>
                   f
                     ? [
-                      id,
-                      {
-                        id: id,
-                        furnitureId: f?.furniture_id,
-                        x: f?.x,
-                        y: f?.y,
-                        z: f?.z,
-                        yaw: f?.yaw,
-                      },
-                    ]
+                        id,
+                        {
+                          id: id,
+                          furnitureId: f?.furniture_id,
+                          x: f?.x,
+                          y: f?.y,
+                          z: f?.z,
+                          yaw: f?.yaw,
+                        },
+                      ]
                     : [id, null],
                 )
                 .reduce((acc, curr) => {
                   acc[curr[0]] = curr[1];
                   return acc;
                 }, {} as any),
-              areas: patch.content?.areas,
-            },
-          }
-        }),
-        status: raw.status,
-        dtCreated: raw.dt_created,
-        dtDone: raw.dt_done,
-      })),
+              areas: raw.base.areas,
+            };
+          })(),
+          patches: raw.patches.map((patch) => {
+            return {
+              name: patch.name,
+              content: {
+                furniture: Object.entries(patch.content?.furniture ?? {})
+                  .map(([id, f]): [string, any] =>
+                    f
+                      ? [
+                          id,
+                          {
+                            id: id,
+                            furnitureId: f?.furniture_id,
+                            x: f?.x,
+                            y: f?.y,
+                            z: f?.z,
+                            yaw: f?.yaw,
+                          },
+                        ]
+                      : [id, null],
+                  )
+                  .reduce((acc, curr) => {
+                    acc[curr[0]] = curr[1];
+                    return acc;
+                  }, {} as any),
+                areas: patch.content?.areas,
+              },
+            };
+          }),
+          status: raw.status,
+          dtCreated: raw.dt_created,
+          dtDone: raw.dt_done,
+        })),
       providesTags: (result, _error, projectId) =>
         result
           ? [
-            ...result.map(({ id }) => ({ type: "Prompts", id }) as const),
-            { type: "Prompts", id: `LIST:${projectId}` },
-          ]
+              ...result.map(({ id }) => ({ type: "Prompts", id }) as const),
+              { type: "Prompts", id: `LIST:${projectId}` },
+            ]
           : [{ type: "Prompts", id: `LIST:${projectId}` }],
     }),
     deletePrompt: builder.mutation<void, string>({
@@ -525,7 +526,12 @@ const api = createApi({
     }),
     generatePlans: builder.mutation<
       Prompt,
-      { projectId: string; text: string; basePlanId: string | null, count: number }
+      {
+        projectId: string;
+        text: string;
+        basePlanId: string | null;
+        count: number;
+      }
     >({
       query: ({ projectId, text, basePlanId, count }) => ({
         url: `projects/${projectId}/prompts`,
@@ -551,16 +557,16 @@ const api = createApi({
               .map(([id, f]): [string, any] =>
                 f
                   ? [
-                    id,
-                    {
-                      id: id,
-                      furnitureId: f?.furniture_id,
-                      x: f?.x,
-                      y: f?.y,
-                      z: f?.z,
-                      yaw: f?.yaw,
-                    },
-                  ]
+                      id,
+                      {
+                        id: id,
+                        furnitureId: f?.furniture_id,
+                        x: f?.x,
+                        y: f?.y,
+                        z: f?.z,
+                        yaw: f?.yaw,
+                      },
+                    ]
                   : [id, null],
               )
               .reduce((acc, curr) => {
@@ -578,16 +584,16 @@ const api = createApi({
                 .map(([id, f]): [string, any] =>
                   f
                     ? [
-                      id,
-                      {
-                        id: id,
-                        furnitureId: f?.furniture_id,
-                        x: f?.x,
-                        y: f?.y,
-                        z: f?.z,
-                        yaw: f?.yaw,
-                      },
-                    ]
+                        id,
+                        {
+                          id: id,
+                          furnitureId: f?.furniture_id,
+                          x: f?.x,
+                          y: f?.y,
+                          z: f?.z,
+                          yaw: f?.yaw,
+                        },
+                      ]
                     : [id, null],
                 )
                 .reduce((acc, curr) => {
@@ -596,7 +602,7 @@ const api = createApi({
                 }, {} as any),
               areas: patch.content?.areas,
             },
-          }
+          };
         }),
         status: raw.status,
         dtCreated: raw.dt_created,

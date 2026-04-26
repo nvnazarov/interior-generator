@@ -80,7 +80,7 @@ export function combineManyJsonMergePatches(patches: any[]): any {
  * Compares two objects. Arrays are compared element-wise.
  * Objects are compared field-wise. In other cases, objects
  * are compared using the "===".
- * 
+ *
  * @param a - The first object.
  * @param b - The second object.
  * @returns `true` if objects are equal, else `false`.
@@ -93,7 +93,10 @@ function equal(a: any, b: any): boolean {
     return a.length === b.length && a.every((v, i) => equal(v, b[i]));
   }
   if (typeof a === "object" && typeof b === "object") {
-    return Object.keys(a).every((k) => equal(a[k], b[k])) && Object.keys(b).length == Object.keys(a).length;
+    return (
+      Object.keys(a).every((k) => equal(a[k], b[k])) &&
+      Object.keys(b).length == Object.keys(a).length
+    );
   }
   return a === b;
 }
@@ -101,14 +104,14 @@ function equal(a: any, b: any): boolean {
 /**
  * Computes minimal JSON Merge Patch that should be applied to
  * the `source` to transform it into the `target`.
- * 
+ *
  * Note: when no patch should be applied, i.e. source and target
  * objects have the same values, `undefined` is returned.
- * 
+ *
  * Note: only JSON types are supported plus the function type
  * (this includes classes and functions).
- *  
- * @param source - The source object. 
+ *
+ * @param source - The source object.
  * @param target - The target object.
  * @returns JSON Merge Patch.
  */
@@ -125,8 +128,10 @@ export function computeJsonMergePatch(source: any, target: any): any {
   if (source === null) {
     return target;
   }
-  const sourceIsObject = typeof source === "object" && source !== null && !Array.isArray(source);
-  const targetIsObject = typeof target === "object" && target !== null && !Array.isArray(target);
+  const sourceIsObject =
+    typeof source === "object" && source !== null && !Array.isArray(source);
+  const targetIsObject =
+    typeof target === "object" && target !== null && !Array.isArray(target);
   if (!sourceIsObject || !targetIsObject) {
     return equal(source, target) ? undefined : target;
   }
@@ -142,11 +147,11 @@ export function computeJsonMergePatch(source: any, target: any): any {
     }
     if (sourceValueIsUndefined) {
       result[key] = targetValue;
-      continue
+      continue;
     }
     if (targetValueIsUndefined) {
       result[key] = null;
-      continue
+      continue;
     }
     const patch = computeJsonMergePatch(sourceValue, targetValue);
     if (patch !== undefined) {
