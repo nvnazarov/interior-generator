@@ -11,22 +11,17 @@ from app.api.errors import (
     HTTPProjectNotFound,
     HTTPProjectsLimitExceeded,
 )
-from app.api.schema.plan import Patch as PlanPatch
-from app.api.schema.plan import Plan as PlanSchema
-from app.api.schema.project import Patch as ProjectPatch
-from app.api.schema.project import Project as ProjectSchema
-from app.core.account import ProjectsLimitExceeded
-from app.core.plan import PatchError as PlanPatchError
-from app.core.plan import Plan
-from app.core.plan import RevisionError as PlanRevisionError
-from app.core.project import PatchError as ProjectPatchError
-from app.core.project import PlansLimitExceededError, Project
-from app.core.project import RevisionError as ProjectRevisionError
+from app.core.account import ProjectsLimitExceededError
+from app.core.plan import Plan, PlanPatchError, PlanRevisionError
+from app.core.project import (
+    PlansLimitExceededError,
+    Project,
+    ProjectPatchError,
+    ProjectRevisionError,
+)
 from app.core.service import PlanNotFoundError, ProjectNotFoundError, Service
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_HEADER = "x-account-id"
 
 
 def attach_project_etag(response: Response, project: Project) -> None:
@@ -59,10 +54,10 @@ class ASGI(FastAPI):
         self,
         service: Service,
         *,
-        header_for_account_id: str = DEFAULT_HEADER,
+        account_header: str,
     ):
         self.service = service
-        self.header_for_account_id = header_for_account_id
+        self.account_header = account_header
 
         super().__init__(
             title="Projects",
@@ -72,7 +67,7 @@ class ASGI(FastAPI):
         def get_account_id(
             account_id: Annotated[
                 str,
-                Header(alias=self.header_for_account_id),
+                Header(alias=self.account_header),
             ] = "",
         ) -> str:
             if account_id == "":
@@ -83,12 +78,12 @@ class ASGI(FastAPI):
         async def create_project(
             response: Response,
             account_id: Annotated[str, Depends(get_account_id)],
-        ) -> ProjectSchema:
+        ) -> Project:
             try:
                 project = await self.service.create_project(account_id)
                 attach_project_etag(response, project)
-                return ProjectSchema.from_core(project)
-            except ProjectsLimitExceeded:
+                return project
+            except ProjectsLimitExceededError:
                 raise HTTPProjectsLimitExceeded
 
         @self.get("/projects/{project_id}", tags=["projects"])
@@ -105,33 +100,27 @@ class ASGI(FastAPI):
                 ):
                     return PlainTextResponse("", status.HTTP_304_NOT_MODIFIED)
                 attach_project_etag(response, project)
-                return ProjectSchema.from_core(project)
+                return project
             except ProjectNotFoundError:
                 raise HTTPProjectNotFound
 
-        @self.post(
-            "/projects/{project_id}/publish",
-            status_code=status.HTTP_204_NO_CONTENT,
-            tags=["projects"],
-        )
+        @self.post("/projects/{project_id}/publish", tags=["projects"])
         async def publish_project(
             project_id: str, account_id: Annotated[str, Depends(get_account_id)]
-        ) -> None:
+        ) -> Project:
             try:
-                await self.service.publish_project(project_id, account_id)
+                project = await self.service.publish_project(project_id, account_id)
+                return project
             except ProjectNotFoundError:
                 raise HTTPProjectNotFound
 
-        @self.post(
-            "/projects/{project_id}/unpublish",
-            status_code=status.HTTP_204_NO_CONTENT,
-            tags=["projects"],
-        )
+        @self.post("/projects/{project_id}/unpublish", tags=["projects"])
         async def unpublish_project(
             project_id: str, account_id: Annotated[str, Depends(get_account_id)]
-        ) -> None:
+        ) -> Project:
             try:
-                await self.service.unublish_project(project_id, account_id)
+                project = await self.service.unublish_project(project_id, account_id)
+                return project
             except ProjectNotFoundError:
                 raise HTTPProjectNotFound
 
@@ -157,14 +146,14 @@ class ASGI(FastAPI):
             response: Response,
             project_id: str,
             account_id: Annotated[str, Depends(get_account_id)],
-            patch: ProjectPatch,
+            patch: Project.Patch,
             revision: Annotated[str, Header(alias="if-match")],
         ) -> None:
             try:
                 project = await self.service.patch_project(
                     account_id,
                     project_id,
-                    patch=patch.to_core(),
+                    patch=patch,
                     revision=parse_project_etag(revision),
                 )
                 attach_project_etag(response, project)
@@ -180,12 +169,12 @@ class ASGI(FastAPI):
                     status.HTTP_412_PRECONDITION_FAILED, detail="incorrect revision"
                 )
 
-        @self.get("/projects", tags=["projects"], response_model_exclude_none=True)
+        @self.get("/projects", tags=["projects"])
         async def get_projects_owned_by_account(
             account_id: Annotated[str, Depends(get_account_id)],
-        ) -> list[ProjectSchema]:
+        ) -> list[Project]:
             projects = await self.service.get_projects_owned_by_account(account_id)
-            return list(map(ProjectSchema.from_core, projects))
+            return projects
 
         @self.post(
             "/projects/{project_id}/plans",
@@ -196,11 +185,11 @@ class ASGI(FastAPI):
             response: Response,
             project_id: str,
             account_id: Annotated[str, Depends(get_account_id)],
-        ) -> PlanSchema:
+        ) -> Plan:
             try:
                 plan = await self.service.create_plan(account_id, project_id)
                 attach_plan_etag(response, plan)
-                return PlanSchema.from_core(plan)
+                return plan
             except PlansLimitExceededError:
                 raise HTTPPlansLimitExceeded
             except ProjectNotFoundError:
@@ -218,7 +207,7 @@ class ASGI(FastAPI):
                 if etag is not None and etag == get_plan_etag(plan):
                     return PlainTextResponse("", status.HTTP_304_NOT_MODIFIED)
                 attach_plan_etag(response, plan)
-                return PlanSchema.from_core(plan)
+                return plan
             except PlanNotFoundError:
                 raise HTTPPlanNotFound
 
@@ -230,10 +219,10 @@ class ASGI(FastAPI):
         async def get_plans_of_project(
             project_id: str,
             account_id: Annotated[str, Depends(get_account_id)],
-        ) -> list[PlanSchema]:
+        ) -> list[Plan]:
             try:
                 plans = await self.service.get_plans_of_project(account_id, project_id)
-                return list(map(PlanSchema.from_core, plans))
+                return plans
             except ProjectNotFoundError:
                 raise HTTPProjectNotFound
 
@@ -259,14 +248,14 @@ class ASGI(FastAPI):
             response: Response,
             plan_id: str,
             account_id: Annotated[str, Depends(get_account_id)],
-            patch: PlanPatch,
+            patch: Plan.Patch,
             etag: Annotated[str, Header(alias="if-match")],
         ) -> None:
             try:
                 plan = await self.service.patch_plan(
                     account_id,
                     plan_id,
-                    patch=patch.to_core(),
+                    patch=patch,
                     revision=parse_plan_etag(etag),
                 )
                 attach_plan_etag(response, plan)

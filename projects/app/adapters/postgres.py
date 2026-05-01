@@ -46,13 +46,13 @@ STMT_GET_PROJECT_WITHOUT_CONTENT = text(
     "SELECT "
     "   account_id, "
     "   name, "
-    "   description, "
     "   revision, "
     "   created_at, "
     "   updated_at, "
     "   plans_count, "
     "   plans_limit, "
     "   published, "
+    "   published_at, "
     "   version "
     "FROM "
     "   projects.projects "
@@ -64,7 +64,6 @@ STMT_GET_PROJECT = text(
     "SELECT "
     "   account_id, "
     "   name, "
-    "   description, "
     "   revision, "
     "   content, "
     "   created_at, "
@@ -72,6 +71,7 @@ STMT_GET_PROJECT = text(
     "   plans_count, "
     "   plans_limit, "
     "   published, "
+    "   published_at, "
     "   version "
     "FROM "
     "   projects.projects "
@@ -84,7 +84,6 @@ STMT_SAVE_PROJECT = text(
     "   id, "
     "   account_id, "
     "   name, "
-    "   description, "
     "   revision, "
     "   content, "
     "   created_at, "
@@ -92,13 +91,13 @@ STMT_SAVE_PROJECT = text(
     "   plans_count, "
     "   plans_limit, "
     "   published, "
+    "   published_at, "
     "   version "
     ") "
     "VALUES ( "
     "   :id, "
     "   :account_id, "
     "   :name, "
-    "   :description, "
     "   :revision, "
     "   :content, "
     "   :created_at, "
@@ -106,12 +105,12 @@ STMT_SAVE_PROJECT = text(
     "   :plans_count, "
     "   :plans_limit, "
     "   :published, "
+    "   :published_at, "
     "   :version "
     ") "
     "ON CONFLICT (id) DO UPDATE SET "
     "   account_id = excluded.account_id, "
     "   name = excluded.name, "
-    "   description = excluded.description, "
     "   revision = excluded.revision, "
     "   content = excluded.content, "
     "   created_at = excluded.created_at, "
@@ -119,6 +118,7 @@ STMT_SAVE_PROJECT = text(
     "   plans_count = :plans_count, "
     "   plans_limit = :plans_limit, "
     "   published = :published, "
+    "   published_at = :published_at, "
     "   version = excluded.version + 1 "
     "WHERE "
     "   projects.projects.version = :version"
@@ -128,30 +128,32 @@ STMT_SAVE_PROJECT_WITHOUT_CONTENT = text(
     "SET "
     "   account_id = :account_id, "
     "   name = :name, "
-    "   description = :description, "
     "   revision = :revision, "
     "   created_at = :created_at, "
     "   updated_at = :updated_at, "
     "   plans_count = :plans_count, "
     "   plans_limit = :plans_limit, "
     "   published = :published, "
+    "   published_at = :published_at, "
     "   version = :version + 1 "
     "WHERE "
     "   id = :id "
     "   AND version = :version"
 )
 STMT_DELETE_PROJECT = text(
-    "UPDATE    projects.projects SET    deleted = true WHERE    id = :project_id"
+    "UPDATE projects.projects SET deleted = true WHERE id = :project_id"
 )
 STMT_GET_ALL_PROJECTS_OWNED_BY_ACCOUNT = text(
     "SELECT "
     "   id, "
     "   name, "
-    "   description, "
     "   revision, "
     "   created_at, "
     "   updated_at, "
+    "   plans_count, "
+    "   plans_limit, "
     "   published, "
+    "   published_at, "
     "   version "
     "FROM "
     "   projects.projects "
@@ -311,14 +313,14 @@ class PostgresProjectRepository(ProjectRepository):
                 id=project_id,
                 account_id=row[0],
                 name=row[1],
-                description=row[2],
-                revision=row[3],
-                content=row[4],
-                created_at=row[5],
-                updated_at=row[6],
-                plans_count=row[7],
-                plans_limit=row[8],
-                published=row[9],
+                revision=row[2],
+                content=row[3],
+                created_at=row[4],
+                updated_at=row[5],
+                plans_count=row[6],
+                plans_limit=row[7],
+                published=row[8],
+                published_at=row[9],
             )
             set_version(project, int(row[10]))
             return project
@@ -345,13 +347,13 @@ class PostgresProjectRepository(ProjectRepository):
                 id=project_id,
                 account_id=row[0],
                 name=row[1],
-                description=row[2],
-                revision=row[3],
-                created_at=row[4],
-                updated_at=row[5],
-                plans_count=row[6],
-                plans_limit=row[7],
-                published=row[8],
+                revision=row[2],
+                created_at=row[3],
+                updated_at=row[4],
+                plans_count=row[5],
+                plans_limit=row[6],
+                published=row[7],
+                published_at=row[8],
             )
             set_version(project, int(row[9]))
             return project
@@ -379,11 +381,13 @@ class PostgresProjectRepository(ProjectRepository):
                 id=row[0],
                 account_id=account_id,
                 name=row[1],
-                description=row[2],
-                revision=row[3],
-                created_at=row[4],
-                updated_at=row[5],
-                published=row[6],
+                revision=row[2],
+                created_at=row[3],
+                updated_at=row[4],
+                plans_count=row[5],
+                plans_limit=row[6],
+                published=row[7],
+                published_at=row[8],
             )
             for row in cursor.all()
         ]

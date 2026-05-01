@@ -25,8 +25,7 @@ async def test_publish_project(client: AsyncClient):
         headers={"x-account-id": account_a_id},
     )
     assert resp.status_code == status.HTTP_201_CREATED
-    project = resp.json()
-    project_id = UUID(project["id"])
+    project_id = UUID(resp.json()["id"])
 
     resp = await client.post(
         f"/projects/{project_id.hex}/plans",
@@ -54,16 +53,15 @@ async def test_publish_project(client: AsyncClient):
         f"/projects/{project_id.hex}/publish",
         headers={"x-account-id": account_a_id},
     )
-    assert resp.status_code == status.HTTP_204_NO_CONTENT
-    assert resp.text == ""
-    project["published"] = True
+    assert resp.status_code == status.HTTP_200_OK
+    project = resp.json()
 
     resp = await client.get(
         f"/projects/{project_id.hex}",
         headers={"x-account-id": account_b_id},
     )
     assert resp.status_code == status.HTTP_200_OK
-    assert omit(resp.json(), "updated_at") == omit(project, "updated_at")
+    assert resp.json() == project
 
     resp = await client.get(
         f"/plans/{plan_id.hex}",
@@ -76,9 +74,7 @@ async def test_publish_project(client: AsyncClient):
         f"/projects/{project_id.hex}/unpublish",
         headers={"x-account-id": account_a_id},
     )
-    assert resp.status_code == status.HTTP_204_NO_CONTENT
-    assert resp.text == ""
-    project["published"] = False
+    assert resp.status_code == status.HTTP_200_OK
 
     resp = await client.get(
         f"/projects/{project_id.hex}",

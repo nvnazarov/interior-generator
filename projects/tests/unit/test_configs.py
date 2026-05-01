@@ -14,7 +14,7 @@ def test_default_root_config():
         "api": {
             "host": "127.0.0.1",
             "port": 8080,
-            "header_for_account_id": "x-account-id",
+            "account_header": "x-account-id",
         },
         "postgres": {
             "db": "postgres",
@@ -41,7 +41,7 @@ def test_root_config():
         {
             "PROJECTS__API__HOST": "0.0.0.0",
             "PROJECTS__API__PORT": "80",
-            "PROJECTS__API__HEADER_FOR_ACCOUNT_ID": "test",
+            "PROJECTS__API__ACCOUNT_HEADER": "test",
             "PROJECTS__GENERAL__PLANS_LIMIT": "10",
             "PROJECTS__GENERAL__PROJECTS_LIMIT": "15",
             "PROJECTS__POSTGRES__HOST": "test",
@@ -57,7 +57,7 @@ def test_root_config():
         "api": {
             "host": "0.0.0.0",
             "port": 80,
-            "header_for_account_id": "test",
+            "account_header": "test",
         },
         "postgres": {
             "db": "test",

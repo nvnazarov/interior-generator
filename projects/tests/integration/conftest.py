@@ -37,7 +37,7 @@ def db_url(db_container: PostgresContainer):
 def run_migration(pyproject_toml: Path, db_url: str):
     revision = "head"
     config = alembic.config.Config(toml_file=pyproject_toml)
-    config.set_main_option("sqlalchemy.url", db_url)
+    config.attributes["sqlalchemy.url"] = db_url
     alembic.command.upgrade(config, revision)
     yield
     alembic.command.downgrade(config, "base")
@@ -56,7 +56,7 @@ def service(uow: PostgresUnitOfWork):
 
 @pytest.fixture
 def asgi(service: Service):
-    return ASGI(service, header_for_account_id="x-account-id")
+    return ASGI(service, account_header="x-account-id")
 
 
 @pytest_asyncio.fixture

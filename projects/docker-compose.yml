@@ -1,29 +1,46 @@
 services:
   postgres:
-    image: "postgres:17.5-alpine"
+    image: "postgres"
+    command: "postgres -p ${PROJECTS__POSTGRES__PORT?}"
     environment:
-      - "POSTGRES_USER=test"
-      - "POSTGRES_PASSWORD=test"
-      - "POSTGRES_DB=test"
+      - "POSTGRES_USER=${PROJECTS__POSTGRES__USER?}"
+      - "POSTGRES_PASSWORD=${PROJECTS__POSTGRES__PASSWORD?}"
+      - "POSTGRES_DB=${PROJECTS__POSTGRES__DB?}"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-p",
+          "${PROJECTS__POSTGRES__PORT?}",
+          "-U",
+          "${PROJECTS__POSTGRES__USER?}",
+          "-d",
+          "${PROJECTS__POSTGRES__DB?}",
+        ]
+      interval: "10s"
+      timeout: "5s"
+      retries: 3
 
   projects:
     build:
-      dockerfile: "./docker/Dockerfile.${MOD:-dev}"
-    environment:
-      - "PROJECTS__API__HOST=0.0.0.0"
-      - "PROJECTS__API__PORT=80"
-      - "PROJECTS__API__HEADER_FOR_ACCOUNT_ID=x-account-id"
-      - "PROJECTS__GENERAL__PLANS_LIMIT=20"
-      - "PROJECTS__GENERAL__PROJECTS_LIMIT=20"
-      - "PROJECTS__POSTGRES__HOST=postgres"
-      - "PROJECTS__POSTGRES__PORT=5432"
-      - "PROJECTS__POSTGRES__USER=test"
-      - "PROJECTS__POSTGRES__PASSWORD=test"
-      - "PROJECTS__POSTGRES__DB=test"
-      - "PROJECTS__LOGGING__LEVEL=INFO"
+      dockerfile: "./docker/Dockerfile.${MOD?}"
     ports:
-      - "127.0.0.1:${PORT:-8080}:80"
+      - "127.0.0.1:${PORT?}:${PROJECTS__API__PORT?}"
+    env_file:
+      - ".env"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PROJECTS__API__PORT?}/health"]
+      interval: "15s"
+      timeout: "5s"
+      retries: 3
 
-networks:
-  default:
-    driver: "bridge"
+  migrate-projects:
+    build:
+      dockerfile: "./docker/Dockerfile.dev"
+    command: ["make", "migrate"]
+    env_file:
+      - ".env"
+    depends_on:
+      postgres:
+        condition: "service_healthy"

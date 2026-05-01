@@ -17,6 +17,7 @@ dev = [
     "alembic>=1.18.3",
     "asgi-lifespan>=2.1.0",
     "httpx>=0.28.1",
+    "hypothesis>=6.152.4",
     "isort>=8.0.0",
     "pytest>=9.0.1",
     "pytest-asyncio>=1.3.0",

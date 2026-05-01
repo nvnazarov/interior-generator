@@ -22,7 +22,6 @@ async def test_create_project(client: AsyncClient):
     assert resp.status_code == status.HTTP_201_CREATED
     project = resp.json()
     assert project["name"] == ""
-    assert project["description"] == ""
     assert project["content"] == {
         "walls": {},
         "windows": {},
@@ -36,7 +35,9 @@ async def test_create_project(client: AsyncClient):
         )
         <= finish_time
     )
-    assert resp.json()["updated_at"] == resp.json()["created_at"]
+    assert project["updated_at"] == project["created_at"]
+    assert not project["published"]
+    assert project["published_at"] is None
     assert resp.headers.get("etag") == f"project-{resp.json()['id']}-0"
 
 

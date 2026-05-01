@@ -11,10 +11,10 @@ local:
 	@uv run python -m app.main
 
 up:
-	@docker compose -f docker-compose.yml up --build
+	@docker compose up --build
 	
-migration:
-	@uv run alembic upgrade head --sql
+migrate:
+	@uv run alembic upgrade head
 
 format:
 	@uv run ruff format

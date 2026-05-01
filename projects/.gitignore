@@ -3,6 +3,5 @@
 .vscode
 .pytest_cache
 .ruff_cache
+.hypothesis
 __pycache__
-
-alembic.ini

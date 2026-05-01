@@ -9,7 +9,7 @@ from httpx import AsyncClient
 @pytest.mark.plan
 @pytest.mark.integration
 async def test_create_plan(client: AsyncClient):
-    account_id = "022f51f9-98bb-40af-9d30-0b3c03819212"
+    account_id = "test-account"
     resp = await client.post("/projects", headers={"x-account-id": account_id})
     project_id = resp.json()["id"]
 
@@ -19,6 +19,7 @@ async def test_create_plan(client: AsyncClient):
         headers={"x-account-id": account_id},
     )
     finish_time = datetime.now(tz=timezone.utc)
+
     assert resp.status_code == status.HTTP_201_CREATED
     plan = resp.json()
     assert plan["name"] == ""

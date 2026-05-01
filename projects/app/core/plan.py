@@ -8,86 +8,78 @@ from pydantic import BaseModel, Field, ValidationError
 from app.core.util import now
 
 
-class RevisionError(Exception): ...
+class PlanRevisionError(Exception): ...
 
 
-class PatchError(Exception): ...
-
-
-class Furniture(BaseModel):
-    id: str
-    furniture_id: str
-    x: int
-    y: int
-    z: int
-    yaw: float
-
-
-class FurniturePatch(BaseModel):
-    id: str
-    furniture_id: str | None = None
-    x: int | None = None
-    y: int | None = None
-    z: int | None = None
-    yaw: float | None = None
-
-
-class Point(BaseModel):
-    x: int
-    y: int
-
-
-class Area(BaseModel):
-    id: str
-    type: str
-    points: list[Point]
-
-
-class AreaPatch(BaseModel):
-    id: str
-    type: str | None = None
-    points: list[Point] | None = None
-
-
-class ContentPatch(BaseModel):
-    furniture: dict[str, FurniturePatch | None] = Field(default_factory=dict)
-    areas: dict[str, AreaPatch | None] = Field(default_factory=dict)
-
-
-class Patch(BaseModel):
-    name: str | None = None
-    content: ContentPatch | None = None
-
-
-class Content(BaseModel):
-    furniture: dict[str, Furniture] = Field(default_factory=dict)
-    areas: dict[str, Area] = Field(default_factory=dict)
+class PlanPatchError(Exception): ...
 
 
 class Plan(BaseModel):
+    class Patch(BaseModel):
+        class Content(BaseModel):
+            class Furniture(BaseModel):
+                furniture_id: str | None = None
+                x: int | None = None
+                y: int | None = None
+                z: int | None = None
+                yaw: float | None = None
+
+            class Area(BaseModel):
+                class Point(BaseModel):
+                    x: int
+                    y: int
+
+                type: str | None = None
+                points: list[Point] | None = None
+
+            furniture: dict[str, Furniture | None] = Field(default_factory=dict)
+            areas: dict[str, Area | None] = Field(default_factory=dict)
+
+        name: str | None = None
+        content: Content | None = None
+
+    class Content(BaseModel):
+        class Furniture(BaseModel):
+            furniture_id: str
+            x: int
+            y: int
+            z: int
+            yaw: float
+
+        class Area(BaseModel):
+            class Point(BaseModel):
+                x: int
+                y: int
+
+            type: str
+            points: list[Point]
+
+        furniture: dict[str, Furniture] = Field(default_factory=dict)
+        areas: dict[str, Area] = Field(default_factory=dict)
+
     id: str
     project_id: str
     revision: int = 0
-    content: Content = Field(default_factory=lambda: Content())
+    content: Content = Field(default_factory=Content)
     name: str = Field("", max_length=256)
     created_at: datetime = Field(default_factory=now)
     updated_at: datetime = Field(default_factory=now)
 
     @staticmethod
-    def empty(project_id: str, *, name: str = "") -> "Plan":
+    def empty(project_id: str) -> "Plan":
         dt = now()
         return Plan(
             id=uuid4().hex,
             project_id=project_id,
             revision=0,
-            name=name,
+            name="",
             created_at=dt,
             updated_at=dt,
         )
 
     def patch(self, patch: Patch, revision: int) -> None:
         if revision != self.revision:
-            raise RevisionError
+            raise PlanRevisionError
 
         if patch.name is not None:
             self.name = patch.name
@@ -97,19 +89,18 @@ class Plan(BaseModel):
                     try:
                         self.content.furniture.pop(furniture_id)
                     except KeyError:
-                        # raise PatchError(
-                        #     f"furniture[id={furniture_id}] does not exist"
-                        # )
                         continue
                 elif (
                     old_furniture := self.content.furniture.get(furniture_id)
                 ) is None:
                     try:
-                        self.content.furniture[furniture_id] = Furniture(
+                        self.content.furniture[furniture_id] = Plan.Content.Furniture(
                             **furniture.model_dump()
                         )
                     except ValidationError:
-                        raise PatchError(f"furniture[id={furniture_id}] must be full")
+                        raise PlanPatchError(
+                            f"furniture[id={furniture_id}] must be full"
+                        )
                 else:
                     self.content.furniture[furniture_id] = self._merge(
                         old_furniture, furniture
@@ -120,13 +111,14 @@ class Plan(BaseModel):
                     try:
                         self.content.areas.pop(area_id)
                     except KeyError:
-                        # raise PatchError(f"area[id={area_id}] does not exist")
                         continue
                 elif (old_area := self.content.areas.get(area_id)) is None:
                     try:
-                        self.content.areas[area_id] = Area(**area.model_dump())
+                        self.content.areas[area_id] = Plan.Content.Area(
+                            **area.model_dump()
+                        )
                     except ValidationError:
-                        raise PatchError(f"area[id={area_id}] must be full")
+                        raise PlanPatchError(f"area[id={area_id}] must be full")
                 else:
                     self.content.areas[area_id] = self._merge(old_area, area)
 

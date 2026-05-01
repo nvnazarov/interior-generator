@@ -34,7 +34,6 @@ def upgrade() -> None:
         Column("id", VARCHAR(256), primary_key=True),
         Column("account_id", VARCHAR(256), nullable=False),
         Column("name", VARCHAR(256), nullable=False),
-        Column("description", VARCHAR(2048), nullable=False),
         Column("revision", INTEGER, nullable=False),
         Column("content", JSONB(), nullable=False),
         Column("plans_count", INTEGER, nullable=False),
@@ -42,8 +41,9 @@ def upgrade() -> None:
         Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=func.now()),
         Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=func.now()),
         Column("published", BOOLEAN, nullable=False, server_default=text("false")),
+        Column("published_at", TIMESTAMP(timezone=True)),
         Column("deleted", BOOLEAN, nullable=False, server_default=text("false")),
-        Column("version", INTEGER, nullable=False),
+        Column("version", INTEGER, nullable=False, server_default=text("0")),
         schema="projects",
     )
     op.create_table(
@@ -56,7 +56,7 @@ def upgrade() -> None:
         Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=func.now()),
         Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=func.now()),
         Column("deleted", BOOLEAN, nullable=False, server_default=text("false")),
-        Column("version", INTEGER, nullable=False),
+        Column("version", INTEGER, nullable=False, server_default=text("0")),
         schema="projects",
     )
     op.create_table(
@@ -64,7 +64,7 @@ def upgrade() -> None:
         Column("account_id", VARCHAR(256), primary_key=True),
         Column("projects_count", INTEGER, nullable=False),
         Column("projects_limit", INTEGER, nullable=False),
-        Column("version", INTEGER, nullable=False),
+        Column("version", INTEGER, nullable=False, server_default=text("0")),
         schema="projects",
     )
     op.create_index("idx_projects_account_id", "projects", ["account_id"], schema="projects")

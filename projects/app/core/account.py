@@ -7,10 +7,10 @@ from app.core.project import Project
 from app.core.util import now
 
 
-class ProjectsLimitExceeded(Exception): ...
+class ProjectsLimitExceededError(Exception): ...
 
 
-class NoProjects(Exception): ...
+class NoProjectsError(Exception): ...
 
 
 class Account(BaseModel):
@@ -28,18 +28,15 @@ class Account(BaseModel):
             projects_limit=projects_limit,
         )
 
-    def create_project(
-        self, *, plans_limit: int, name: str = "", description: str = ""
-    ) -> Project:
+    def create_project(self, *, plans_limit: int) -> Project:
         if self.projects_count >= self.projects_limit:
-            raise ProjectsLimitExceeded
+            raise ProjectsLimitExceededError
         self.projects_count += 1
         dt = now()
         return Project(
             id=uuid4().hex,
             account_id=self.id,
-            name=name,
-            description=description,
+            name="",
             created_at=dt,
             updated_at=dt,
             plans_count=0,
@@ -47,9 +44,9 @@ class Account(BaseModel):
         )
 
     def delete_project(self, project_id: str) -> None:
-        if self.projects_count == 0:
-            raise NoProjects
-        self.projects_count = max(0, self.projects_count - 1)
+        if self.projects_count <= 0:
+            raise NoProjectsError
+        self.projects_count = self.projects_count - 1
 
 
 class AccountRepository(ABC):

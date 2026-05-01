@@ -1,7 +1,5 @@
 from app.core.account import Account
-from app.core.plan import Patch as PlanPatch
 from app.core.plan import Plan
-from app.core.project import Patch as ProjectPatch
 from app.core.project import Project
 from app.core.uow import UnitOfWork
 
@@ -58,7 +56,7 @@ class Service:
         account_id: str,
         project_id: str,
         *,
-        patch: ProjectPatch,
+        patch: Project.Patch,
         revision: int,
     ) -> Project:
         async with self.uow_factory as u:
@@ -80,21 +78,23 @@ class Service:
         async with self.uow_factory as u:
             return await u.projects.get_all_owned_by_account(account_id)
 
-    async def publish_project(self, project_id: str, account_id: str) -> None:
+    async def publish_project(self, project_id: str, account_id: str) -> Project:
         async with self.uow_factory as u:
             project = await u.projects.get_without_content(project_id)
             if project is None or not project.is_owned_by(account_id):
                 raise ProjectNotFoundError
             project.publish()
             await u.projects.save_without_content(project)
+            return project
 
-    async def unublish_project(self, project_id: str, account_id: str) -> None:
+    async def unublish_project(self, project_id: str, account_id: str) -> Project:
         async with self.uow_factory as u:
             project = await u.projects.get_without_content(project_id)
             if project is None or not project.is_owned_by(account_id):
                 raise ProjectNotFoundError
             project.unpublish()
             await u.projects.save_without_content(project)
+            return project
 
     async def create_plan(self, account_id: str, project_id: str) -> Plan:
         async with self.uow_factory as u:
@@ -129,7 +129,7 @@ class Service:
             await u.plans.delete(plan)
 
     async def patch_plan(
-        self, account_id: str, plan_id: str, *, patch: PlanPatch, revision: int
+        self, account_id: str, plan_id: str, *, patch: Plan.Patch, revision: int
     ) -> Plan:
         async with self.uow_factory as u:
             no_content = patch.content is None
