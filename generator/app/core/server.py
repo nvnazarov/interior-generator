@@ -51,7 +51,9 @@ class Server:
         await self.prompts.save(prompt)
 
         try:
-            patches = await self.generator.generate_patches(project, base_plan, text, count)
+            patches = await self.generator.generate_patches(
+                project, base_plan, text, count
+            )
             prompt.success(patches)
         except Exception as e:
             logger.error({"error": str(e)})

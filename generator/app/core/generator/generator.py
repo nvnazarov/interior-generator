@@ -1,9 +1,10 @@
 import logging
+
 from openai import AsyncOpenAI
 
 from app.core.facade import SystemFacade
-from app.core.models import Plan, Project
 from app.core.generator.context import GenerationContext
+from app.core.models import Plan, Project
 
 logger = logging.getLogger(__name__)
 

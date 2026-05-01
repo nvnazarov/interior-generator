@@ -4,11 +4,11 @@ import uvicorn
 from fastapi import Body, Depends, FastAPI, Header, HTTPException
 
 from app.core.models import Prompt
-from app.core.server import Server
+from app.core.server import PromptNotFoundError, Server
 
 
 class ASGI(FastAPI):
-    def __init__(self, server: Server, header_for_account_id: str = "x-account-id"):
+    def __init__(self, server: Server, account_header: str = "x-account-id"):
         super().__init__(
             title="Generator",
             summary="Generates plans based on instructions provided by user",
@@ -17,7 +17,7 @@ class ASGI(FastAPI):
         def get_account_id(
             account_id: Annotated[
                 str,
-                Header(alias=header_for_account_id),
+                Header(alias=account_header),
             ] = "",
         ) -> str:
             if account_id == "":
@@ -48,7 +48,10 @@ class ASGI(FastAPI):
             prompt_id: str,
             account_id: Annotated[str, Depends(get_account_id)],
         ):
-            await server.delete_prompt(account_id, prompt_id)
+            try:
+                await server.delete_prompt(account_id, prompt_id)
+            except PromptNotFoundError:
+                raise HTTPException(status_code=404, detail="prompt not found")
 
         @self.get("/health", status_code=204)
         async def healthcheck():

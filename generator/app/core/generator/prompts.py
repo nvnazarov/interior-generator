@@ -169,3 +169,12 @@ Answer:
 removed: Chair-A
 moved: Chair-B, Table-A
 """
+
+A = """
+object | type | a brief but  description
+
+Example:
+Instruction:
+Answer:
+chair-a | 
+"""

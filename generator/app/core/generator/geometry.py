@@ -1,5 +1,6 @@
+from typing import Any, Literal
+
 import numpy as np
-from typing import Literal, Any
 
 Vec = np.ndarray[Any, np.dtype[np.float64]]
 Vec2 = np.ndarray[tuple[int, int], np.dtype[np.float64]]

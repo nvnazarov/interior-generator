@@ -1,7 +1,13 @@
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-config = context.config
+from app.configs.root import RootConfig
+
+if (url := context.config.attributes.get("sqlalchemy.url")) is not None:
+    context.config.set_main_option("sqlalchemy.url", url)
+else:
+    config = RootConfig()
+    context.config.set_main_option("sqlalchemy.url", config.postgres.url())
 
 target_metadata = None
 
@@ -18,7 +24,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = context.config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -38,7 +44,7 @@ def run_migrations_online() -> None:
 
     """
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        context.config.get_section(context.config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

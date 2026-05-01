@@ -14,7 +14,7 @@ def test_default_root_config():
         "api": {
             "host": "127.0.0.1",
             "port": 8080,
-            "header_for_account_id": "x-account-id",
+            "account_header": "x-account-id",
         },
         "openai": {
             "api_key": "",
@@ -34,7 +34,7 @@ def test_root_config():
         {
             "GENERATOR__API__HOST": "0.0.0.0",
             "GENERATOR__API__PORT": "80",
-            "GENERATOR__API__HEADER_FOR_ACCOUNT_ID": "test",
+            "GENERATOR__API__ACCOUNT_HEADER": "test",
             "GENERATOR__OPENAI__API_KEY": "test",
             "GENERATOR__OPENAI__BASE_URL": "test",
             "GENERATOR__LOGGING__LEVEL": "ERROR",
@@ -45,7 +45,7 @@ def test_root_config():
         "api": {
             "host": "0.0.0.0",
             "port": 80,
-            "header_for_account_id": "test",
+            "account_header": "test",
         },
         "openai": {
             "api_key": "test",

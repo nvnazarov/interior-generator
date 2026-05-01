@@ -1,0 +1,8 @@
+__pycache__
+.pytest_cache
+.ruff_cache
+.venv
+.env
+docker-compose.yml
+docker/
+README.md

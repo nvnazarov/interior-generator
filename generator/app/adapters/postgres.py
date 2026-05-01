@@ -1,10 +1,10 @@
-from sqlalchemy import text, bindparam
-from sqlalchemy.ext.asyncio import AsyncEngine
-from sqlalchemy.dialects.postgresql import JSONB
 from pydantic import RootModel
+from sqlalchemy import bindparam, text
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.core.db import PromptsRepository
-from app.core.models import Prompt, Plan
+from app.core.models import Plan, Prompt
 
 STMT_GET_PROMPTS_FOR_PROJECT = text(
     "SELECT "
@@ -54,12 +54,7 @@ STMT_SAVE_PROMPT = text(
     "   dt_done = excluded.dt_done"
 ).bindparams(bindparam("base", type_=JSONB), bindparam("patches", type_=JSONB))
 STMT_DELETE_PROMPT = text(
-    "UPDATE "
-    "   generator.prompts "
-    "SET "
-    "   deleted = true "
-    "WHERE "
-    "   id = :prompt_id"
+    "UPDATE    generator.prompts SET    deleted = true WHERE    id = :prompt_id"
 )
 STMT_GET_PROMPT = text(
     "SELECT "

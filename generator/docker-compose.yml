@@ -1,17 +1,55 @@
 services:
+  postgres:
+    image: "postgres"
+    command: "postgres -p ${GENERATOR__POSTGRES__PORT?}"
+    environment:
+      - "POSTGRES_USER=${GENERATOR__POSTGRES__USER?}"
+      - "POSTGRES_PASSWORD=${GENERATOR__POSTGRES__PASSWORD?}"
+      - "POSTGRES_DB=${GENERATOR__POSTGRES__DB?}"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-p",
+          "${GENERATOR__POSTGRES__PORT?}",
+          "-U",
+          "${GENERATOR__POSTGRES__USER?}",
+          "-d",
+          "${GENERATOR__POSTGRES__DB?}",
+        ]
+      interval: "10s"
+      timeout: "5s"
+      retries: 3
+
   generator:
     build:
-      dockerfile: "./docker/Dockerfile.${MOD:-dev}"
-    environment:
-      - "GENERATOR__API__HOST=0.0.0.0"
-      - "GENERATOR__API__PORT=80"
-      - "GENERATOR__API__HEADER_FOR_ACCOUNT_ID=x-account-id"
-      - "GENERATOR__OPENAI__API_KEY=${GENERATOR__OPENAI__API_KEY}"
-      - "GENERATOR__OPENAI__BASE_URL=${GENERATOR__OPENAI__BASE_URL}"
-      - "GENERATOR__LOGGING__LEVEL=INFO"
+      dockerfile: "./docker/Dockerfile.${MOD?}"
+    env_file:
+      - ".env"
     ports:
-      - "127.0.0.1:${PORT:-8080}:80"
+      - "127.0.0.1:${PORT?}:${GENERATOR__API__PORT?}"
+    depends_on:
+      migrate-generator:
+        condition: "service_completed_successfully"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:${GENERATOR__API__PORT?}/health",
+        ]
+      interval: "15s"
+      timeout: "5s"
+      retries: 3
 
-networks:
-  default:
-    driver: "bridge"
+  migrate-generator:
+    build:
+      dockerfile: "./docker/Dockerfile.dev"
+    command: ["make", "migrate"]
+    env_file:
+      - ".env"
+    depends_on:
+      postgres:
+        condition: "service_healthy"

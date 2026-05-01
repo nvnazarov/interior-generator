@@ -16,12 +16,11 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = [
-    "alembic>=1.18.4",
-    "isort>=8.0.0",
-    "pytest>=9.0.2",
-    "ruff>=0.15.4",
-]
+dev = ["alembic>=1.18.4", "isort>=8.0.0", "pytest>=9.0.2", "ruff>=0.15.4"]
+
+[tool.alembic]
+script_location = "%(here)s/migrations"
+prepend_sys_path = ["."]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

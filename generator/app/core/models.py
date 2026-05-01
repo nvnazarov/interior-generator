@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import Literal
+from uuid import uuid4
 
 from pydantic import BaseModel, Field
-from uuid import uuid4
 
 from app.utils.datetime import current_time
 

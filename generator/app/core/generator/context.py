@@ -1,29 +1,30 @@
-from openai import AsyncOpenAI
 import logging
-from uuid import uuid4
 import time
+from uuid import uuid4
 
-from app.core.models import Plan, Project
+from openai import AsyncOpenAI
+
 from app.core.facade import SystemFacade
-from app.core.generator.scene import (
-    SceneGraph,
-    OnFloor,
-    OnTopOf,
-    InFrontOf,
-    AgainstWall,
-    FarWall,
-    FaceToFace,
-    BackToBack,
-    SideBySide,
-    Aligned,
-    SceneObject,
-    Location,
-)
 from app.core.generator.prompts import (
+    IDENTIFY_ACTIONS_PROMPT,
     SPATIAL_ANALYSIS_PROMPT,
     SPATIAL_RELATIONSHIP_PROMPT,
-    IDENTIFY_ACTIONS_PROMPT,
 )
+from app.core.generator.scene import (
+    AgainstWall,
+    Aligned,
+    BackToBack,
+    FaceToFace,
+    FarWall,
+    InFrontOf,
+    Location,
+    OnFloor,
+    OnTopOf,
+    SceneGraph,
+    SceneObject,
+    SideBySide,
+)
+from app.core.models import Plan, Project
 
 logger = logging.getLogger(__name__)
 

@@ -1,26 +1,27 @@
 import logging
-from typing import Iterable
-from abc import ABC, abstractmethod
-from uuid import uuid4
 import random
+from abc import ABC, abstractmethod
+from itertools import pairwise
+from typing import Iterable
+from uuid import uuid4
+
 from pydantic import BaseModel
+
 from app.core.generator.geometry import (
-    vec2,
-    vec3,
     direction,
-    yaw,
-    scale,
-    left,
-    right,
-    norm,
     distance_point_to_segment,
     intersect_par_seg,
-    random_yaw,
+    left,
+    norm,
     opposite_yaw,
+    random_yaw,
+    right,
+    scale,
+    vec2,
+    vec3,
+    yaw,
 )
-from itertools import pairwise
-
-from app.core.models import Furniture, Project, Plan
+from app.core.models import Furniture, Plan, Project
 
 logger = logging.getLogger(__name__)
 
@@ -624,7 +625,11 @@ class SceneGraph:
                     c = a + scale(d, door.x + door.w / 2)  # type: ignore
                     for u, v in pairwise([c + m + n for m in [h, -h] for n in [t, -t]]):
                         if intersect_par_seg(
-                            object_pivot, object_size, object_dir, u, v  # type: ignore
+                            object_pivot,
+                            object_size,
+                            object_dir,
+                            u,
+                            v,  # type: ignore
                         ):
                             total += 1
                             break

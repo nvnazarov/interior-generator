@@ -1,13 +1,13 @@
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import create_async_engine
 from openai import AsyncOpenAI
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.adapters.gateway import GatewayFacade
 from app.adapters.postgres import PostgresPromptsRepository
 from app.api.asgi import ASGI
 from app.configs.root import RootConfig
-from app.core.server import Server
 from app.core.generator import Generator
+from app.core.server import Server
 
 
 def main():
@@ -20,11 +20,11 @@ def main():
         base_url=config.openai.base_url,
     )
 
-    facade = GatewayFacade(http_client)
+    facade = GatewayFacade(http_client, config.api.account_header)
     prompts = PostgresPromptsRepository(sql_engine)
     generator = Generator(openai_client, facade)
     server = Server(prompts, facade, generator)
-    asgi = ASGI(server)
+    asgi = ASGI(server, config.api.account_header)
     asgi.listen_and_serve(config.api.host, config.api.port)
 
 

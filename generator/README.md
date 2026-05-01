@@ -2,8 +2,8 @@
 
 ## Responsibility
 
-The service defined API for automatic plans generation based on
-natural language processing.
+The service allows users to generate interior designs based on
+textual description.
 
 ## Project structure
 
@@ -14,36 +14,26 @@ natural language processing.
 
 ## Tech Stack
 
-- Python3
+- Python 3
 - [uv](https://docs.astral.sh/uv/)
-- FastAPI, Alembic, SQLAlchemy
+- fastapi, alembic, sqlalchemy, psycopg, openai, numpy
 
 ## Setup
 
-Install Make and Docker. Use the following commands:
+Install uv, make and Docker. Create a .env file (see .env.example).
+Use the following commands:
 
 ```bash
-make test               # run all tests
-make test-unit          # run unit tests
-make test-integration   # run integration tests
+make test               # Run all tests
+make test-unit          # Run unit tests
+make test-integration   # Run integration tests
 
-make format             # run code formatter
-make lint               # run code linter
-make qa                 # run code formatter and linter
+make format             # Run code formatter
+make lint               # Run code linter
+make qa                 # Run code formatter and linter
 
-make local              # start the program locally
-make up                 # start the program in docker compose
-```
+make local              # Start the program locally
+make up                 # Start the program in Docker Compose
 
-Environment:
-
-```dotenv
-mod=dev
-port=8080
-generator__api__host=0.0.0.0
-generator__api__port=80
-generator__api__header_for_account_id=x-account-id
-generator__openai__api_key=***
-generator__openai__base_url=***
-generator__logging__level=INFO
+make migrate            # Migrate database to the latest version
 ```

@@ -13,12 +13,12 @@ local:
 up:
 	@docker compose up --build
 
-migration:
-	@uv run alembic upgrade head --sql
+migrate:
+	@uv run alembic upgrade head
 
 format:
 	@uv run ruff format
-	@uv run isort app/ tests/
+	@uv run isort app/ tests/ migrations/
 
 lint:
 	@uv run ruff check

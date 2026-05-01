@@ -9,9 +9,8 @@ Create Date: 2026-04-07 16:25:50.984213
 from typing import Sequence, Union
 
 from alembic import op
-from sqlalchemy import Column, VARCHAR, TIMESTAMP, BOOLEAN, text, func
+from sqlalchemy import BOOLEAN, TIMESTAMP, VARCHAR, Column, func, text
 from sqlalchemy.dialects.postgresql import JSONB
-
 
 # revision identifiers, used by Alembic.
 revision: str = "fe34dc765864"
@@ -43,7 +42,11 @@ def upgrade() -> None:
         Column("deleted", BOOLEAN, server_default=text("false")),
         schema="generator",
     )
+    op.create_index(
+        "idx_prompts_project_id", "prompts", ["project_id"], schema="generator"
+    )
 
 
 def downgrade() -> None:
+    op.drop_index("idx_prompts_project_id", "prompts", schema="generator")
     op.drop_table("prompts", schema="generator")
