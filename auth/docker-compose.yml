@@ -1,21 +1,49 @@
 services:
   postgres:
-    image: "postgres:17.5-alpine"
+    image: "postgres"
+    command: "postgres -p ${AUTH__POSTGRES__PORT?}"
     environment:
-      - "POSTGRES_DB=postgres"
-      - "POSTGRES_USER=postgres"
-      - "POSTGRES_PASSWORD=postgres"
+      - "POSTGRES_USER=${AUTH__POSTGRES__USER?}"
+      - "POSTGRES_PASSWORD=${AUTH__POSTGRES__PASSWORD?}"
+      - "POSTGRES_DB=${AUTH__POSTGRES__DB?}"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-p",
+          "${AUTH__POSTGRES__PORT?}",
+          "-U",
+          "${AUTH__POSTGRES__USER?}",
+          "-d",
+          "${AUTH__POSTGRES__DB?}",
+        ]
+      interval: "10s"
+      timeout: "5s"
+      retries: 3
 
   auth:
     build:
-      dockerfile: "./docker/Dockerfile.${MOD:-dev}"
-    environment:
-      - "APP_PORT=${APP_PORT:-80}"
-      - "APP_POSTGRES__HOST=postgres"
-      - "APP_POSTGRES__PORT=5432"
-      - "APP_POSTGRES__DB=postgres"
-      - "APP_POSTGRES__USER=postgres"
-      - "APP_POSTGRES__PASSWORD=postgres"
-      - "BETTER_AUTH_BASE_URL=${BETTER_AUTH_BASE_URL}"
+      dockerfile: "./docker/Dockerfile.${MOD?}"
     ports:
-      - "127.0.0.1:${PORT:-8080}:${APP_PORT:-80}"
+      - "127.0.0.1:${PORT?}:${AUTH__API__PORT?}"
+    env_file:
+      - ".env"
+    depends_on:
+      migrate-auth:
+        condition: "service_completed_successfully"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${AUTH__API__PORT?}/health"]
+      interval: "15s"
+      timeout: "5s"
+      retries: 3
+
+  migrate-auth:
+    build:
+      dockerfile: "./docker/Dockerfile.dev"
+    command: ["make", "migrate"]
+    env_file:
+      - ".env"
+    depends_on:
+      postgres:
+        condition: "service_healthy"

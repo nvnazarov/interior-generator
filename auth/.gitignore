@@ -1,6 +1,6 @@
 .env
 
-/node_modules
-/dist
-/coverage
-/generated/prisma1
+node_modules
+dist
+coverage
+generated

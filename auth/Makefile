@@ -1,20 +1,14 @@
 local:
-	npm run dev
+	@npm run dev
 
 up:
-	docker compose -f docker-compose.yml up --build
-
-down:
-	docker compose -f docker-compose.yml down
+	@docker compose up --build
 
 test:
-	npm run test
-
-coverage:
-	npm run coverage
+	@npm run test
 
 format:
-	npm run format
+	@npm run format
 
-format-check:
-	npm run format:check
+migrate:
+	@npx prisma migrate deploy --schema=./prisma/schema.prisma

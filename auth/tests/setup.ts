@@ -3,18 +3,23 @@ import {
   PostgreSqlContainer,
 } from "@testcontainers/postgresql";
 
-export let container: StartedPostgreSqlContainer;
-export let dbUrl: string;
+let container: StartedPostgreSqlContainer;
 
-export async function startDb() {
+export async function startDb({
+  db,
+  user,
+  password,
+}: {
+  db: string;
+  user: string;
+  password: string;
+}): Promise<number> {
   container = await new PostgreSqlContainer("postgres:17.5-alpine")
-    .withDatabase("test")
-    .withUsername("test")
-    .withPassword("test")
+    .withDatabase(db)
+    .withUsername(user)
+    .withPassword(password)
     .start();
-
-  dbUrl = container.getConnectionUri();
-  process.env.DATABASE_URL = dbUrl;
+  return container.getPort();
 }
 
 export async function stopDb() {

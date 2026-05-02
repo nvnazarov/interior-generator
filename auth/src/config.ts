@@ -1,5 +1,3 @@
-import "dotenv/config";
-
 const r = (key: string): string => {
   const v = process.env[key];
   if (v === undefined) {
@@ -9,12 +7,17 @@ const r = (key: string): string => {
 };
 
 export const config = {
-  port: process.env.APP_PORT || "8080",
+  host: process.env.AUTH__API__HOST || "0.0.0.0",
+  port: +(process.env.AUTH__API__PORT || 8080),
   postgres: {
-    url: r("APP_POSTGRES__URL"),
+    url:
+      `postgresql://${r("AUTH__POSTGRES__USER")}:${r("AUTH__POSTGRES__PASSWORD")}` +
+      `@${r("AUTH__POSTGRES__HOST")}:${r("AUTH__POSTGRES__PORT")}` +
+      `/${r("AUTH__POSTGRES__DB")}`,
   },
   betterAuth: {
-    baseURL: r("BETTER_AUTH_BASE_URL"),
-    trustedOrigins: r("BETTER_AUTH_TRUSTED_ORIGINS").split(","),
+    secret: r("AUTH__BETTER_AUTH__SECRET"),
+    baseURL: r("AUTH__BETTER_AUTH__BASE_URL"),
+    trustedOrigins: r("AUTH__BETTER_AUTH__TRUSTED_ORIGINS").split(","),
   },
 };
