@@ -8,11 +8,11 @@ from app.core.exporter import Exporter
 
 def main():
     config = RootConfig()
-    client = AsyncClient(base_url=config.api_gateway.base_url)
+    client = AsyncClient(base_url=config.gateway.base_url)
     catalog = GatewayCatalog(client)
     projects = GatewayProjectsService(client)
     exporter = Exporter(projects, catalog)
-    asgi = ASGI(exporter, header_for_account_id=config.api.header_for_account_id)
+    asgi = ASGI(exporter, account_header=config.api.account_header)
     asgi.listen_and_serve(config.api.host, config.api.port)
 
 

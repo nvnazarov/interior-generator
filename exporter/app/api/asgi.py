@@ -12,7 +12,7 @@ class ASGI(FastAPI):
         self,
         exporter: Exporter,
         *,
-        header_for_account_id: str = "x-account-id",
+        account_header: str = "x-account-id",
     ):
         self.exporter = exporter
 
@@ -24,7 +24,7 @@ class ASGI(FastAPI):
         def get_account_id(
             account_id: Annotated[
                 str,
-                Header(alias=header_for_account_id),
+                Header(alias=account_header),
             ] = "",
         ) -> str:
             if account_id == "":

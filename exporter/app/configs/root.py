@@ -12,5 +12,5 @@ class RootConfig(BaseSettings):
         env_nested_delimiter="__",
     )
     api: APIConfig = Field(default_factory=APIConfig)
-    api_gateway: GatewayConfig = Field(default_factory=GatewayConfig)
+    gateway: GatewayConfig = Field(default_factory=GatewayConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
