@@ -27,8 +27,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # fmt: off
-    op.execute("CREATE SCHEMA projects")
+    op.execute("CREATE SCHEMA IF NOT EXISTS projects")
     op.create_table(
         "projects",
         Column("id", VARCHAR(256), primary_key=True),
@@ -38,8 +37,18 @@ def upgrade() -> None:
         Column("content", JSONB(), nullable=False),
         Column("plans_count", INTEGER, nullable=False),
         Column("plans_limit", INTEGER, nullable=False),
-        Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=func.now()),
-        Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=func.now()),
+        Column(
+            "created_at",
+            TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=func.now(),
+        ),
+        Column(
+            "updated_at",
+            TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=func.now(),
+        ),
         Column("published", BOOLEAN, nullable=False, server_default=text("false")),
         Column("published_at", TIMESTAMP(timezone=True)),
         Column("deleted", BOOLEAN, nullable=False, server_default=text("false")),
@@ -49,12 +58,27 @@ def upgrade() -> None:
     op.create_table(
         "plans",
         Column("id", VARCHAR(256), primary_key=True),
-        Column("project_id", VARCHAR(256), ForeignKey("projects.projects.id", ondelete="CASCADE"), nullable=False),
+        Column(
+            "project_id",
+            VARCHAR(256),
+            ForeignKey("projects.projects.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         Column("name", VARCHAR(256), nullable=False),
         Column("revision", INTEGER, nullable=False),
         Column("content", JSONB(), nullable=False),
-        Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=func.now()),
-        Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=func.now()),
+        Column(
+            "created_at",
+            TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=func.now(),
+        ),
+        Column(
+            "updated_at",
+            TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=func.now(),
+        ),
         Column("deleted", BOOLEAN, nullable=False, server_default=text("false")),
         Column("version", INTEGER, nullable=False, server_default=text("0")),
         schema="projects",
@@ -67,7 +91,9 @@ def upgrade() -> None:
         Column("version", INTEGER, nullable=False, server_default=text("0")),
         schema="projects",
     )
-    op.create_index("idx_projects_account_id", "projects", ["account_id"], schema="projects")
+    op.create_index(
+        "idx_projects_account_id", "projects", ["account_id"], schema="projects"
+    )
     op.create_index("idx_plans_project_id", "plans", ["project_id"], schema="projects")
     op.execute(
         "CREATE OR REPLACE FUNCTION sync_project_update_time() "
@@ -86,7 +112,6 @@ def upgrade() -> None:
         "FOR EACH ROW "
         "EXECUTE FUNCTION sync_project_update_time()"
     )
-    # fmt: on
 
 
 def downgrade() -> None:
@@ -97,4 +122,3 @@ def downgrade() -> None:
     op.drop_table("accounts", schema="projects")
     op.drop_table("plans", schema="projects")
     op.drop_table("projects", schema="projects")
-    op.execute("DROP SCHEMA projects")

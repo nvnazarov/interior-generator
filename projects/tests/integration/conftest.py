@@ -7,7 +7,7 @@ import httpx
 import pytest
 import pytest_asyncio
 from asgi_lifespan import LifespanManager
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from testcontainers.postgres import PostgresContainer  # type: ignore
 
 from app.adapters.postgres import PostgresUnitOfWork
@@ -34,7 +34,12 @@ def db_url(db_container: PostgresContainer):
 
 
 @pytest.fixture
-def run_migration(pyproject_toml: Path, db_url: str):
+def db_engine(db_url: str):
+    return create_async_engine(db_url)
+
+
+@pytest_asyncio.fixture
+async def run_migration(pyproject_toml: Path, db_url: str):
     revision = "head"
     config = alembic.config.Config(toml_file=pyproject_toml)
     config.attributes["sqlalchemy.url"] = db_url
@@ -44,9 +49,8 @@ def run_migration(pyproject_toml: Path, db_url: str):
 
 
 @pytest.fixture
-def uow(db_url: str, run_migration: None):
-    engine = create_async_engine(db_url)
-    return PostgresUnitOfWork(engine)
+def uow(db_engine: AsyncEngine, run_migration: None):
+    return PostgresUnitOfWork(db_engine)
 
 
 @pytest.fixture

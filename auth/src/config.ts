@@ -13,7 +13,7 @@ export const config = {
     url:
       `postgresql://${r("AUTH__POSTGRES__USER")}:${r("AUTH__POSTGRES__PASSWORD")}` +
       `@${r("AUTH__POSTGRES__HOST")}:${r("AUTH__POSTGRES__PORT")}` +
-      `/${r("AUTH__POSTGRES__DB")}`,
+      `/${r("AUTH__POSTGRES__DB")}?schema=auth`,
   },
   betterAuth: {
     secret: r("AUTH__BETTER_AUTH__SECRET"),

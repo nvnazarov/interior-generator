@@ -1,5 +1,8 @@
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "auth";
+
 -- CreateTable
-CREATE TABLE "user" (
+CREATE TABLE "auth"."user" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -12,7 +15,7 @@ CREATE TABLE "user" (
 );
 
 -- CreateTable
-CREATE TABLE "session" (
+CREATE TABLE "auth"."session" (
     "id" TEXT NOT NULL,
     "expiresAt" TIMESTAMP(3) NOT NULL,
     "token" TEXT NOT NULL,
@@ -26,7 +29,7 @@ CREATE TABLE "session" (
 );
 
 -- CreateTable
-CREATE TABLE "account" (
+CREATE TABLE "auth"."account" (
     "id" TEXT NOT NULL,
     "accountId" TEXT NOT NULL,
     "providerId" TEXT NOT NULL,
@@ -45,7 +48,7 @@ CREATE TABLE "account" (
 );
 
 -- CreateTable
-CREATE TABLE "verification" (
+CREATE TABLE "auth"."verification" (
     "id" TEXT NOT NULL,
     "identifier" TEXT NOT NULL,
     "value" TEXT NOT NULL,
@@ -57,22 +60,22 @@ CREATE TABLE "verification" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "user_email_key" ON "user"("email");
+CREATE UNIQUE INDEX "user_email_key" ON "auth"."user"("email");
 
 -- CreateIndex
-CREATE INDEX "session_userId_idx" ON "session"("userId");
+CREATE INDEX "session_userId_idx" ON "auth"."session"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "session_token_key" ON "session"("token");
+CREATE UNIQUE INDEX "session_token_key" ON "auth"."session"("token");
 
 -- CreateIndex
-CREATE INDEX "account_userId_idx" ON "account"("userId");
+CREATE INDEX "account_userId_idx" ON "auth"."account"("userId");
 
 -- CreateIndex
-CREATE INDEX "verification_identifier_idx" ON "verification"("identifier");
+CREATE INDEX "verification_identifier_idx" ON "auth"."verification"("identifier");
 
 -- AddForeignKey
-ALTER TABLE "session" ADD CONSTRAINT "session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "auth"."session" ADD CONSTRAINT "session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "auth"."user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "account" ADD CONSTRAINT "account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "auth"."account" ADD CONSTRAINT "account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "auth"."user"("id") ON DELETE CASCADE ON UPDATE CASCADE;

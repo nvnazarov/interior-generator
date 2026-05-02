@@ -20,7 +20,7 @@ services:
         condition: "service_healthy"
       assets:
         condition: "service_healthy"
-  
+
   private-gateway:
     image: "nginx:1.29"
     volumes:
@@ -46,13 +46,13 @@ services:
     volumes:
       - "postgres:/var/lib/postgresql"
     environment:
-      - "POSTGRES_DB=postgres"
-      - "POSTGRES_USER=postgres"
-      - "POSTGRES_PASSWORD=postgres"
+      - "POSTGRES_DB=${POSTGRES__DB?}"
+      - "POSTGRES_USER=${POSTGRES__USER?}"
+      - "POSTGRES_PASSWORD=${POSTGRES__PASSWORD?}"
     networks:
       - "private"
     healthcheck:
-      test: "pg_isready -U postgres"
+      test: "pg_isready -U ${POSTGRES__USER?}"
       interval: "10s"
       timeout: "5s"
       retries: 3
@@ -61,11 +61,8 @@ services:
     image: "quay.io/minio/minio"
     command: ["minio", "server", "/data", "--console-address", ":9001"]
     environment:
-      - "MINIO_ROOT_USER=user"
-      - "MINIO_ROOT_PASSWORD=password"
-    ports:
-      - "127.0.0.1:9000:9000" # API
-      - "127.0.0.1:9001:9001" # Web UI
+      - "MINIO_ROOT_USER=${MINIO__USER?}"
+      - "MINIO_ROOT_PASSWORD=${MINIO__PASSWORD?}"
     volumes:
       - "minio:/data"
     networks:
@@ -107,24 +104,53 @@ services:
   auth:
     build:
       context: "../auth"
-      dockerfile: "../auth/docker/Dockerfile.${MOD:-dev}"
+      dockerfile: "../auth/docker/Dockerfile.${MOD?}"
     environment:
-      - "APP_PORT=80"
-      - "APP_POSTGRES__URL=postgresql://postgres:postgres@postgres:5432/postgres"
-      - "BETTER_AUTH_BASE_URL=${BETTER_AUTH_BASE_URL:-http://localhost:8080}"
-      - "BETTER_AUTH_TRUSTED_ORIGINS=${BETTER_AUTH_TRUSTED_ORIGINS:-http://localhost:3000,http://localhost:8080}"
+      - "AUTH__API__HOST=0.0.0.0"
+      - "AUTH__API__PORT=80"
+      - "AUTH__POSTGRES__HOST=postgres"
+      - "AUTH__POSTGRES__PORT=5432"
+      - "AUTH__POSTGRES__USER=${POSTGRES__USER?}"
+      - "AUTH__POSTGRES__PASSWORD=${POSTGRES__PASSWORD?}"
+      - "AUTH__POSTGRES__DB=${POSTGRES__DB?}"
+      - "AUTH__BETTER_AUTH__SECRET=${AUTH__BETTER_AUTH__SECRET?}"
+      - "AUTH__BETTER_AUTH__BASE_URL=${AUTH__BETTER_AUTH__BASE_URL?}"
+      - "AUTH__BETTER_AUTH__TRUSTED_ORIGINS=${AUTH__BETTER_AUTH__TRUSTED_ORIGINS?}"
     networks:
       - "private"
+    depends_on:
+      migrate-auth:
+        condition: "service_completed_successfully"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: "15s"
       timeout: "5s"
       retries: 3
 
+  migrate-auth:
+    build:
+      context: "../auth"
+      dockerfile: "../auth/docker/Dockerfile.dev"
+    command: ["make", "migrate"]
+    environment:
+      - "AUTH__POSTGRES__HOST=postgres"
+      - "AUTH__POSTGRES__PORT=5432"
+      - "AUTH__POSTGRES__USER=${POSTGRES__USER?}"
+      - "AUTH__POSTGRES__PASSWORD=${POSTGRES__PASSWORD?}"
+      - "AUTH__POSTGRES__DB=${POSTGRES__DB?}"
+      - "AUTH__BETTER_AUTH__SECRET=${AUTH__BETTER_AUTH__SECRET?}"
+      - "AUTH__BETTER_AUTH__BASE_URL=${AUTH__BETTER_AUTH__BASE_URL?}"
+      - "AUTH__BETTER_AUTH__TRUSTED_ORIGINS=${AUTH__BETTER_AUTH__TRUSTED_ORIGINS?}"
+    networks:
+      - "private"
+    depends_on:
+      postgres:
+        condition: "service_healthy"
+
   catalog:
     build:
       context: "../catalog"
-      dockerfile: "../catalog/docker/Dockerfile.${MOD:-dev}"
+      dockerfile: "../catalog/docker/Dockerfile.${MOD?}"
     environment:
       - "CATALOG__API__HOST=0.0.0.0"
       - "CATALOG__API__PORT=80"
@@ -145,37 +171,57 @@ services:
   generator:
     build:
       context: "../generator"
-      dockerfile: "../generator/docker/Dockerfile.${MOD:-dev}"
+      dockerfile: "../generator/docker/Dockerfile.${MOD?}"
     environment:
       - "GENERATOR__API__HOST=0.0.0.0"
       - "GENERATOR__API__PORT=80"
-      - "GENERATOR__API__HEADER_FOR_ACCOUNT_ID=x-account-id"
-      - "GENERATOR__OPENAI__API_KEY=${GENERATOR__OPENAI__API_KEY?error}"
-      - "GENERATOR__OPENAI__BASE_URL=${GENERATOR__OPENAI__BASE_URL?error}"
+      - "GENERATOR__API__ACCOUNT_HEADER=x-account-id"
+      - "GENERATOR__OPENAI__API_KEY=${GENERATOR__OPENAI__API_KEY?}"
+      - "GENERATOR__OPENAI__BASE_URL=${GENERATOR__OPENAI__BASE_URL?}"
       - "GENERATOR__POSTGRES__HOST=postgres"
       - "GENERATOR__POSTGRES__PORT=5432"
-      - "GENERATOR__POSTGRES__USER=postgres"
-      - "GENERATOR__POSTGRES__PASSWORD=postgres"
-      - "GENERATOR__POSTGRES__DB=postgres"
+      - "GENERATOR__POSTGRES__USER=${POSTGRES__USER?}"
+      - "GENERATOR__POSTGRES__PASSWORD=${POSTGRES__PASSWORD?}"
+      - "GENERATOR__POSTGRES__DB=${POSTGRES__DB?}"
       - "GENERATOR__GATEWAY__BASE_URL=http://private-gateway/api"
       - "GENERATOR__LOGGING__LEVEL=DEBUG"
     networks:
       - "private"
+    depends_on:
+      migrate-generator:
+        condition: "service_completed_successfully"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: "15s"
       timeout: "5s"
       retries: 3
 
+  migrate-generator:
+    build:
+      context: "../generator"
+      dockerfile: "../generator/docker/Dockerfile.dev"
+    command: ["make", "migrate"]
+    environment:
+      - "GENERATOR__POSTGRES__HOST=postgres"
+      - "GENERATOR__POSTGRES__PORT=5432"
+      - "GENERATOR__POSTGRES__USER=${POSTGRES__USER?}"
+      - "GENERATOR__POSTGRES__PASSWORD=${POSTGRES__PASSWORD?}"
+      - "GENERATOR__POSTGRES__DB=${POSTGRES__DB?}"
+    networks:
+      - "private"
+    depends_on:
+      postgres:
+        condition: "service_healthy"
+
   exporter:
     build:
       context: "../exporter"
-      dockerfile: "../exporter/docker/Dockerfile.${MOD:-dev}"
+      dockerfile: "../exporter/docker/Dockerfile.${MOD?}"
     environment:
       - "EXPORTER__API__HOST=0.0.0.0"
       - "EXPORTER__API__PORT=80"
-      - "EXPORTER__API__HEADER_FOR_ACCOUNT_ID=x-account-id"
-      - "EXPORTER__API_GATEWAY__BASE_URL=http://private-gateway/api"
+      - "EXPORTER__API__ACCOUNT_HEADER=x-account-id"
+      - "EXPORTER__GATEWAY__BASE_URL=http://private-gateway/api"
       - "EXPORTER__LOGGING__LEVEL=INFO"
     networks:
       - "private"
@@ -188,26 +234,43 @@ services:
   projects:
     build:
       context: "../projects"
-      dockerfile: "../projects/docker/Dockerfile.${MOD:-dev}"
+      dockerfile: "../projects/docker/Dockerfile.${MOD?}"
     environment:
       - "PROJECTS__API__HOST=0.0.0.0"
       - "PROJECTS__API__PORT=80"
-      - "PROJECTS__API__HEADER_FOR_ACCOUNT_ID=x-account-id"
+      - "PROJECTS__API__ACCOUNT_HEADER=x-account-id"
       - "PROJECTS__GENERAL__PLANS_LIMIT=20"
       - "PROJECTS__GENERAL__PROJECTS_LIMIT=20"
       - "PROJECTS__POSTGRES__HOST=postgres"
       - "PROJECTS__POSTGRES__PORT=5432"
-      - "PROJECTS__POSTGRES__USER=postgres"
-      - "PROJECTS__POSTGRES__PASSWORD=postgres"
-      - "PROJECTS__POSTGRES__DB=postgres"
+      - "PROJECTS__POSTGRES__USER=${POSTGRES__USER?}"
+      - "PROJECTS__POSTGRES__PASSWORD=${POSTGRES__PASSWORD?}"
+      - "PROJECTS__POSTGRES__DB=${POSTGRES__DB?}"
       - "PROJECTS__LOGGING__LEVEL=INFO"
     networks:
       - "private"
+    depends_on:
+      migrate-projects:
+        condition: "service_completed_successfully"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: "15s"
       timeout: "5s"
       retries: 3
+
+  migrate-projects:
+    build:
+      context: "../projects"
+      dockerfile: "../projects/docker/Dockerfile.dev"
+    command: ["make", "migrate"]
+    environment:
+      - "PROJECTS__POSTGRES__HOST=postgres"
+      - "PROJECTS__POSTGRES__PORT=5432"
+      - "PROJECTS__POSTGRES__USER=${POSTGRES__USER?}"
+      - "PROJECTS__POSTGRES__PASSWORD=${POSTGRES__PASSWORD?}"
+      - "PROJECTS__POSTGRES__DB=${POSTGRES__DB?}"
+    networks:
+      - "private"
     depends_on:
       postgres:
         condition: "service_healthy"
@@ -215,14 +278,14 @@ services:
   assets:
     build:
       context: "../assets"
-      dockerfile: "../assets/docker/Dockerfile.${MOD:-dev}"
+      dockerfile: "../assets/docker/Dockerfile.${MOD?}"
     environment:
       - "ASSETS__API__HOST=0.0.0.0"
       - "ASSETS__API__PORT=80"
       - "ASSETS__MINIO__HOST=minio"
       - "ASSETS__MINIO__PORT=9000"
-      - "ASSETS__MINIO__ACCESS_KEY=user"
-      - "ASSETS__MINIO__SECRET_KEY=password"
+      - "ASSETS__MINIO__ACCESS_KEY=${MINIO__USER?}"
+      - "ASSETS__MINIO__SECRET_KEY=${MINIO__PASSWORD?}"
     networks:
       - "private"
     healthcheck:
@@ -237,13 +300,13 @@ services:
   frontend:
     build:
       context: "../frontend"
-      dockerfile: "../frontend/docker/Dockerfile.${MOD:-dev}"
+      dockerfile: "../frontend/docker/Dockerfile.${MOD?}"
     volumes:
       - "../frontend/src:/app/src"
     environment:
       - "FRONTEND__API__HOST=0.0.0.0"
       - "FRONTEND__API__PORT=80"
-      - "FRONTEND__API_GATEWAY__BASE_URL=${FRONTEND__API_GATEWAY__BASE_URL:-http://localhost:8080}"
+      - "FRONTEND__API_GATEWAY__BASE_URL=${FRONTEND__API_GATEWAY__BASE_URL?}"
       - "FRONTEND__PROXY__BASE_PATH=/app"
     networks:
       - "private"

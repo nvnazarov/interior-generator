@@ -1,7 +1,7 @@
 """create prompts table
 
 Revision ID: fe34dc765864
-Revises: 4bd0dd009e46
+Revises:
 Create Date: 2026-04-07 16:25:50.984213
 
 """
@@ -14,12 +14,13 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 # revision identifiers, used by Alembic.
 revision: str = "fe34dc765864"
-down_revision: Union[str, Sequence[str], None] = "4bd0dd009e46"
+down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    op.execute("CREATE SCHEMA IF NOT EXISTS generator")
     op.create_table(
         "prompts",
         Column("id", VARCHAR(256), primary_key=True),

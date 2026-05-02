@@ -6,9 +6,9 @@ A Docker Compose configuration for running application demo.
 
 ## Setup
 
-Install Make and Docker. Use the following command:
+Install make and Docker. Create a `.env` file (see `.env.example`). Use the following commands:
 
 ```bash
-make up     # Run application.
-make down   # Shutdown application.
+make up     # Run the application
+make down   # Shutdown the application
 ```

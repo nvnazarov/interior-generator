@@ -2,8 +2,15 @@ import express from "express";
 import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
 import { auth } from "./auth";
 import { prisma } from "./prisma";
+import { log } from "./log";
 
 export const server = express();
+server.use((req, res, next) => {
+  next();
+  res.on("finish", () => {
+    log.info({ method: req.method, url: req.url, status: res.statusCode });
+  })
+});
 server.all("/auth/*splat", toNodeHandler(auth));
 server.get("/auth", async (req, res) => {
   try {
@@ -15,7 +22,7 @@ server.get("/auth", async (req, res) => {
       res.status(401).json({ error: "Unauthorized" });
     }
   } catch (error) {
-    console.error("error: getting session", error);
+    log.error({ msg: "error: getting session", error });
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -31,7 +38,7 @@ server.get("/accounts/:id", async (req, res) => {
       res.status(200).json(user);
     }
   } catch (error) {
-    console.error("error: getting user", error);
+    log.error({ msg: "error: getting user", error });
     res.status(500).json({ error: "Internal server error" });
   }
 });
