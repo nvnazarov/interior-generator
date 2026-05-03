@@ -12,14 +12,12 @@ class Furniture(BaseModel):
 class Project(BaseModel):
     class Content(BaseModel):
         class Door(BaseModel):
-            id: str
             wall_id: str
             x: int = Field(ge=0)
             w: int = Field(ge=0)
             h: int = Field(ge=0)
 
         class Window(BaseModel):
-            id: str
             wall_id: str
             x: int = Field(ge=0)
             y: int = Field(ge=0)
@@ -27,7 +25,6 @@ class Project(BaseModel):
             h: int = Field(ge=0)
 
         class Wall(BaseModel):
-            id: str
             x1: int
             y1: int
             x2: int
@@ -38,7 +35,6 @@ class Project(BaseModel):
                 x: int
                 y: int
 
-            id: str
             points: list[Point]
 
         walls: dict[str, Wall] = Field(default_factory=dict)
@@ -55,7 +51,6 @@ class Project(BaseModel):
 class Plan(BaseModel):
     class Content(BaseModel):
         class Furniture(BaseModel):
-            id: str
             furniture_id: str
             x: int
             y: int
@@ -67,7 +62,6 @@ class Plan(BaseModel):
                 x: int
                 y: int
 
-            id: str
             type: str
             points: list[Point]
 

@@ -1,6 +1,6 @@
 import logging
 from io import BytesIO
-from typing import NamedTuple
+from typing import NamedTuple, cast
 
 import numpy as np
 from reportlab.lib.colors import (
@@ -22,6 +22,8 @@ from app.core.catalog import Catalog
 from app.core.models import Plan, Project
 
 logger = logging.getLogger(__name__)
+
+Vec2 = np.ndarray[tuple[int, int], np.dtype[np.float64]]
 
 
 def get_area_color(type: str) -> Color:
@@ -73,6 +75,18 @@ def calc_polygon_area(
     return abs(area) / 10000
 
 
+def vec2(x: float, y: float) -> Vec2:
+    return np.asarray([x, y], dtype=np.float64)  # type: ignore
+
+
+def left(v: Vec2) -> Vec2:
+    return vec2(-v[1], v[0])
+
+
+def right(v: Vec2) -> Vec2:
+    return vec2(v[1], -v[0])
+
+
 WALL_COLOR = black
 WINDOW_COLOR = blue
 DOOR_COLOR = brown
@@ -117,10 +131,24 @@ class PDFRenderer:
                 min_y = min(point.y, min_y)
                 max_y = max(point.y, max_y)
         for wall in project.content.walls.values():
-            min_x = min(wall.x1 - h, wall.x2 - h, min_x)
-            max_x = max(wall.x1 + h, wall.x2 + h, max_x)
-            min_y = min(wall.y1 - h, wall.y2 - h, min_y)
-            max_y = max(wall.y1 + h, wall.y2 + h, max_y)
+            if wall.x1 == wall.x2 or wall.y1 == wall.y2:
+                min_x = min(wall.x1 - h, wall.x2 - h, min_x)
+                max_x = max(wall.x1 + h, wall.x2 + h, max_x)
+                min_y = min(wall.y1 - h, wall.y2 - h, min_y)
+                max_y = max(wall.y1 + h, wall.y2 + h, max_y)
+            else:
+                a = vec2(wall.x1, wall.y1)
+                b = vec2(wall.x2, wall.y2)
+                d = cast(Vec2, a - b)
+                d *= h / np.linalg.norm(d)
+                p1 = a + d + left(d)
+                p2 = a + d + right(d)
+                p3 = b - d + left(d)
+                p4 = b - d + right(d)
+                min_x = min(p1[0], p2[0], p3[0], p4[0], min_x)
+                max_x = max(p1[0], p2[0], p3[0], p4[0], max_x)
+                min_y = min(p1[1], p2[1], p3[1], p4[1], min_y)
+                max_y = max(p1[1], p2[1], p3[1], p4[1], max_y)
 
         # Apply padding transforms.
         self.c.saveState()
@@ -235,10 +263,24 @@ class PDFRenderer:
                 min_y = min(point.y, min_y)
                 max_y = max(point.y, max_y)
         for wall in project.content.walls.values():
-            min_x = min(wall.x1 - h, wall.x2 - h, min_x)
-            max_x = max(wall.x1 + h, wall.x2 + h, max_x)
-            min_y = min(wall.y1 - h, wall.y2 - h, min_y)
-            max_y = max(wall.y1 + h, wall.y2 + h, max_y)
+            if wall.x1 == wall.x2 or wall.y1 == wall.y2:
+                min_x = min(wall.x1 - h, wall.x2 - h, min_x)
+                max_x = max(wall.x1 + h, wall.x2 + h, max_x)
+                min_y = min(wall.y1 - h, wall.y2 - h, min_y)
+                max_y = max(wall.y1 + h, wall.y2 + h, max_y)
+            else:
+                a = vec2(wall.x1, wall.y1)
+                b = vec2(wall.x2, wall.y2)
+                d = cast(Vec2, a - b)
+                d *= h / np.linalg.norm(d)
+                p1 = a + d + left(d)
+                p2 = a + d + right(d)
+                p3 = b - d + left(d)
+                p4 = b - d + right(d)
+                min_x = min(p1[0], p2[0], p3[0], p4[0], min_x)
+                max_x = max(p1[0], p2[0], p3[0], p4[0], max_x)
+                min_y = min(p1[1], p2[1], p3[1], p4[1], min_y)
+                max_y = max(p1[1], p2[1], p3[1], p4[1], max_y)
         for area in plan.content.areas.values():
             for point in area.points:
                 min_x = min(point.x, min_x)
@@ -259,14 +301,10 @@ class PDFRenderer:
             sin = np.sin(meta.yaw)
             w = furniture.width / 2
             d = furniture.depth / 2
-            min_x = min(meta.x - abs(d * cos), meta.x - abs(w * sin), min_x)
-            max_x = max(meta.x + abs(d * cos), meta.x + abs(w * sin), max_x)
-            min_y = min(meta.z - abs(d * sin), meta.z - abs(w * cos), min_y)
-            max_y = max(meta.z + abs(d * sin), meta.z + abs(w * cos), max_y)
-        if min_x == max_x:
-            min_x -= 1
-        if min_y == max_y:
-            min_y -= 1
+            min_x = min(meta.x - abs(w * cos), meta.x - abs(d * sin), min_x)
+            max_x = max(meta.x + abs(w * cos), meta.x + abs(d * sin), max_x)
+            min_y = min(meta.z - abs(w * sin), meta.z - abs(d * cos), min_y)
+            max_y = max(meta.z + abs(w * sin), meta.z + abs(d * cos), max_y)
 
         # Apply padding transforms.
         self.c.saveState()
