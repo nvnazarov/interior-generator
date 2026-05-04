@@ -1,9 +1,9 @@
 from httpx import AsyncClient
 
 from app.adapters.gateway import GatewayCatalog, GatewayProjectsService
-from app.api.asgi import ASGI
 from app.configs.root import RootConfig
 from app.core.exporter import Exporter
+from exporter.app.api.server import Server
 
 
 def main():
@@ -12,8 +12,8 @@ def main():
     catalog = GatewayCatalog(client)
     projects = GatewayProjectsService(client)
     exporter = Exporter(projects, catalog)
-    asgi = ASGI(exporter, account_header=config.api.account_header)
-    asgi.listen_and_serve(config.api.host, config.api.port)
+    server = Server(exporter, account_header=config.api.account_header)
+    server.listen_and_serve(config.api.host, config.api.port)
 
 
 if __name__ == "__main__":

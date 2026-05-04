@@ -9,11 +9,11 @@ from app.core.projects import ProjectsService
 
 class GatewayCatalog(Catalog):
     def __init__(self, client: AsyncClient):
-        self.client = client
+        self._client = client
 
     @async_lru_cache(maxsize=100, ttl=3600)
     async def find_furniture_by_id(self, id: str) -> Furniture | None:
-        resp = await self.client.get(
+        resp = await self._client.get(
             f"/catalog/furniture/{id}",
         )
         if resp.status_code == 404:
@@ -25,12 +25,12 @@ class GatewayCatalog(Catalog):
 
 class GatewayProjectsService(ProjectsService):
     def __init__(self, client: AsyncClient):
-        self.client = client
+        self._client = client
 
     async def find_project_by_id(
         self, account_id: str, project_id: str
     ) -> Project | None:
-        resp = await self.client.get(
+        resp = await self._client.get(
             f"/projects/{project_id}",
             headers={"x-account-id": account_id},
         )
@@ -41,14 +41,14 @@ class GatewayProjectsService(ProjectsService):
         return project
 
     async def iter_plans_in_project(self, account_id: str, project_id: str):
-        resp = await self.client.get(
+        resp = await self._client.get(
             f"/projects/{project_id}/plans",
             headers={"x-account-id": account_id},
         )
         resp.raise_for_status()
         partial_plans = RootModel[list[Plan]].model_validate(resp.json()).root
         for partial_plan in partial_plans:
-            resp = await self.client.get(
+            resp = await self._client.get(
                 f"/plans/{partial_plan.id}",
                 headers={"x-account-id": account_id},
             )

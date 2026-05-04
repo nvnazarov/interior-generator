@@ -7,15 +7,13 @@ from fastapi.responses import StreamingResponse
 from app.core.exporter import Exporter, ProjectNotFoundError
 
 
-class ASGI(FastAPI):
+class Server(FastAPI):
     def __init__(
         self,
         exporter: Exporter,
         *,
         account_header: str = "x-account-id",
     ):
-        self.exporter = exporter
-
         super().__init__(
             title="Exporter",
             summary="Exports projects and plans into various formats",
@@ -37,10 +35,10 @@ class ASGI(FastAPI):
             account_id: Annotated[str, Depends(get_account_id)],
         ):
             try:
-                buffer = await self.exporter.export_project_pdf(project_id, account_id)
+                buffer = await exporter.export_project_pdf(project_id, account_id)
             except ProjectNotFoundError:
                 raise HTTPException(
-                    status.HTTP_404_NOT_FOUND, detail={"project not found"}
+                    status.HTTP_404_NOT_FOUND, detail="project not found"
                 )
             else:
                 return StreamingResponse(
@@ -52,7 +50,7 @@ class ASGI(FastAPI):
                 )
 
         @self.get("/health", status_code=204)
-        async def healthcheck():
+        async def health():
             pass
 
     def listen_and_serve(self, host: str = "127.0.0.1", port: int = 8080):
