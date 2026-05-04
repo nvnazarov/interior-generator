@@ -3,7 +3,7 @@ from httpx import AsyncClient
 from app.adapters.gateway import GatewayCatalog, GatewayProjectsService
 from app.configs.root import RootConfig
 from app.core.exporter import Exporter
-from exporter.app.api.server import Server
+from app.api.server import Server
 
 
 def main():
