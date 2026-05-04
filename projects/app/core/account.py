@@ -49,9 +49,9 @@ class Account(BaseModel):
         self.projects_count = self.projects_count - 1
 
 
-class AccountRepository(ABC):
+class AccountsRepository(ABC):
     @abstractmethod
-    async def get(self, account_id: str) -> Account | None: ...
+    async def find(self, account_id: str) -> Account | None: ...
 
     @abstractmethod
     async def save(self, account: Account) -> None: ...

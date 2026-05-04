@@ -1,14 +1,15 @@
 import logging
+from contextlib import asynccontextmanager
 from typing import Any
 
 from sqlalchemy import bindparam, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
-from app.core.account import Account, AccountRepository
-from app.core.plan import Plan, PlanRepository
-from app.core.project import Project, ProjectRepository
-from app.core.uow import UnitOfWork
+from app.core.account import Account, AccountsRepository
+from app.core.plan import Plan, PlansRepository
+from app.core.project import Project, ProjectsRepository
+from app.core.unit_of_work import UnitOfWork, UnitOfWorkFactory
 
 logger = logging.getLogger(__name__)
 
@@ -267,11 +268,11 @@ STMT_DELETE_PLAN = text(
 class OptimisticLockError(Exception): ...
 
 
-class PostgresAccountRepository(AccountRepository):
+class PostgresAccountRepository(AccountsRepository):
     def __init__(self, connection: AsyncConnection):
         self._conn = connection
 
-    async def get(self, account_id: str) -> Account | None:
+    async def find(self, account_id: str) -> Account | None:
         cursor = await self._conn.execute(
             STMT_GET_ACCOUNT_BY_ID, {"account_id": account_id}
         )
@@ -300,11 +301,11 @@ class PostgresAccountRepository(AccountRepository):
             raise OptimisticLockError
 
 
-class PostgresProjectRepository(ProjectRepository):
+class PostgresProjectRepository(ProjectsRepository):
     def __init__(self, connection: AsyncConnection):
         self._conn = connection
 
-    async def get(self, project_id: str) -> Project | None:
+    async def find(self, project_id: str) -> Project | None:
         cursor = await self._conn.execute(STMT_GET_PROJECT, {"project_id": project_id})
         if (row := cursor.one_or_none()) is None:
             return None
@@ -336,7 +337,7 @@ class PostgresProjectRepository(ProjectRepository):
         if cursor.rowcount == 0:
             raise OptimisticLockError
 
-    async def get_without_content(self, project_id: str) -> Project | None:
+    async def find_without_content(self, project_id: str) -> Project | None:
         cursor = await self._conn.execute(
             STMT_GET_PROJECT_WITHOUT_CONTENT, {"project_id": project_id}
         )
@@ -372,7 +373,7 @@ class PostgresProjectRepository(ProjectRepository):
     async def delete(self, project_id: str) -> None:
         _ = await self._conn.execute(STMT_DELETE_PROJECT, {"project_id": project_id})
 
-    async def get_all_owned_by_account(self, account_id: str) -> list[Project]:
+    async def owned_by_account(self, account_id: str) -> list[Project]:
         cursor = await self._conn.execute(
             STMT_GET_ALL_PROJECTS_OWNED_BY_ACCOUNT, {"account_id": account_id}
         )
@@ -394,11 +395,11 @@ class PostgresProjectRepository(ProjectRepository):
         return projects
 
 
-class PostgresPlanRepository(PlanRepository):
+class PostgresPlanRepository(PlansRepository):
     def __init__(self, connection: AsyncConnection):
         self._conn = connection
 
-    async def get(self, plan_id: str) -> Plan | None:
+    async def find(self, plan_id: str) -> Plan | None:
         cursor = await self._conn.execute(STMT_GET_PLAN, {"plan_id": plan_id})
         if (row := cursor.one_or_none()) is None:
             return None
@@ -423,7 +424,7 @@ class PostgresPlanRepository(PlanRepository):
         if cursor.rowcount == 0:
             raise OptimisticLockError
 
-    async def get_without_content(self, plan_id: str) -> Plan | None:
+    async def find_without_content(self, plan_id: str) -> Plan | None:
         cursor = await self._conn.execute(
             STMT_GET_PLAN_WITHOUT_CONTENT, {"plan_id": plan_id}
         )
@@ -456,7 +457,7 @@ class PostgresPlanRepository(PlanRepository):
         if cursor.rowcount == 0:
             raise OptimisticLockError
 
-    async def get_all_of_project(self, project_id: str) -> list[Plan]:
+    async def in_project(self, project_id: str) -> list[Plan]:
         cursor = await self._conn.execute(
             STMT_GET_PLANS_OF_PROJECT, {"project_id": project_id}
         )
@@ -475,39 +476,24 @@ class PostgresPlanRepository(PlanRepository):
 
 
 class PostgresUnitOfWork(UnitOfWork):
-    def __init__(
-        self,
-        engine: AsyncEngine,
-    ):
-        self._engine = engine
-        self._connection: AsyncConnection | None = None
-
-    async def __aenter__(self):
-        self._connection = await self._engine.connect()
-        try:
-            self.accounts = PostgresAccountRepository(self._connection)
-            self.projects = PostgresProjectRepository(self._connection)
-            self.plans = PostgresPlanRepository(self._connection)
-        except Exception as e:
-            logger.error({"msg": "unit of work __aenter__ error", "error": str(e)})
-            await self._connection.close()
-            raise
-        return self
-
-    async def __aexit__(self, exc_type: Any, exc: Any, traceback: Any):
-        try:
-            if exc:
-                await self.rollback()
-            else:
-                await self.commit()
-        finally:
-            if self._connection and not self._connection.closed:
-                await self._connection.close()
+    def __init__(self, connection: AsyncConnection):
+        self._connection = connection
+        self.accounts = PostgresAccountRepository(self._connection)
+        self.projects = PostgresProjectRepository(self._connection)
+        self.plans = PostgresPlanRepository(self._connection)
 
     async def commit(self) -> None:
-        if self._connection:
-            await self._connection.commit()
+        await self._connection.commit()
 
     async def rollback(self) -> None:
-        if self._connection:
-            await self._connection.rollback()
+        await self._connection.rollback()
+
+
+class PostgresUnitOfWorkFactory(UnitOfWorkFactory):
+    def __init__(self, engine: AsyncEngine):
+        self._engine = engine
+
+    @asynccontextmanager
+    async def begin(self):
+        async with self._engine.connect() as connection:
+            yield PostgresUnitOfWork(connection)

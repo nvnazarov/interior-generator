@@ -19,7 +19,12 @@ from app.core.project import (
     ProjectPatchError,
     ProjectRevisionError,
 )
-from app.core.service import PlanNotFoundError, ProjectNotFoundError, Service
+from app.core.service import (
+    AccessDeniedError,
+    PlanNotFoundError,
+    ProjectNotFoundError,
+    Service,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -49,15 +54,15 @@ def get_plan_etag(plan: Plan):
     return f"plan-{plan.revision}"
 
 
-class ASGI(FastAPI):
+class Server(FastAPI):
     def __init__(
         self,
         service: Service,
         *,
         account_header: str,
     ):
-        self.service = service
-        self.account_header = account_header
+        self._service = service
+        self._account_header = account_header
 
         super().__init__(
             title="Projects",
@@ -67,7 +72,7 @@ class ASGI(FastAPI):
         def get_account_id(
             account_id: Annotated[
                 str,
-                Header(alias=self.account_header),
+                Header(alias=self._account_header),
             ] = "",
         ) -> str:
             if account_id == "":
@@ -80,7 +85,7 @@ class ASGI(FastAPI):
             account_id: Annotated[str, Depends(get_account_id)],
         ) -> Project:
             try:
-                project = await self.service.create_project(account_id)
+                project = await self._service.create_project(account_id)
                 attach_project_etag(response, project)
                 return project
             except ProjectsLimitExceededError:
@@ -94,14 +99,14 @@ class ASGI(FastAPI):
             revision: Annotated[str | None, Header(alias="if-none-match")] = None,
         ):
             try:
-                project = await self.service.get_project(account_id, project_id)
+                project = await self._service.get_project(account_id, project_id)
                 if revision is not None and project.revision == parse_project_etag(
                     revision
                 ):
                     return PlainTextResponse("", status.HTTP_304_NOT_MODIFIED)
                 attach_project_etag(response, project)
                 return project
-            except ProjectNotFoundError:
+            except (ProjectNotFoundError, AccessDeniedError):
                 raise HTTPProjectNotFound
 
         @self.post("/projects/{project_id}/publish", tags=["projects"])
@@ -109,9 +114,9 @@ class ASGI(FastAPI):
             project_id: str, account_id: Annotated[str, Depends(get_account_id)]
         ) -> Project:
             try:
-                project = await self.service.publish_project(project_id, account_id)
+                project = await self._service.publish_project(project_id, account_id)
                 return project
-            except ProjectNotFoundError:
+            except (ProjectNotFoundError, AccessDeniedError):
                 raise HTTPProjectNotFound
 
         @self.post("/projects/{project_id}/unpublish", tags=["projects"])
@@ -119,9 +124,9 @@ class ASGI(FastAPI):
             project_id: str, account_id: Annotated[str, Depends(get_account_id)]
         ) -> Project:
             try:
-                project = await self.service.unublish_project(project_id, account_id)
+                project = await self._service.unublish_project(project_id, account_id)
                 return project
-            except ProjectNotFoundError:
+            except (ProjectNotFoundError, AccessDeniedError):
                 raise HTTPProjectNotFound
 
         @self.delete(
@@ -133,8 +138,8 @@ class ASGI(FastAPI):
             project_id: str, account_id: Annotated[str, Depends(get_account_id)]
         ) -> None:
             try:
-                await self.service.delete_project(account_id, project_id)
-            except ProjectNotFoundError:
+                await self._service.delete_project(account_id, project_id)
+            except (ProjectNotFoundError, AccessDeniedError):
                 raise HTTPProjectNotFound
 
         @self.patch(
@@ -150,14 +155,14 @@ class ASGI(FastAPI):
             revision: Annotated[str, Header(alias="if-match")],
         ) -> None:
             try:
-                project = await self.service.patch_project(
+                project = await self._service.patch_project(
                     account_id,
                     project_id,
                     patch=patch,
                     revision=parse_project_etag(revision),
                 )
                 attach_project_etag(response, project)
-            except ProjectNotFoundError:
+            except (ProjectNotFoundError, AccessDeniedError):
                 raise HTTPProjectNotFound
             except ProjectPatchError:
                 raise HTTPException(
@@ -173,7 +178,7 @@ class ASGI(FastAPI):
         async def get_projects_owned_by_account(
             account_id: Annotated[str, Depends(get_account_id)],
         ) -> list[Project]:
-            projects = await self.service.get_projects_owned_by_account(account_id)
+            projects = await self._service.get_projects_owned_by_account(account_id)
             return projects
 
         @self.post(
@@ -187,12 +192,12 @@ class ASGI(FastAPI):
             account_id: Annotated[str, Depends(get_account_id)],
         ) -> Plan:
             try:
-                plan = await self.service.create_plan(account_id, project_id)
+                plan = await self._service.create_plan(account_id, project_id)
                 attach_plan_etag(response, plan)
                 return plan
             except PlansLimitExceededError:
                 raise HTTPPlansLimitExceeded
-            except ProjectNotFoundError:
+            except (ProjectNotFoundError, AccessDeniedError):
                 raise HTTPProjectNotFound
 
         @self.get("/plans/{plan_id}", tags=["plans"])
@@ -203,12 +208,12 @@ class ASGI(FastAPI):
             etag: Annotated[str | None, Header(alias="if-none-match")] = None,
         ):
             try:
-                plan = await self.service.get_plan(account_id, plan_id)
+                plan = await self._service.get_plan(account_id, plan_id)
                 if etag is not None and etag == get_plan_etag(plan):
                     return PlainTextResponse("", status.HTTP_304_NOT_MODIFIED)
                 attach_plan_etag(response, plan)
                 return plan
-            except PlanNotFoundError:
+            except (PlanNotFoundError, AccessDeniedError):
                 raise HTTPPlanNotFound
 
         @self.get(
@@ -221,9 +226,9 @@ class ASGI(FastAPI):
             account_id: Annotated[str, Depends(get_account_id)],
         ) -> list[Plan]:
             try:
-                plans = await self.service.get_plans_of_project(account_id, project_id)
+                plans = await self._service.get_plans_in_project(account_id, project_id)
                 return plans
-            except ProjectNotFoundError:
+            except (ProjectNotFoundError, AccessDeniedError):
                 raise HTTPProjectNotFound
 
         @self.delete(
@@ -235,8 +240,8 @@ class ASGI(FastAPI):
             plan_id: str, account_id: Annotated[str, Depends(get_account_id)]
         ):
             try:
-                await self.service.delete_plan(account_id, plan_id)
-            except PlanNotFoundError:
+                await self._service.delete_plan(account_id, plan_id)
+            except (PlanNotFoundError, AccessDeniedError):
                 raise HTTPPlanNotFound
 
         @self.patch(
@@ -252,14 +257,14 @@ class ASGI(FastAPI):
             etag: Annotated[str, Header(alias="if-match")],
         ) -> None:
             try:
-                plan = await self.service.patch_plan(
+                plan = await self._service.patch_plan(
                     account_id,
                     plan_id,
                     patch=patch,
                     revision=parse_plan_etag(etag),
                 )
                 attach_plan_etag(response, plan)
-            except PlanNotFoundError:
+            except (PlanNotFoundError, AccessDeniedError):
                 raise HTTPPlanNotFound
             except PlanPatchError as e:
                 logger.error({"msg": "plan patch error", "error": str(e)})
@@ -273,7 +278,7 @@ class ASGI(FastAPI):
                 )
 
         @self.get("/health", status_code=204)
-        async def healthcheck():
+        async def health():
             pass
 
     def listen_and_serve(self, host: str = "127.0.0.1", port: int = 8080):

@@ -10,8 +10,8 @@ from asgi_lifespan import LifespanManager
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from testcontainers.postgres import PostgresContainer  # type: ignore
 
-from app.adapters.postgres import PostgresUnitOfWork
-from app.api.asgi import ASGI
+from app.adapters.postgres import PostgresUnitOfWorkFactory
+from app.api.server import Server
 from app.core.service import Service
 
 os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
@@ -49,24 +49,24 @@ async def run_migration(pyproject_toml: Path, db_url: str):
 
 
 @pytest.fixture
-def uow(db_engine: AsyncEngine, run_migration: None):
-    return PostgresUnitOfWork(db_engine)
+def uow_factory(db_engine: AsyncEngine, run_migration: None):
+    return PostgresUnitOfWorkFactory(db_engine)
 
 
 @pytest.fixture
-def service(uow: PostgresUnitOfWork):
-    return Service(uow)
+def service(uow_factory: PostgresUnitOfWorkFactory):
+    return Service(uow_factory)
 
 
 @pytest.fixture
-def asgi(service: Service):
-    return ASGI(service, account_header="x-account-id")
+def server(service: Service):
+    return Server(service, account_header="x-account-id")
 
 
 @pytest_asyncio.fixture
-async def client(asgi: ASGI):
-    transport = httpx.ASGITransport(asgi)
-    async with LifespanManager(asgi):
+async def client(server: Server):
+    transport = httpx.ASGITransport(server)
+    async with LifespanManager(server):
         async with httpx.AsyncClient(
             transport=transport, base_url="http://test"
         ) as client:
