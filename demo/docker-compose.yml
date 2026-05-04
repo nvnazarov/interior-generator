@@ -165,6 +165,23 @@ services:
       timeout: "5s"
       retries: 3
     depends_on:
+      migrate-and-seed-catalog:
+        condition: "service_completed_successfully"
+
+  migrate-and-seed-catalog:
+    build:
+      context: "../catalog"
+      dockerfile: "../catalog/docker/Dockerfile.dev"
+    command: ["sh", "-c", "make migrate && make seed"]
+    environment:
+      - "CATALOG__API__HOST=0.0.0.0"
+      - "CATALOG__API__PORT=80"
+      - "CATALOG__ELASTIC__HOST=http://elastic:9200"
+      - "CATALOG__ELASTIC__INDEX=catalog"
+      - "CATALOG__LOGGING__LEVEL=INFO"
+    networks:
+      - "private"
+    depends_on:
       elastic:
         condition: "service_healthy"
 
@@ -184,7 +201,7 @@ services:
       - "GENERATOR__POSTGRES__PASSWORD=${POSTGRES__PASSWORD?}"
       - "GENERATOR__POSTGRES__DB=${POSTGRES__DB?}"
       - "GENERATOR__GATEWAY__BASE_URL=http://private-gateway/api"
-      - "GENERATOR__LOGGING__LEVEL=DEBUG"
+      - "GENERATOR__LOGGING__LEVEL=INFO"
     networks:
       - "private"
     depends_on:
@@ -207,6 +224,7 @@ services:
       - "GENERATOR__POSTGRES__USER=${POSTGRES__USER?}"
       - "GENERATOR__POSTGRES__PASSWORD=${POSTGRES__PASSWORD?}"
       - "GENERATOR__POSTGRES__DB=${POSTGRES__DB?}"
+      - "GENERATOR__LOGGING__LEVEL=INFO"
     networks:
       - "private"
     depends_on:
@@ -269,6 +287,7 @@ services:
       - "PROJECTS__POSTGRES__USER=${POSTGRES__USER?}"
       - "PROJECTS__POSTGRES__PASSWORD=${POSTGRES__PASSWORD?}"
       - "PROJECTS__POSTGRES__DB=${POSTGRES__DB?}"
+      - "PROJECTS__LOGGING__LEVEL=INFO"
     networks:
       - "private"
     depends_on:
@@ -286,6 +305,7 @@ services:
       - "ASSETS__MINIO__PORT=9000"
       - "ASSETS__MINIO__ACCESS_KEY=${MINIO__USER?}"
       - "ASSETS__MINIO__SECRET_KEY=${MINIO__PASSWORD?}"
+      - "ASSETS__LOGGING__LEVEL=INFO"
     networks:
       - "private"
     healthcheck:
