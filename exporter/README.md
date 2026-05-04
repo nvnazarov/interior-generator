@@ -18,7 +18,8 @@ The service defines API for exporting projects into PDF.
 
 ## Setup
 
-Install uv, make and Docker. Provide a `.env` file (see `.env.example`). Use the following commands:
+Install uv, make and Docker. Provide a `.env` file (see `.env.example`).
+Use the following commands:
 
 ```bash
 make test               # Run all tests
