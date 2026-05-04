@@ -9,16 +9,10 @@ class Furniture(BaseModel):
         LIVING_ROOM = "living_room"
         BATHROOM = "bathroom"
         BEDROOM = "bedroom"
-
-    class Function(str, Enum):
-        DINING = ""
-        STORAGE = "storage"
-        SLEEP = "sleep"
-        RELAX = "relax"
+        HALLWAY = "hallway"
 
     class Meta(BaseModel):
         area: "Furniture.Area | None" = None
-        function: "Furniture.Function | None" = None
 
     class Mount(str, Enum):
         FLOOR = "floor"

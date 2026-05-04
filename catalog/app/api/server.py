@@ -4,9 +4,8 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Query, status
 from pydantic import BaseModel
 
-from app.core.catalog import MAX_LIMIT, Catalog
-from app.core.errors import FurnitureNotFoundError, InvalidCursorError
 from app.core.models import Furniture
+from app.core.service import MAX_LIMIT, FurnitureNotFoundError, Service
 
 
 class SearchResult(BaseModel):
@@ -17,17 +16,17 @@ class SearchResult(BaseModel):
     meta: Meta
 
 
-class ASGI(FastAPI):
-    def __init__(self, catalog: Catalog):
+class Server(FastAPI):
+    def __init__(self, service: Service):
         super().__init__(
             title="Catalog API",
-            summary="Furniture & other interior elements catalog",
+            summary="Furniture catalog",
         )
 
         @self.get("/furniture/{furniture_id}")
         async def get_furniture_by_id(furniture_id: str) -> Furniture:
             try:
-                return await catalog.get_furniture_by_id(furniture_id)
+                return await service.get_furniture_by_id(furniture_id)
             except FurnitureNotFoundError:
                 raise HTTPException(status.HTTP_404_NOT_FOUND, "furniture not found")
 
@@ -38,30 +37,28 @@ class ASGI(FastAPI):
             name: Annotated[str | None, Query(max_length=64)] = None,
             limit: Annotated[int, Query(le=MAX_LIMIT)] = MAX_LIMIT,
         ) -> SearchResult:
-            try:
-                if cursor is None:
-                    furniture, next_cursor = await catalog.search_furniture(
-                        name, area, limit
-                    )
-                else:
-                    (
-                        furniture,
-                        next_cursor,
-                    ) = await catalog.search_furniture_with_cursor(cursor, limit)
-            except InvalidCursorError:
-                raise HTTPException(status.HTTP_400_BAD_REQUEST, "invalid cursor")
+            if cursor is None:
+                furniture, next_cursor = await service.search_furniture(
+                    name, area, limit
+                )
+            else:
+                (
+                    furniture,
+                    next_cursor,
+                ) = await service.get_next_search_result(cursor, limit)
             return SearchResult(
                 furniture=furniture, meta=SearchResult.Meta(cursor=next_cursor)
             )
 
-        @self.get("/like")
-        async def get_top_k_like(
-            description: Annotated[str, Query()], k: Annotated[int, Query(le=5)] = 5
+        @self.get("/search/description")
+        async def find_furniture_by_description(
+            description: Annotated[str, Query(max_length=512)],
+            limit: Annotated[int, Query(le=MAX_LIMIT)] = MAX_LIMIT,
         ) -> list[Furniture]:
-            return await catalog.get_top_k_like(k, description)
+            return await service.find_furniture_by_description(description, limit)
 
         @self.get("/health", status_code=204)
-        async def healthcheck():
+        async def health():
             pass
 
     def listen_and_serve(self, host: str = "127.0.0.1", port: int = 8080):

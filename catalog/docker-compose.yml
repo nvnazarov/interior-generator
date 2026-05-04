@@ -1,26 +1,51 @@
 services:
-  postgres:
-    image: "postgres:17.5-alpine"
+  elastic:
+    image: "docker.elastic.co/elasticsearch/elasticsearch:9.3.2"
     environment:
-      - "POSTGRES_USER=test"
-      - "POSTGRES_PASSWORD=test"
-      - "POSTGRES_DB=test"
+      - "discovery.type=single-node"
+      - "xpack.security.enabled=false"
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "bootstrap.memory_lock=true"
+    mem_limit: "2g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:9200/_cluster/health?local=true",
+        ]
+      interval: "30s"
+      timeout: "10s"
+      retries: 3
 
   catalog:
     build:
-      dockerfile: "./docker/Dockerfile.${MOD:-dev}"
-    environment:
-      - "CATALOG__API__HOST=0.0.0.0"
-      - "CATALOG__API__PORT=80"
-      - "CATALOG__POSTGRES__HOST=postgres"
-      - "CATALOG__POSTGRES__PORT=5432"
-      - "CATALOG__POSTGRES__USER=test"
-      - "CATALOG__POSTGRES__PASSWORD=test"
-      - "CATALOG__POSTGRES__DB=test"
-      - "CATALOG__LOGGING__LEVEL=INFO"
+      dockerfile: "./docker/Dockerfile.${MOD?}"
     ports:
-      - "127.0.0.1:${PORT:-8080}:80"
+      - "127.0.0.1:${PORT?}:${CATALOG__API__PORT?}"
+    env_file:
+      - ".env"
+    depends_on:
+      migrate-and-seed-catalog:
+        condition: "service_completed_successfully"
+    healthcheck:
+      test:
+        ["CMD", "curl", "-f", "http://localhost:${CATALOG__API__PORT?}/health"]
+      interval: "15s"
+      timeout: "5s"
+      retries: 3
 
-networks:
-  default:
-    driver: "bridge"
+  migrate-and-seed-catalog:
+    build:
+      dockerfile: "./docker/Dockerfile.dev"
+    command: ["sh", "-c", "make migrate && make seed"]
+    env_file:
+      - ".env"
+    depends_on:
+      elastic:
+        condition: "service_healthy"

@@ -13,8 +13,11 @@ local:
 up:
 	@docker compose -f docker-compose.yml up --build
 	
-migration:
-	@uv run alembic upgrade head --sql
+migrate:
+	@uv run python -m migrations.migrate
+
+seed:
+	@uv run python -m seeder.seed
 
 format:
 	@uv run ruff format

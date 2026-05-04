@@ -1,15 +1,15 @@
 import asyncio
 
-from app.adapters.elastic import ElasticFurnitureRepository
+from app.adapters.elastic import ElasticCatalog
 from app.configs.root import RootConfig
 from app.core.models import Furniture
 
 
 def seed_elastic():
     config = RootConfig()
-    repository = ElasticFurnitureRepository(config.elastic.host, config.elastic.index)
+    elastic = ElasticCatalog(config.elastic.host, config.elastic.index)
     asyncio.run(
-        repository.save_bulk(
+        elastic.save_bulk(
             [
                 # Bedroom.
                 (
