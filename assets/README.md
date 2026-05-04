@@ -8,32 +8,29 @@ avatars, are accessed and modified.
 ## Project structure
 
 - `/app` contains project's source code
+- `/tests` contains tests
 - `/docker` contains Dockerfiles
 
 ## Tech Stack
 
-- Python3
+- Python 3
 - [uv](https://docs.astral.sh/uv/)
-- FastAPI
+- fastapi, minio
 
 ## Setup
 
-Install Make and Docker. Use the following commands:
+Install uv, make and Docker. Create a .env file (see .env.example).
+Use the following commands:
 
 ```bash
-make format             # run code formatter
-make lint               # run code linter
-make qa                 # run code formatter and linter
-```
+make test               # Run all tests
+make test-unit          # Run unit tests
+make test-integration   # Run integration tests
 
-Environment:
+make format             # Run code formatter
+make lint               # Run code linter
+make qa                 # Run code formatter and linter
 
-```dotenv
-MOD=dev
-PORT=8080
-ASSETS__API__HOST=0.0.0.0
-ASSETS__API__PORT=8080
-ASSETS__MINIO__HOST=minio
-ASSETS__MINIO__PORT=9000
-ASSETS__LOGGING__LEVEL=INFO
+make local              # Start the program locally
+make up                 # Start the program in Docker Compose
 ```

@@ -6,12 +6,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.core.constants import MAX_AVATAR_SIZE_BYTES
-from app.core.service import Service
+from app.core.service import AvatarSizeTooBigError, Service
 
 logger = logging.getLogger(__name__)
 
 
-class ASGI(FastAPI):
+class Server(FastAPI):
     def __init__(self, service: Service):
         super().__init__(
             title="Assets API",
@@ -25,13 +25,15 @@ class ASGI(FastAPI):
                     400, "only jpeg, jpg, and png avatars are supported"
                 )
             data = await file.read(MAX_AVATAR_SIZE_BYTES + 1)
-            if len(data) > MAX_AVATAR_SIZE_BYTES:
+            try:
+                avatar_id = await service.create_avatar(data)
+            except AvatarSizeTooBigError:
                 raise HTTPException(413, "file is too big")
-            avatar_id = await service.create_avatar(data)
-            return avatar_id
+            else:
+                return avatar_id
 
         @self.get("/health", status_code=204)
-        async def healthcheck():
+        async def health():
             pass
 
         @self.exception_handler(RequestValidationError)

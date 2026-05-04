@@ -1,0 +1,41 @@
+services:
+  minio:
+    image: "quay.io/minio/minio"
+    command:
+      [
+        "minio",
+        "server",
+        "/data",
+        "--address",
+        ":${ASSETS__MINIO__PORT?}",
+        "--console-address",
+        ":9001",
+      ]
+    environment:
+      - "MINIO_ROOT_USER=${ASSETS__MINIO__ACCESS_KEY?}"
+      - "MINIO_ROOT_PASSWORD=${ASSETS__MINIO__SECRET_KEY?}"
+    ports:
+      - "127.0.0.1:${MINIO_CONSOLE_PORT?}:9001"
+    healthcheck:
+      test: "curl -fsS http://localhost:${ASSETS__MINIO__PORT?}/minio/health/live >/dev/null"
+      interval: "10s"
+      timeout: "5s"
+      retries: 3
+
+  assets:
+    build:
+      context: "../assets"
+      dockerfile: "../assets/docker/Dockerfile.${MOD?}"
+    env_file:
+      - ".env"
+    ports:
+      - "127.0.0.1:${PORT?}:${ASSETS__API__PORT?}"
+    healthcheck:
+      test:
+        ["CMD", "curl", "-f", "http://localhost:${ASSETS__API__PORT?}/health"]
+      interval: "15s"
+      timeout: "5s"
+      retries: 3
+    depends_on:
+      minio:
+        condition: "service_healthy"
