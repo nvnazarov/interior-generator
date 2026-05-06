@@ -17,6 +17,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "asgi-lifespan>=2.1.0",
+    "hypothesis>=6.152.4",
     "isort>=8.0.0",
     "pypdf>=6.10.2",
     "pytest>=9.0.2",
