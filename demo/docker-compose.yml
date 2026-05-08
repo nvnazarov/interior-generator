@@ -156,7 +156,7 @@ services:
       - "CATALOG__API__PORT=80"
       - "CATALOG__ELASTIC__HOST=http://elastic:9200"
       - "CATALOG__ELASTIC__INDEX=catalog"
-      - "CATALOG__LOGGING__LEVEL=INFO"
+      - "CATALOG__LOGGING__LEVEL=${CATALOG__LOGGING__LEVEL:-${LOGGING__LEVEL:-INFO}}"
     networks:
       - "private"
     healthcheck:
@@ -178,7 +178,7 @@ services:
       - "CATALOG__API__PORT=80"
       - "CATALOG__ELASTIC__HOST=http://elastic:9200"
       - "CATALOG__ELASTIC__INDEX=catalog"
-      - "CATALOG__LOGGING__LEVEL=INFO"
+      - "CATALOG__LOGGING__LEVEL=${CATALOG__LOGGING__LEVEL:-${LOGGING__LEVEL:-INFO}}"
     networks:
       - "private"
     depends_on:
@@ -201,7 +201,7 @@ services:
       - "GENERATOR__POSTGRES__PASSWORD=${POSTGRES__PASSWORD?}"
       - "GENERATOR__POSTGRES__DB=${POSTGRES__DB?}"
       - "GENERATOR__GATEWAY__BASE_URL=http://private-gateway/api"
-      - "GENERATOR__LOGGING__LEVEL=INFO"
+      - "GENERATOR__LOGGING__LEVEL=${GENERATOR__LOGGING__LEVEL:-${LOGGING__LEVEL:-INFO}}"
     networks:
       - "private"
     depends_on:
@@ -224,7 +224,7 @@ services:
       - "GENERATOR__POSTGRES__USER=${POSTGRES__USER?}"
       - "GENERATOR__POSTGRES__PASSWORD=${POSTGRES__PASSWORD?}"
       - "GENERATOR__POSTGRES__DB=${POSTGRES__DB?}"
-      - "GENERATOR__LOGGING__LEVEL=INFO"
+      - "GENERATOR__LOGGING__LEVEL=${GENERATOR__LOGGING__LEVEL:-${LOGGING__LEVEL:-INFO}}"
     networks:
       - "private"
     depends_on:
@@ -240,7 +240,7 @@ services:
       - "EXPORTER__API__PORT=80"
       - "EXPORTER__API__ACCOUNT_HEADER=x-account-id"
       - "EXPORTER__GATEWAY__BASE_URL=http://private-gateway/api"
-      - "EXPORTER__LOGGING__LEVEL=INFO"
+      - "EXPORTER__LOGGING__LEVEL=${EXPORTER__LOGGING__LEVEL:-${LOGGING__LEVEL:-INFO}}"
     networks:
       - "private"
     healthcheck:
@@ -264,7 +264,7 @@ services:
       - "PROJECTS__POSTGRES__USER=${POSTGRES__USER?}"
       - "PROJECTS__POSTGRES__PASSWORD=${POSTGRES__PASSWORD?}"
       - "PROJECTS__POSTGRES__DB=${POSTGRES__DB?}"
-      - "PROJECTS__LOGGING__LEVEL=INFO"
+      - "PROJECTS__LOGGING__LEVEL=${PROJECTS__LOGGING__LEVEL:-${LOGGING__LEVEL:-INFO}}"
     networks:
       - "private"
     depends_on:
@@ -287,7 +287,7 @@ services:
       - "PROJECTS__POSTGRES__USER=${POSTGRES__USER?}"
       - "PROJECTS__POSTGRES__PASSWORD=${POSTGRES__PASSWORD?}"
       - "PROJECTS__POSTGRES__DB=${POSTGRES__DB?}"
-      - "PROJECTS__LOGGING__LEVEL=INFO"
+      - "PROJECTS__LOGGING__LEVEL=${PROJECTS__LOGGING__LEVEL:-${LOGGING__LEVEL:-INFO}}"
     networks:
       - "private"
     depends_on:
@@ -305,7 +305,7 @@ services:
       - "ASSETS__MINIO__PORT=9000"
       - "ASSETS__MINIO__ACCESS_KEY=${MINIO__USER?}"
       - "ASSETS__MINIO__SECRET_KEY=${MINIO__PASSWORD?}"
-      - "ASSETS__LOGGING__LEVEL=INFO"
+      - "ASSETS__LOGGING__LEVEL=${ASSETS__LOGGING__LEVEL:-${LOGGING__LEVEL:-INFO}}"
     networks:
       - "private"
     healthcheck:
