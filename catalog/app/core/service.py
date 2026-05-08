@@ -1,5 +1,5 @@
 from app.core.catalog import Catalog
-from app.core.models import Cursor, Furniture
+from app.core.models import Cursor, Furniture, SearchResult
 
 MAX_LIMIT = 20
 
@@ -18,15 +18,13 @@ class Service:
             raise FurnitureNotFoundError(f"furniture[id={furniture_id}] not found")
         return furniture
 
-    async def get_next_search_result(
-        self, cursor: Cursor, limit: int
-    ) -> tuple[list[Furniture], Cursor | None]:
+    async def get_next_search_result(self, cursor: Cursor, limit: int) -> SearchResult:
         limit = min(limit, MAX_LIMIT)
         return await self._catalog.get_next_search_result(cursor, limit)
 
     async def search_furniture(
         self, name: str | None, area: Furniture.Area | None, limit: int
-    ) -> tuple[list[Furniture], Cursor | None]:
+    ) -> SearchResult:
         limit = min(limit, MAX_LIMIT)
         return await self._catalog.search(name, area, limit)
 
