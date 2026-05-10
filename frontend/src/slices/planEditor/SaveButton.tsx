@@ -3,6 +3,7 @@ import { Button } from "./Button";
 import { useAppDispatch, useAppSelector } from "../storeTypes";
 import { planSaved, selectIsPlanSaved, selectPlanEditor } from "./slice";
 import { usePatchPlanMutation } from "../api/slice";
+import { Tooltip } from "../../shared/components/tooltip/Tooltip";
 
 export function SaveButton() {
   const dispatch = useAppDispatch();
@@ -31,11 +32,20 @@ export function SaveButton() {
   }, [editor.plan?.id, editor.plan?.revision, editor.unsavedAccumulatedPatch]);
 
   return (
-    <Button
-      icon="sync.png"
-      onClick={handleClick}
-      loading={isSaving}
-      disabled={isPlanSaved}
-    />
+    <Tooltip
+      content={
+        <>
+          Use to <b>save changes</b>
+          {isPlanSaved && ". There is nothing to save right now."}
+        </>
+      }
+    >
+      <Button
+        icon="sync.png"
+        onClick={handleClick}
+        loading={isSaving}
+        disabled={isPlanSaved}
+      />
+    </Tooltip>
   );
 }

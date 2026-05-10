@@ -5,7 +5,7 @@ import { Avatar } from "./Avatar";
 import { selectMyAccount } from "./slice";
 import { useNavigate } from "react-router";
 
-export function SmartAvatar({ accountId }: { accountId: string }) {
+export function AccountAvatar({ accountId }: { accountId: string }) {
   const navigate = useNavigate();
   const myAccount = useAppSelector(selectMyAccount);
   const { data: account, isSuccess } = useFindAccountByIdQuery(accountId);
@@ -17,7 +17,7 @@ export function SmartAvatar({ accountId }: { accountId: string }) {
   }, [myAccount?.id, accountId]);
 
   if (!isSuccess) {
-    return <Avatar name="?" avatarUrl={null} />;
+    return <Avatar />;
   }
 
   return (

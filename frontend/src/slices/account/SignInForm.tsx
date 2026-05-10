@@ -5,6 +5,8 @@ import { authClient } from "../../shared/betterAuth";
 import { useAppDispatch } from "../storeTypes";
 import { userSignedIn } from "./slice";
 import { notify } from "../notifications/slice";
+import { TextInput } from "../../shared/components/input/TextInput";
+import { Button } from "../../shared/components/button/Button";
 
 export function SignInForm() {
   const dispatch = useAppDispatch();
@@ -58,19 +60,26 @@ export function SignInForm() {
   );
 
   return (
-    <form className="account__sign-in-form">
+    <form className="sign-in-form">
       <p>
         Do not have an account? <Link to="/sign-up">Sign up</Link>
       </p>
-      <input value={email} onChange={handleEmailChange} placeholder="Email" />
-      <input
+      <TextInput
+        value={email}
+        onChange={handleEmailChange}
+        placeholder="Email"
+      />
+      <TextInput
         value={password}
         onChange={handlePasswordChange}
         placeholder="Password"
       />
-      <button onClick={handleSignIn} disabled={isSigningIn}>
-        Sign In
-      </button>
+      <Button
+        onClick={handleSignIn}
+        disabled={isSigningIn}
+        primary
+        text="Sign in"
+      />
     </form>
   );
 }

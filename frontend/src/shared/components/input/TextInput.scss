@@ -1,0 +1,21 @@
+@use "../../styles/semantic" as s;
+
+.text-input {
+  background-color: s.$color-bg-100;
+  border-radius: 5px;
+  padding: s.$padding-xs s.$padding-sm;
+  box-sizing: border-box;
+  border: 3px solid transparent;
+  box-shadow: s.$color-bg-200 0px 0px 0px 1px;
+  transition-duration: 0.125s;
+  color: s.$color-fg-900;
+  outline: none;
+
+  &:hover {
+    box-shadow: s.$color-bg-200 0px 0px 0px 3px;
+  }
+
+  &:focus {
+    box-shadow: s.$color-border-primary-500 0px 0px 0px 3px;
+  }
+}

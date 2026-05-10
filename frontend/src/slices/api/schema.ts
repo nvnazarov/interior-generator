@@ -1,59 +1,111 @@
 import { z } from "zod/v4";
 
-export const RawProjectSchema = z.object({
-  id: z.string(),
-  account_id: z.string(),
-  name: z.string(),
-  description: z.string(),
-  published: z.boolean(),
-  created_at: z.string(),
-  updated_at: z.string(),
-  content: z.object({
-    walls: z.record(
-      z.string(),
-      z.object({
-        id: z.string(),
-        x1: z.number(),
-        y1: z.number(),
-        x2: z.number(),
-        y2: z.number(),
-      }),
-    ),
-    windows: z.record(
-      z.string(),
-      z.object({
-        id: z.string(),
-        wall_id: z.string(),
-        x: z.number(),
-        y: z.number(),
-        w: z.number(),
-        h: z.number(),
-      }),
-    ),
-    doors: z.record(
-      z.string(),
-      z.object({
-        id: z.string(),
-        wall_id: z.string(),
-        x: z.number(),
-        w: z.number(),
-        h: z.number(),
-      }),
-    ),
-    wet_areas: z.record(
-      z.string(),
-      z.object({
-        id: z.string(),
-        points: z.array(
-          z.object({
-            x: z.number(),
-            y: z.number(),
-          }),
-        ),
-      }),
-    ),
+export const RawProjectSchema = z.union([
+  z.object({
+    id: z.string(),
+    account_id: z.string(),
+    name: z.string(),
+    published: z.literal(false),
+    published_at: z.null(),
+    plans_count: z.number(),
+    plans_limit: z.number(),
+    created_at: z.string(),
+    updated_at: z.string(),
+    content: z.object({
+      walls: z.record(
+        z.string(),
+        z.object({
+          x1: z.number(),
+          y1: z.number(),
+          x2: z.number(),
+          y2: z.number(),
+        }),
+      ),
+      windows: z.record(
+        z.string(),
+        z.object({
+          wall_id: z.string(),
+          x: z.number(),
+          y: z.number(),
+          w: z.number(),
+          h: z.number(),
+        }),
+      ),
+      doors: z.record(
+        z.string(),
+        z.object({
+          wall_id: z.string(),
+          x: z.number(),
+          w: z.number(),
+          h: z.number(),
+        }),
+      ),
+      wet_areas: z.record(
+        z.string(),
+        z.object({
+          points: z.array(
+            z.object({
+              x: z.number(),
+              y: z.number(),
+            }),
+          ),
+        }),
+      ),
+    }),
   }),
-});
+  z.object({
+    id: z.string(),
+    account_id: z.string(),
+    name: z.string(),
+    published: z.literal(true),
+    published_at: z.string(),
+    plans_count: z.number(),
+    plans_limit: z.number(),
+    created_at: z.string(),
+    updated_at: z.string(),
+    content: z.object({
+      walls: z.record(
+        z.string(),
+        z.object({
+          x1: z.number(),
+          y1: z.number(),
+          x2: z.number(),
+          y2: z.number(),
+        }),
+      ),
+      windows: z.record(
+        z.string(),
+        z.object({
+          wall_id: z.string(),
+          x: z.number(),
+          y: z.number(),
+          w: z.number(),
+          h: z.number(),
+        }),
+      ),
+      doors: z.record(
+        z.string(),
+        z.object({
+          wall_id: z.string(),
+          x: z.number(),
+          w: z.number(),
+          h: z.number(),
+        }),
+      ),
+      wet_areas: z.record(
+        z.string(),
+        z.object({
+          points: z.array(
+            z.object({
+              x: z.number(),
+              y: z.number(),
+            }),
+          ),
+        }),
+      ),
+    }),
+  }),
+]);
 
 export const RawPlanSchema = z.object({
   id: z.string(),
@@ -65,7 +117,6 @@ export const RawPlanSchema = z.object({
     furniture: z.record(
       z.string(),
       z.object({
-        id: z.string(),
         furniture_id: z.string(),
         x: z.number(),
         y: z.number(),
@@ -76,7 +127,6 @@ export const RawPlanSchema = z.object({
     areas: z.record(
       z.string(),
       z.object({
-        id: z.string(),
         type: z.literal([
           "kitchen",
           "livingroom",
@@ -117,7 +167,6 @@ export const RawPromptSchema = z.object({
       furniture: z.record(
         z.string(),
         z.object({
-          id: z.string(),
           furniture_id: z.string(),
           x: z.number(),
           y: z.number(),
@@ -128,7 +177,6 @@ export const RawPromptSchema = z.object({
       areas: z.record(
         z.string(),
         z.object({
-          id: z.string(),
           type: z.literal([
             "kitchen",
             "livingroom",
@@ -156,7 +204,6 @@ export const RawPromptSchema = z.object({
               z.string(),
               z
                 .object({
-                  id: z.string().optional(),
                   furniture_id: z.string().optional(),
                   x: z.number().optional(),
                   y: z.number().optional(),
@@ -171,7 +218,6 @@ export const RawPromptSchema = z.object({
               z.string(),
               z
                 .object({
-                  id: z.string(),
                   type: z
                     .literal([
                       "kitchen",

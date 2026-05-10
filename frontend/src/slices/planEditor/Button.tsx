@@ -1,37 +1,36 @@
 import "./Button.scss";
-import type { MouseEventHandler } from "react";
+import type { ButtonHTMLAttributes } from "react";
 
-export function Button({
-  title,
-  icon,
-  loading,
-  active,
-  disabled,
-  onClick,
-}: {
+type ButtonAttributes = {
   title?: string;
   icon?: string;
   loading?: boolean;
   active?: boolean;
-  disabled?: boolean;
-  onClick?: MouseEventHandler<HTMLButtonElement>;
-}) {
-  const className = disabled
+} & ButtonHTMLAttributes<HTMLButtonElement>;
+
+export function Button(attributes: ButtonAttributes) {
+  const className = attributes.disabled
     ? "plan-editor__button__disabled"
-    : active
+    : attributes.active
       ? "plan-editor__button__active"
       : "plan-editor__button";
 
+  const buttonAttibutes = Object.assign(
+    {},
+    ...(Object.keys(attributes) as (keyof ButtonAttributes)[])
+      .filter((a) => !["title", "icon", "loading", "active"].includes(a))
+      .map((key) => ({ [key]: attributes[key] })),
+  );
+
   return (
-    <button
-      className={className}
-      onClick={onClick}
-      disabled={disabled || loading}
-    >
-      {icon && (
-        <img className="plan-editor__button__icon" src={`/app/icons/${icon}`} />
+    <button className={className} {...buttonAttibutes}>
+      {attributes.icon && (
+        <img
+          className="plan-editor__button__icon"
+          src={`/app/icons/${attributes.icon}`}
+        />
       )}
-      {title}
+      {attributes.title}
     </button>
   );
 }

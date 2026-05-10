@@ -1,0 +1,58 @@
+@use "../../styles/semantic" as s;
+
+.button {
+  &[disabled] {
+    opacity: 0.5;
+  }
+
+  background-color: s.$color-bg-100;
+  border-radius: 5px;
+  padding: s.$padding-xs s.$padding-sm;
+  box-sizing: border-box;
+  border: 3px solid transparent;
+  box-shadow: s.$color-bg-200 0px 0px 0px 1px;
+  transition-duration: 0.125s;
+  color: s.$color-fg-900;
+
+  &:enabled:hover {
+    box-shadow: s.$color-bg-300 0px 0px 0px 3px;
+  }
+
+  &--primary {
+    &[disabled] {
+      opacity: 0.5;
+    }
+
+    background-color: s.$color-bg-primary-500;
+    border-radius: 5px;
+    padding: s.$padding-xs s.$padding-sm;
+    box-sizing: border-box;
+    border: 3px solid transparent;
+    box-shadow: s.$color-border-primary-500 0px 0px 0px 1px;
+    transition-duration: 0.125s;
+    color: s.$color-fg-primary-500;
+
+    &:enabled:hover {
+      box-shadow: s.$color-border-primary-500 0px 0px 0px 3px;
+    }
+  }
+
+  &--danger {
+    &[disabled] {
+      opacity: 0.5;
+    }
+
+    background-color: s.$color-bg-100;
+    border-radius: 5px;
+    padding: s.$padding-xs s.$padding-sm;
+    box-sizing: border-box;
+    border: 3px solid transparent;
+    box-shadow: s.$color-border-danger-500 0px 0px 0px 1px;
+    transition-duration: 0.125s;
+    color: s.$color-fg-900;
+
+    &:enabled:hover {
+      box-shadow: s.$color-border-danger-500 0px 0px 0px 3px;
+    }
+  }
+}

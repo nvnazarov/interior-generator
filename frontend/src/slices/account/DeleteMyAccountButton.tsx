@@ -1,21 +1,23 @@
 import type React from "react";
-import { authClient } from "../../shared/betterAuth";
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router";
+
+import { authClient } from "../../shared/betterAuth";
 import { useAppDispatch } from "../storeTypes";
 import { accountDeleted } from "./slice";
 import { notify } from "../notifications/slice";
+import { Button } from "../../shared/components/button/Button";
 
 export function DeleteMyAccountButton() {
   const dispatch = useAppDispatch();
-  const [disabled, setDisabled] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
 
   const handleClick = useCallback((_: React.MouseEvent<HTMLButtonElement>) => {
-    if (disabled) {
+    if (deleting) {
       return;
     }
-    setDisabled(true);
+    setDeleting(true);
     authClient
       .deleteUser()
       .then((res) => {
@@ -29,12 +31,15 @@ export function DeleteMyAccountButton() {
       .catch(() => {
         dispatch(notify({ text: "Something wrong", severity: "error" }));
       })
-      .finally(() => setDisabled(false));
+      .finally(() => setDeleting(false));
   }, []);
 
   return (
-    <button onClick={handleClick} disabled={disabled}>
-      Delete
-    </button>
+    <Button
+      onClick={handleClick}
+      loading={deleting}
+      danger
+      text="Delete account"
+    />
   );
 }

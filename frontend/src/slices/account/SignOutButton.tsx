@@ -1,9 +1,10 @@
 import { useCallback, useState } from "react";
+import { useNavigate } from "react-router";
+
 import { useAppDispatch } from "../storeTypes";
 import { authClient } from "../../shared/betterAuth";
 import { userSignedOut } from "./slice";
-import { useNavigate } from "react-router";
-import { Button } from "../../shared/components";
+import { Button } from "../../shared/components/button/Button";
 
 export function SignOutButton() {
   const navigate = useNavigate();
@@ -28,10 +29,6 @@ export function SignOutButton() {
   }, [isSigningOut]);
 
   return (
-    <Button
-      icon="signout.png"
-      onClick={handleSignOut}
-      disabled={isSigningOut}
-    />
+    <Button onClick={handleSignOut} loading={isSigningOut} text="Sign out" />
   );
 }

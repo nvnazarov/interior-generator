@@ -1,31 +1,9 @@
-@use "../../styles/base";
-@use "../../styles/colors";
-
-.account__sign-in-form {
+.sign-in-form {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  @include base.bbox();
+  gap: 10px;
 
-  p {
-    margin-bottom: 1rem;
-  }
-
-  input {
-    outline: none;
-    @include base.bbox();
-
-    &:focus {
-      border-color: colors.$primary-0;
-      box-shadow: base.$shadow-1;
-    }
-  }
-
-  button {
-    @include base.bbox();
-
-    &:hover {
-      @include base.bbox($color: colors.$surface-1);
-    }
+  > p {
+    margin-bottom: 20px;
   }
 }

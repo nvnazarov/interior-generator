@@ -1,24 +1,22 @@
 import "./HomePage.scss";
-import { NavLink } from "react-router";
-import { ProjectsGrid } from "../slices/projects";
-import { SignOutButton } from "../slices/account";
-import { Center, Page } from "../shared/components";
-import { ChangeLanguageButton } from "../slices/other";
-import { MyAvatar } from "../slices/account/MyAvatar";
+import { ProjectsList } from "../slices/projects";
+import {
+  DeleteMyAccountButton,
+  Profile,
+  SignOutButton,
+} from "../slices/account";
 
 export function HomePage() {
   return (
-    <Page>
-      <div className="pages__home__header">
-        <ChangeLanguageButton />
-        <SignOutButton />
-        <NavLink to="/profile">
-          <MyAvatar />
-        </NavLink>
+    <div className="home-page">
+      <div className="home-page__container">
+        <div className="home-page__header">
+          <DeleteMyAccountButton />
+          <SignOutButton />
+        </div>
+        <Profile />
+        <ProjectsList />
       </div>
-      <Center>
-        <ProjectsGrid />
-      </Center>
-    </Page>
+    </div>
   );
 }

@@ -1,44 +1,25 @@
-.account__profile {
+@use "../../shared/styles/semantic" as s;
+
+.profile {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 20px;
-  border-radius: 10px;
-  width: 400px;
-  height: 200px;
-  background-color: #faa;
+  align-items: center;
+  gap: 10px;
 
-  &__data {
+  &__static-data {
     display: flex;
-    justify-content: space-between;
-    align-items: start;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
   }
 
-  &__title {
-    text-align: center;
-    font-weight: bold;
-    font-family: "Courier New", Courier, monospace;
+  &__register-date {
+    font-size: s.$font-size-sm;
+    color: s.$color-fg-500;
   }
 
-  &__attr {
-    &__name {
-      font-weight: bold;
-      color: blue;
-      padding-right: 10px;
-      font-family: "Courier New", Courier, monospace;
-    }
-    &__value {
-      font-weight: bold;
-      text-transform: uppercase;
-      color: black;
-      font-family: "Courier New", Courier, monospace;
-
-      input {
-        color: black;
-        font-family: "Courier New", Courier, monospace;
-        border: none;
-      }
-    }
+  &__email {
+    font-size: s.$font-size-md;
   }
 
   &__actions {

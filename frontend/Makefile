@@ -1,8 +1,11 @@
 local:
-	npm run dev
+	@npm run dev
+
+test:
+	@npm run test
 
 format:
-	npm run format
+	@npm run format
 
 format-check:
-	npm run format:check
+	@npm run format:check

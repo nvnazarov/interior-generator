@@ -1,32 +1,31 @@
 import { useCallback, useState } from "react";
 import { useCreateProjectMutation } from "../api/slice";
 import { useNavigate } from "react-router";
-import { Button } from "../../shared/components";
-import { useTranslation } from "react-i18next";
+import { Button } from "../../shared/components/button/Button";
 
 export function CreateProjectButton() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const [createProject] = useCreateProjectMutation();
-  const [isCreating, setIsCreating] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
   const handleClick = useCallback(async () => {
     try {
-      setIsCreating(true);
+      setProcessing(true);
       const project = await createProject().unwrap();
-      navigate(`/editor/${project.id}`);
+      navigate(`/editor/project/${project.id}`);
     } catch {
       // TODO
     } finally {
-      setIsCreating(false);
+      setProcessing(false);
     }
   }, []);
 
   return (
     <Button
       onClick={handleClick}
-      disabled={isCreating}
-      title={t("Projects.CreateProjectButton.Title", "New Project")}
+      text="Create project"
+      disabled={processing}
+      primary
     />
   );
 }

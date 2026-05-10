@@ -17,7 +17,7 @@ import { NameInput } from "./NameInput";
 import { Hint } from "./Hint";
 import { ChatButton } from "./ChatButton";
 import { Chat } from "../prompts/Chat";
-import { SmartAvatar } from "../account";
+import { AccountAvatar } from "../account";
 
 export function PlanEditor({
   projectId,
@@ -59,9 +59,37 @@ export function PlanEditor({
           <NameInput />
         </div>
         <div>
-          <SelectToolButton icon="hand.png" tool="hand" />
-          <SelectToolButton icon="area.png" tool="area" />
-          <SelectToolButton icon="move.png" tool="furniture" />
+          <SelectToolButton
+            icon="hand.png"
+            tool="hand"
+            tooltip={
+              <>
+                This is the <b>hand</b> tool. Use it to <b>move around</b>{" "}
+                without worring about accidentally modifying anything.
+              </>
+            }
+          />
+          <SelectToolButton
+            icon="area.png"
+            tool="area"
+            tooltip={
+              <>
+                This is the <b>area</b> tool. Use it to{" "}
+                <b>draw functional areas</b>. This will help AI assistant in
+                arranging furniture.
+              </>
+            }
+          />
+          <SelectToolButton
+            icon="move.png"
+            tool="furniture"
+            tooltip={
+              <>
+                This is the <b>move</b> tool. Use it to <b>move furniture</b> or
+                similar items.
+              </>
+            }
+          />
         </div>
         <div>
           <ChangeViewButton />
@@ -78,7 +106,7 @@ export function PlanEditor({
           <ChatButton />
           <FurnitureCatalogSwitch />
         </div>
-        {isSuccess && <SmartAvatar accountId={project.accountId} />}
+        {isSuccess && <AccountAvatar accountId={project.accountId} />}
       </div>
       {isCatalogOpen && <FurnitureCatalog />}
       {isChatOpen && <Chat projectId={projectId} />}

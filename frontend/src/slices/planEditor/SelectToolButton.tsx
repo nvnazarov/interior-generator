@@ -1,14 +1,17 @@
-import { useCallback } from "react";
+import { useCallback, type ReactNode } from "react";
 import { Button } from "./Button";
 import { useAppDispatch, useAppSelector } from "../storeTypes";
 import { selectPlanEditorTool, toolSelected } from "./slice";
+import { Tooltip } from "../../shared/components/tooltip/Tooltip";
 
 export function SelectToolButton({
   icon,
   tool,
+  tooltip,
 }: {
   icon: string;
   tool: "hand" | "area" | "furniture";
+  tooltip: ReactNode;
 }) {
   const dispatch = useAppDispatch();
   const selectedTool = useAppSelector(selectPlanEditorTool);
@@ -18,6 +21,12 @@ export function SelectToolButton({
   }, [tool]);
 
   return (
-    <Button icon={icon} onClick={handleClick} active={tool === selectedTool} />
+    <Tooltip content={tooltip}>
+      <Button
+        icon={icon}
+        onClick={handleClick}
+        active={tool === selectedTool}
+      />
+    </Tooltip>
   );
 }

@@ -1,5 +1,4 @@
 export interface Wall {
-  id: string;
   x1: number;
   y1: number;
   x2: number;
@@ -7,7 +6,6 @@ export interface Wall {
 }
 
 export interface Window {
-  id: string;
   wallId: string;
   x: number;
   y: number;
@@ -16,7 +14,6 @@ export interface Window {
 }
 
 export interface Door {
-  id: string;
   wallId: string;
   x: number;
   w: number;
@@ -24,16 +21,15 @@ export interface Door {
 }
 
 export interface WetArea {
-  id: string;
   points: { x: number; y: number }[];
 }
 
-export interface Project {
+export type Project = {
   id: string;
   accountId: string;
   name: string;
-  description: string;
   published: boolean;
+  dtPublished: string | null;
   content: {
     walls: Record<string, Wall>;
     windows: Record<string, Window>;
@@ -41,9 +37,11 @@ export interface Project {
     wetAreas: Record<string, WetArea>;
   };
   revision: string;
+  plansCount: number;
+  plansLimit: number;
   dtCreated: string;
   dtUpdated: string;
-}
+};
 
 export interface ProjectPatch {
   name?: string;
@@ -57,13 +55,11 @@ export interface ProjectPatch {
 }
 
 export interface FunctionalArea {
-  id: string;
   type: "kitchen" | "livingroom" | "bedroom" | "bathroom" | "hallway";
   points: { x: number; y: number }[];
 }
 
 export interface FurnitureInPlan {
-  id: string;
   furnitureId: string;
   x: number;
   y: number;

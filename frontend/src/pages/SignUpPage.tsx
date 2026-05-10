@@ -1,12 +1,10 @@
-import { Center, Page } from "../shared/components";
+import "./SignUpPage.scss";
 import { SignUpForm } from "../slices/account";
 
 export function SignUpPage() {
   return (
-    <Page>
-      <Center>
-        <SignUpForm />
-      </Center>
-    </Page>
+    <div className="sign-up-page">
+      <SignUpForm />
+    </div>
   );
 }

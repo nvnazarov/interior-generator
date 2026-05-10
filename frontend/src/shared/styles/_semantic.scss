@@ -1,0 +1,46 @@
+@use "primitive" as p;
+
+$text-color-default: p.$color-neutral-1000;
+
+$text-size-body-md: 10px;
+$text-size-: 10px;
+
+$border-radius-sm: p.$d-100;
+$border-radius-md: p.$d-200;
+$border-radius-lg: p.$d-300;
+
+$color-bg-0: p.$color-neutral-0;
+$color-bg-50: p.$color-neutral-50;
+$color-bg-100: p.$color-neutral-100;
+$color-bg-200: p.$color-neutral-200;
+$color-bg-300: p.$color-neutral-300;
+$color-bg-400: p.$color-neutral-400;
+$color-bg-500: p.$color-neutral-500;
+
+$color-bg-primary-500: p.$color-primary-300;
+$color-border-primary-500: p.$color-primary-500;
+
+$color-border-500: p.$color-neutral-600;
+$color-border-danger-500: p.$color-danger-500;
+
+$color-fg-500: p.$color-neutral-400;
+$color-fg-600: p.$color-neutral-500;
+$color-fg-700: p.$color-neutral-600;
+$color-fg-800: p.$color-neutral-800;
+$color-fg-900: p.$color-neutral-900;
+$color-fg-1000: p.$color-neutral-1000;
+
+$color-fg-primary-500: p.$color-primary-800;
+
+$padding-xs: p.$d-100;
+$padding-sm: p.$d-200;
+$padding-md: p.$d-300;
+$padding-lg: p.$d-400;
+
+$font-weight-default: 600;
+$font-size-xs: p.$font-size-300;
+$font-size-sm: p.$font-size-400;
+$font-size-md: p.$font-size-500;
+$font-size-lg: p.$font-size-600;
+$font-size-default: $font-size-md;
+$font-family-default: p.$font-family;

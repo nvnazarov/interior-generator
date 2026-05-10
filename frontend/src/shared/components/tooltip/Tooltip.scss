@@ -1,0 +1,22 @@
+.tooltip {
+  &__container {
+    z-index: 2000;
+    position: absolute;
+    max-width: 200px;
+  }
+
+  &__tooltip {
+    color: white;
+    background-color: black;
+    border-radius: 5px;
+    padding: 10px;
+  }
+
+  &__pointer {
+    position: fixed;
+    width: 6px;
+    height: 6px;
+    background-color: black;
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+}

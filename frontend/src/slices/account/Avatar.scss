@@ -1,15 +1,26 @@
-.account__avatar {
+@use "../../shared/styles/semantic" as s;
+
+.avatar {
   display: flex;
   justify-content: space-around;
   align-items: center;
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.2);
   overflow: hidden;
+  background-color: s.$color-bg-100;
 
-  &__img {
-    width: 50px;
-    height: 50px;
+  * {
+    width: inherit;
+    height: inherit;
+  }
+
+  &--interactive {
+    box-shadow: s.$color-bg-200 0px 0px 0px 1px;
+    transition-duration: 0.125s;
+
+    &:hover {
+      box-shadow: s.$color-bg-200 0px 0px 0px 3px;
+    }
   }
 }

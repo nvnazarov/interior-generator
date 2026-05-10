@@ -1,22 +1,20 @@
+import moment from "moment";
+import { useCallback, useEffect, useState, type ChangeEvent } from "react";
+
 import "./Profile.scss";
 import { useAppDispatch, useAppSelector } from "../storeTypes";
 import { accountUpdated, selectMyAccount } from "./slice";
-import moment from "moment";
 import { DeleteMyAccountButton } from "./DeleteMyAccountButton";
-import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 import { authClient } from "../../shared/betterAuth";
 import { Avatar } from "./Avatar";
 import { Client } from "../../shared/client";
-import { useTranslation } from "react-i18next";
-import { Button } from "../../shared/components";
-import i18next from "i18next";
+import { Button } from "../../shared/components/button/Button";
 import { notify } from "../notifications/slice";
-
-const MAX_AVATAR_FILE_SIZE_BYTES = 512 * 1024;
+import { MAX_AVATAR_FILE_SIZE_BYTES } from "./lib";
+import { TextInput } from "../../shared/components/input/TextInput";
 
 export function Profile() {
   const dispatch = useAppDispatch();
-  const { t } = useTranslation();
   const [mode, setMode] = useState<"view" | "edit">("view");
   const account = useAppSelector(selectMyAccount);
   const dtCreated = moment(account?.dtCreated);
@@ -25,7 +23,7 @@ export function Profile() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
 
-  const isDirty = editedName !== account?.name || avatarFile;
+  const isDirty = editedName !== account?.name || Boolean(avatarFile);
 
   const handleSave = useCallback(async () => {
     if (isSaving) {
@@ -109,85 +107,56 @@ export function Profile() {
   }, [avatarPreviewUrl]);
 
   return (
-    <div className="account__profile">
-      <div className="account__profile__title">
-        USER LICENSE <hr />
-      </div>
-      <div className="account__profile__data">
-        {mode === "view" ? (
-          <Avatar name={account?.name} avatarUrl={account?.avatarUrl} />
-        ) : (
-          <div>
-            <input
-              id="avatar-file-input"
-              accept="image/png, image/jpeg"
-              type="file"
-              style={{ display: "none" }}
-              onChange={handleAvatarFileChange}
+    <div className="profile">
+      {mode === "view" ? (
+        <Avatar name={account?.name} avatarUrl={account?.avatarUrl} />
+      ) : (
+        <div>
+          <input
+            id="avatar-file-input"
+            accept="image/png, image/jpeg"
+            type="file"
+            style={{ display: "none" }}
+            onChange={handleAvatarFileChange}
+          />
+          <label htmlFor="avatar-file-input">
+            <Avatar
+              interactive
+              name={account?.name}
+              avatarUrl={avatarPreviewUrl || account?.avatarUrl}
             />
-            <label htmlFor="avatar-file-input">
-              <Avatar
-                name={account?.name}
-                avatarUrl={avatarPreviewUrl || account?.avatarUrl}
-              />
-            </label>
-          </div>
-        )}
-        <table>
-          <tbody>
-            <tr>
-              <td className="account__profile__attr__name">
-                {t("Account.Profile.Name.Title")}
-              </td>
-              <td className="account__profile__attr__value">
-                {mode === "edit" ? (
-                  <input
-                    placeholder="your name"
-                    value={editedName}
-                    onChange={handleNameChange}
-                  />
-                ) : (
-                  account?.name
-                )}
-              </td>
-            </tr>
-            <tr>
-              <td className="account__profile__attr__name">
-                {t("Account.Profile.Lang.Title")}
-              </td>
-              <td className="account__profile__attr__value">
-                {i18next.language}
-              </td>
-            </tr>
-            <tr>
-              <td className="account__profile__attr__name">
-                {t("Account.Profile.Date.Title", "Date")}
-              </td>
-              <td className="account__profile__attr__value">
-                {dtCreated.format(
-                  t("Account.Profile.Date.Format", "DD.MM.YYYY"),
-                )}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+          </label>
+        </div>
+      )}
+      {mode === "edit" ? (
+        <TextInput
+          placeholder="Name"
+          value={editedName}
+          onChange={handleNameChange}
+        />
+      ) : (
+        <p>{account?.name}</p>
+      )}
+      <div className="profile__static-data">
+        <p className="profile__email">{account?.email}</p>
+        <p className="profile__register-date">
+          Registered {dtCreated.format("DD.MM.YYYY")}
+        </p>
       </div>
-      <div className="account__profile__actions">
+      <div className="profile__actions">
         {mode === "view" ? (
           <>
-            <DeleteMyAccountButton />
-            <button onClick={handleSwitchToEditMode}>Edit</button>
+            <Button onClick={handleSwitchToEditMode} text="Edit" />
           </>
         ) : (
           <>
-            <Button
-              onClick={handleCancel}
-              title={t("Account.Profile.Edit.CancelButton.Title", "Cancel")}
-            />
+            <Button onClick={handleCancel} text="Cancel" />
             <Button
               onClick={handleSave}
-              disabled={isSaving || !isDirty}
-              title={t("Account.Profile.Edit.SaveButton.Title", "Save")}
+              disabled={!isDirty}
+              loading={isSaving && isDirty}
+              primary
+              text="Save"
             />
           </>
         )}

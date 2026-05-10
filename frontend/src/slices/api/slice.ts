@@ -45,14 +45,16 @@ const api = createApi({
           id: raw.id,
           accountId: raw.account_id,
           name: raw.name,
-          description: raw.description,
+          published: raw.published,
+          dtPublished: raw.published_at,
+          plansCount: raw.plans_count,
+          plansLimit: raw.plans_limit,
           content: {
             walls: {},
             windows: {},
             doors: {},
             wetAreas: {},
           },
-          published: raw.published,
           revision: "",
           dtCreated: raw.created_at,
           dtUpdated: raw.updated_at,
@@ -72,11 +74,13 @@ const api = createApi({
         id: raw.id,
         accountId: raw.account_id,
         name: raw.name,
-        description: raw.description,
+        published: raw.published,
+        dtPublished: raw.published_at,
+        plansCount: raw.plans_count,
+        plansLimit: raw.plans_limit,
         content: {
           walls: raw.content.walls,
           windows: mapById(raw.content.windows, (w) => ({
-            id: w.id,
             wallId: w.wall_id,
             x: w.x,
             y: w.y,
@@ -84,7 +88,6 @@ const api = createApi({
             h: w.h,
           })),
           doors: mapById(raw.content.doors, (d) => ({
-            id: d.id,
             wallId: d.wall_id,
             x: d.x,
             w: d.w,
@@ -92,7 +95,6 @@ const api = createApi({
           })),
           wetAreas: raw.content.wet_areas,
         },
-        published: raw.published,
         revision: meta?.response?.headers.get("etag") || "",
         dtCreated: raw.created_at,
         dtUpdated: raw.updated_at,
@@ -109,11 +111,13 @@ const api = createApi({
         id: raw.id,
         accountId: raw.account_id,
         name: raw.name,
-        description: raw.description,
+        published: raw.published,
+        dtPublished: raw.published_at,
+        plansCount: raw.plans_count,
+        plansLimit: raw.plans_limit,
         content: {
           walls: raw.content.walls,
           windows: mapById(raw.content.windows, (w) => ({
-            id: w.id,
             wallId: w.wall_id,
             x: w.x,
             y: w.y,
@@ -121,7 +125,6 @@ const api = createApi({
             h: w.h,
           })),
           doors: mapById(raw.content.doors, (d) => ({
-            id: d.id,
             wallId: d.wall_id,
             x: d.x,
             w: d.w,
@@ -129,7 +132,6 @@ const api = createApi({
           })),
           wetAreas: raw.content.wet_areas,
         },
-        published: raw.published,
         revision: meta?.response?.headers.get("etag") || "",
         dtCreated: raw.created_at,
         dtUpdated: raw.updated_at,
@@ -272,7 +274,6 @@ const api = createApi({
         content: {
           areas: raw.content.areas,
           furniture: mapById(raw.content.furniture, (f) => ({
-            id: f.id,
             furnitureId: f.furniture_id,
             x: f.x,
             y: f.y,
@@ -299,7 +300,6 @@ const api = createApi({
         content: {
           areas: raw.content.areas,
           furniture: mapById(raw.content.furniture, (f) => ({
-            id: f.id,
             furnitureId: f.furniture_id,
             x: f.x,
             y: f.y,

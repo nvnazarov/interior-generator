@@ -1,27 +1,24 @@
-import type React from "react";
+import type { HTMLAttributes } from "react";
+
 import "./Avatar.scss";
 import type { Account } from "./slice";
+import { initials } from "./lib";
 
-function getInitials(name: string): string {
-  return name.slice(0, 2).toUpperCase();
-}
+type AvatarAttributes = Pick<Partial<Account>, "name" | "avatarUrl"> & {
+  interactive?: boolean;
+} & HTMLAttributes<HTMLDivElement>;
 
 export function Avatar({
   name,
+  interactive,
   avatarUrl,
-  onClick,
-}: Pick<Partial<Account>, "name" | "avatarUrl"> & {
-  onClick?: React.MouseEventHandler<HTMLDivElement>;
-}) {
+  ...props
+}: AvatarAttributes) {
+  name = name ? name : "Anonymous";
+  const classes_ = "avatar" + (interactive ? " avatar--interactive" : "");
   return (
-    <div className="account__avatar" onClick={onClick} title={name}>
-      {avatarUrl ? (
-        <img className="account__avatar__img" src={avatarUrl || undefined} />
-      ) : name ? (
-        <>{getInitials(name)}</>
-      ) : (
-        <>?</>
-      )}
+    <div className={classes_} {...props} title={name}>
+      {avatarUrl ? <img src={avatarUrl} /> : initials(name)}
     </div>
   );
 }

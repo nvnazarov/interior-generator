@@ -2,4 +2,5 @@ export { Profile } from "./Profile";
 export { SignUpForm } from "./SignUpForm";
 export { SignInForm } from "./SignInForm";
 export { SignOutButton } from "./SignOutButton";
-export { SmartAvatar } from "./SmartAvatar";
+export { AccountAvatar } from "./AccountAvatar";
+export { DeleteMyAccountButton } from "./DeleteMyAccountButton";

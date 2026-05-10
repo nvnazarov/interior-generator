@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { Button } from "./Button";
 import { useAppDispatch, useAppSelector } from "../storeTypes";
 import { changeRedone, selectCanRedoChange } from "./slice";
+import { Tooltip } from "../../shared/components/tooltip/Tooltip";
 
 export function RedoChangeButton() {
   const dispatch = useAppDispatch();
@@ -12,6 +13,8 @@ export function RedoChangeButton() {
   }, []);
 
   return (
-    <Button icon="redo.png" onClick={handleClick} disabled={!canRedoChange} />
+    <Tooltip content="Redo the last undone change" position="bottom">
+      <Button icon="redo.png" onClick={handleClick} disabled={!canRedoChange} />
+    </Tooltip>
   );
 }

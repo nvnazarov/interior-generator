@@ -1,10 +1,13 @@
-import "./SignUpForm.scss";
 import { useCallback, useState, type ChangeEvent } from "react";
 import { Link, useNavigate } from "react-router";
+
+import "./SignUpForm.scss";
 import { authClient } from "../../shared/betterAuth";
 import { useAppDispatch } from "../storeTypes";
 import { userSignedUp } from "./slice";
 import { notify } from "../notifications/slice";
+import { TextInput } from "../../shared/components/input/TextInput";
+import { Button } from "../../shared/components/button/Button";
 
 export function SignUpForm() {
   const dispatch = useAppDispatch();
@@ -63,21 +66,27 @@ export function SignUpForm() {
   );
 
   return (
-    <form className="account__sign-up-form">
+    <form className="sign-up-form">
       <p>
         Already have an account? <Link to="/sign-in">Sign in</Link>
       </p>
-
-      <input value={name} onChange={handleNameChange} placeholder="Name" />
-      <input value={email} onChange={handleEmailChange} placeholder="Email" />
-      <input
+      <TextInput value={name} onChange={handleNameChange} placeholder="Name" />
+      <TextInput
+        value={email}
+        onChange={handleEmailChange}
+        placeholder="Email"
+      />
+      <TextInput
         value={password}
         onChange={handlePasswordChange}
         placeholder="Password"
       />
-      <button onClick={handleSignUp} disabled={isSigningUp}>
-        Sign Up
-      </button>
+      <Button
+        onClick={handleSignUp}
+        loading={isSigningUp}
+        primary
+        text="Sign up"
+      />
     </form>
   );
 }

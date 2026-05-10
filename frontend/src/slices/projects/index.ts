@@ -1,1 +1,1 @@
-export { ProjectsGrid } from "./ProjectsGrid";
+export { ProjectsList } from "./ProjectsList";
