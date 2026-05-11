@@ -1,0 +1,32 @@
+@use "../../shared/styles/semantic" as s;
+
+.plan-editor {
+  &__menu {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%);
+    z-index: 1;
+    gap: 10px;
+    padding: 10px;
+    background-color: s.$color-bg-0;
+    border: 1px solid s.$color-bg-500;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    box-shadow: s.$shadow-default;
+
+    > span {
+      width: 1.2px;
+      background-color: s.$color-bg-300;
+      margin-left: 5px;
+      margin-right: 5px;
+    }
+
+    > button {
+      width: 40px;
+    }
+  }
+}

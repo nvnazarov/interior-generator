@@ -1,0 +1,63 @@
+@use "../../../shared/styles/semantic" as s;
+
+.furniture-catalog {
+  ::-webkit-scrollbar {
+    width: 0px;
+  }
+
+  position: absolute;
+  top: 70px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  border: 1px solid s.$color-border-500;
+  box-shadow: s.$shadow-default;
+  border-radius: 10px;
+  background-color: white;
+  height: 500px;
+  max-width: 400px;
+  min-width: 300px;
+  z-index: 10;
+
+  &__feed {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    overflow-y: scroll;
+
+    &__item {
+      width: 160px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 10px;
+
+      img {
+        aspect-ratio: 1;
+      }
+
+      span {
+        opacity: 0.5;
+      }
+    }
+  }
+
+  &__filters {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    border-bottom: 1px solid #ddd;
+    width: 100%;
+
+    div {
+      display: flex;
+      gap: 5px;
+
+      :nth-child(1) {
+        flex: 50px;
+      }
+    }
+  }
+}

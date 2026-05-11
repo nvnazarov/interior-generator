@@ -1,0 +1,45 @@
+@use "../../shared/styles/semantic" as s;
+
+.chat {
+  ::-webkit-scrollbar {
+    width: 0px;
+  }
+
+  position: absolute;
+  top: 70px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  border: 1px solid s.$color-border-500;
+  box-shadow: s.$shadow-default;
+  border-radius: 10px;
+  background-color: white;
+  height: 500px;
+  max-width: 400px;
+  min-width: 300px;
+  z-index: 10;
+
+  & > p {
+    padding: 10px;
+    font-size: 0.9em;
+    opacity: 0.8;
+  }
+
+  &__history {
+    flex: 1;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    overflow-y: scroll;
+  }
+
+  &__input {
+    border-top: 1px solid s.$color-bg-100;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+}

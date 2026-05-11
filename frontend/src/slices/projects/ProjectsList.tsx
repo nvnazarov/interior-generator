@@ -53,10 +53,10 @@ export function ProjectsList() {
           You don't have any{" "}
           <Tooltip
             content={
-              <>
+              <p style={{ fontWeight: 400 }}>
                 A <b>project</b> is a workspace where you can probe different
                 interior designs.
-              </>
+              </p>
             }
             position="top"
           >

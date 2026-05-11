@@ -5,6 +5,7 @@ import {
   Profile,
   SignOutButton,
 } from "../slices/account";
+import { ChangeLanguageButton } from "../slices/internalization";
 
 export function HomePage() {
   return (
@@ -13,6 +14,7 @@ export function HomePage() {
         <div className="home-page__header">
           <DeleteMyAccountButton />
           <SignOutButton />
+          <ChangeLanguageButton />
         </div>
         <Profile />
         <ProjectsList />

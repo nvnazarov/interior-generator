@@ -3,11 +3,15 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
 import Backend from "i18next-http-backend";
 
+export const LANGUAGES = ["en", "ru"]
+
 i18next
   .use(LanguageDetector)
   .use(initReactI18next)
   .use(new Backend(undefined, { loadPath: "/app/locales/{{lng}}/{{ns}}.json" }))
   .init({
     returnObjects: true,
-    fallbackLng: "en",
+    fallbackLng: LANGUAGES[0],
+    supportedLngs: LANGUAGES,
   });
+

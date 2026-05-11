@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 import "./Profile.scss";
 import { useAppDispatch, useAppSelector } from "../storeTypes";
 import { accountUpdated, selectMyAccount } from "./slice";
-import { DeleteMyAccountButton } from "./DeleteMyAccountButton";
 import { authClient } from "../../shared/betterAuth";
 import { Avatar } from "./Avatar";
 import { Client } from "../../shared/client";

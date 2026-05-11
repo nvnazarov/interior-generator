@@ -28,7 +28,5 @@ export function SignOutButton() {
     }
   }, [isSigningOut]);
 
-  return (
-    <Button onClick={handleSignOut} loading={isSigningOut} text="Sign out" />
-  );
+  return <Button onClick={handleSignOut} text="Sign out" />;
 }

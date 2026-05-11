@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { motion } from "motion/react";
+import { createPortal } from "react-dom";
 
 type TooltipProps = {
   children: ReactElement<HTMLAttributes<HTMLElement>>;
@@ -91,25 +92,28 @@ export function Tooltip({
   return (
     <>
       {child}
-      {visible && (
-        <div
-          className="tooltip__container"
-          style={{ top: top, left: left, transform: transform }}
-        >
-          <motion.div
-            className="tooltip__tooltip"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.5 }}
+      {visible &&
+        content &&
+        createPortal(
+          <div
+            className="tooltip__container"
+            style={{ top: top, left: left, transform: transform }}
           >
-            <div
-              className="tooltip__pointer"
-              style={{ top: pTop, bottom: pBottom, left: pLeft }}
-            />
-            {content}
-          </motion.div>
-        </div>
-      )}
+            <motion.div
+              className="tooltip__tooltip"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <div
+                className="tooltip__pointer"
+                style={{ top: pTop, bottom: pBottom, left: pLeft }}
+              />
+              {content}
+            </motion.div>
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

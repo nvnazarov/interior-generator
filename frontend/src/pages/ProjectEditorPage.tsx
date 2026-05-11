@@ -1,19 +1,18 @@
-import { useParams } from "react-router";
-import { Page } from "../shared/components";
-import { ProjectEditor } from "../slices/projectEditor/ProjectEditor";
+import { Navigate, useParams } from "react-router";
+
+import "./ProjectEditorPage.scss";
+import { ProjectEditor } from "../slices/project-editor/ProjectEditor";
 
 export function ProjectEditorPage() {
   const { projectId } = useParams();
 
   if (!projectId) {
-    throw new Error(
-      "error: project editor page: cannot get project id from params",
-    );
+    return <Navigate to="/" replace />;
   }
 
   return (
-    <Page>
+    <div className="project-editor-page">
       <ProjectEditor projectId={projectId} />
-    </Page>
+    </div>
   );
 }

@@ -1,22 +1,18 @@
-import { useParams } from "react-router";
-import { Page } from "../shared/components";
-import { PlanEditor } from "../slices/planEditor/PlanEditor";
+import { Navigate, useParams } from "react-router";
+
+import "./PlanEditorPage.scss";
+import { PlanEditor } from "../slices/plan-editor/PlanEditor";
 
 export function PlanEditorPage() {
   const { projectId, planId } = useParams();
 
-  if (!projectId) {
-    throw new Error(
-      "error: plan editor page: cannot get project id from params",
-    );
-  }
-  if (!planId) {
-    throw new Error("error: plan editor page: cannot get plan id from params");
+  if (!projectId || !planId) {
+    return <Navigate to="/" replace />;
   }
 
   return (
-    <Page>
+    <div className="plan-editor-page">
       <PlanEditor planId={planId} projectId={projectId} />
-    </Page>
+    </div>
   );
 }

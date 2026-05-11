@@ -1,0 +1,31 @@
+@use "../../styles/semantic" as s;
+
+.toggle {
+  input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+
+    &:checked ~ .toggle__checkmark {
+      background-color: s.$color-bg-primary-500;
+      box-shadow: s.$color-border-primary-500 0px 0px 0px 3px;
+    }
+  }
+
+  &__checkmark {
+    background-color: s.$color-bg-100;
+    box-shadow: s.$color-bg-200 0px 0px 0px 1px;
+    transition-duration: 0.125s;
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    &:hover {
+      box-shadow: s.$color-bg-300 0px 0px 0px 3px;
+    }
+  }
+}

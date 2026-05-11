@@ -54,28 +54,6 @@ export function combineManyJsonMergePatches(patches: any[]): any {
   return result;
 }
 
-// function isEmptyObject(v: any): boolean {
-//   return typeof v === "object" && v !== null && !Array.isArray(v) && Object.keys(v).length === 0
-// }
-
-// function optimize(patch: any): any {
-//   if (typeof patch === "object" && patch !== null && !Array.isArray(patch)) {
-//     const keys = Object.keys(patch);
-//     if (keys.length === 0) {
-//       return {};
-//     }
-//     const result: any = {};
-//     for (const key of keys) {
-//       const optimized = optimize(patch[key]);
-//       if (!isEmptyObject(optimized)) {
-//         result[key] = optimized;
-//       }
-//     }
-//     return result;
-//   }
-//   return patch;
-// }
-
 /**
  * Compares two objects. Arrays are compared element-wise.
  * Objects are compared field-wise. In other cases, objects

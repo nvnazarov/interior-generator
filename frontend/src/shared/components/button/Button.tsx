@@ -1,6 +1,7 @@
 import { forwardRef, type ButtonHTMLAttributes } from "react";
 
 import "./Button.scss";
+import { Icon } from "../icon/Icon";
 
 export type CustomAttributes = {
   text?: string;
@@ -21,7 +22,12 @@ export const Button = forwardRef<
       : "button";
   return (
     <button className={class_} {...props} ref={ref}>
-      {loading ? <></> : icon && <></>} {text}
+      {loading ? (
+        <span className="button__spinner" />
+      ) : (
+        icon && <Icon src={icon} />
+      )}{" "}
+      {text}
     </button>
   );
 });

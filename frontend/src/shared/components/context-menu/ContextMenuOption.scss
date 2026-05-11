@@ -1,0 +1,34 @@
+@use "../../styles/semantic" as s;
+
+.context-menu-option {
+  &[disabled] {
+    opacity: 0.5;
+  }
+
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  gap: 5px;
+  background-color: s.$color-bg-0;
+  border-radius: 5px;
+  padding: s.$padding-xs s.$padding-xs;
+  box-sizing: border-box;
+  border: 3px solid transparent;
+  box-shadow: s.$color-bg-100 0px 0px 0px 0px;
+  transition-duration: 0.125s;
+  color: s.$color-fg-900;
+
+  &:enabled:hover {
+    box-shadow: s.$color-bg-100 0px 0px 0px 3px;
+  }
+
+  &__spinner {
+    display: inline-block;
+    border: 2px solid s.$color-bg-400;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    animation: spin 2s linear infinite;
+  }
+}

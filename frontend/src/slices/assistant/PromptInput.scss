@@ -1,0 +1,24 @@
+@use "../../shared/styles/semantic" as s;
+
+.prompt-input {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background-color: s.$color-bg-100;
+  padding: 10px;
+  border: 1px solid s.$color-bg-500;
+  border-radius: 5px;
+
+  > textarea {
+    outline: none;
+    border: none;
+    background: transparent;
+    resize: vertical;
+    min-height: calc(2 * s.$font-size-default);
+  }
+
+  > div {
+    display: flex;
+    gap: 10px;
+  }
+}

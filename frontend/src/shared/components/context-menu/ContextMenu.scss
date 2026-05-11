@@ -1,0 +1,20 @@
+@use "../../../shared/styles/semantic" as s;
+
+.context-menu {
+  &__container {
+    z-index: 2000;
+    position: absolute;
+    max-width: 200px;
+  }
+
+  &__menu {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    border: 1px solid s.$color-border-500;
+    box-shadow: s.$shadow-default;
+    background-color: s.$color-bg-0;
+    border-radius: 10px;
+    padding: 10px;
+  }
+}

@@ -70,6 +70,7 @@
     align-items: center;
     color: s.$color-fg-600;
     font-size: s.$font-size-sm;
+    user-select: none;
 
     * {
       font-size: inherit;

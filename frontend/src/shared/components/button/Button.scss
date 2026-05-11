@@ -1,10 +1,23 @@
 @use "../../styles/semantic" as s;
 
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 .button {
   &[disabled] {
     opacity: 0.5;
   }
 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   background-color: s.$color-bg-100;
   border-radius: 5px;
   padding: s.$padding-xs s.$padding-sm;
@@ -13,6 +26,7 @@
   box-shadow: s.$color-bg-200 0px 0px 0px 1px;
   transition-duration: 0.125s;
   color: s.$color-fg-900;
+  user-select: none;
 
   &:enabled:hover {
     box-shadow: s.$color-bg-300 0px 0px 0px 3px;
@@ -23,6 +37,10 @@
       opacity: 0.5;
     }
 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
     background-color: s.$color-bg-primary-500;
     border-radius: 5px;
     padding: s.$padding-xs s.$padding-sm;
@@ -31,9 +49,15 @@
     box-shadow: s.$color-border-primary-500 0px 0px 0px 1px;
     transition-duration: 0.125s;
     color: s.$color-fg-primary-500;
+    user-select: none;
 
     &:enabled:hover {
       box-shadow: s.$color-border-primary-500 0px 0px 0px 3px;
+    }
+
+    > .button__spinner {
+      border: 2px solid s.$color-fg-primary-500;
+      border-top: 2px solid transparent;
     }
   }
 
@@ -42,6 +66,10 @@
       opacity: 0.5;
     }
 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
     background-color: s.$color-bg-100;
     border-radius: 5px;
     padding: s.$padding-xs s.$padding-sm;
@@ -50,9 +78,20 @@
     box-shadow: s.$color-border-danger-500 0px 0px 0px 1px;
     transition-duration: 0.125s;
     color: s.$color-fg-900;
+    user-select: none;
 
     &:enabled:hover {
       box-shadow: s.$color-border-danger-500 0px 0px 0px 3px;
     }
+  }
+
+  &__spinner {
+    display: inline-block;
+    border: 2px solid s.$color-bg-400;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    animation: spin 2s linear infinite;
   }
 }

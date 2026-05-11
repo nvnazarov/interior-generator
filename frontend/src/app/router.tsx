@@ -60,6 +60,7 @@ export const router = createBrowserRouter(
       path: "/",
       Component: SessionLoader,
       loader: loadSessionIfExists,
+      hydrateFallbackElement: <></>,
       children: [
         {
           element: <ProtectedRoute />,
