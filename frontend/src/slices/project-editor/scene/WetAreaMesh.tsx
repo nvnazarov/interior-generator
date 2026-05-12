@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import { projectChanged } from "../slice";
 import { useAppDispatch } from "../../storeTypes";
-import { MeshHint } from "../../../shared/components/mesh-hint/MeshHint";
+import { ContextMenuOption, MeshMenu } from "../../../shared/components";
 import { computePolygonArea } from "../lib";
 
 export function WetAreaMesh({ area }: { area: WetArea & { id: string } }) {
@@ -56,12 +56,17 @@ export function WetAreaMesh({ area }: { area: WetArea & { id: string } }) {
   const areaSqm = Math.round(computePolygonArea(area.points));
 
   return (
-    <MeshHint
-      content={
+    <MeshMenu
+      hint={
         <>
           Wet area
           <br />
           <br /> <b>Area:</b> {areaSqm} sq m
+        </>
+      }
+      menu={
+        <>
+          <ContextMenuOption text="Delete wet area" onClick={handleDelete} />
         </>
       }
     >
@@ -76,6 +81,6 @@ export function WetAreaMesh({ area }: { area: WetArea & { id: string } }) {
           side={THREE.DoubleSide}
         />
       </mesh>
-    </MeshHint>
+    </MeshMenu>
   );
 }

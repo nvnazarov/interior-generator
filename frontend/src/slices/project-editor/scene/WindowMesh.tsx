@@ -5,7 +5,8 @@ import { useCallback, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import { useAppDispatch } from "../../storeTypes";
 import { projectChanged } from "../slice";
-import { MeshHint } from "../../../shared/components/mesh-hint/MeshHint";
+import { MeshMenu } from "../../../shared/components";
+import { ContextMenuOption } from "../../../shared/components/context-menu";
 
 export function WindowMesh({
   window,
@@ -65,14 +66,19 @@ export function WindowMesh({
   }, []);
 
   return (
-    <MeshHint
-      content={
+    <MeshMenu
+      hint={
         <>
           Window
           <br />
           <br />
           <b>Width:</b> {window.w / M} m<br />
           <b>Height:</b> {window.h / M} m
+        </>
+      }
+      menu={
+        <>
+          <ContextMenuOption text="Delete window" onClick={handleDelete} />
         </>
       }
     >
@@ -85,6 +91,6 @@ export function WindowMesh({
         <boxGeometry args={[length, window.h, WALL_WIDTH + 4 * CM]} />
         <meshStandardMaterial color={hovered ? "hotpink" : "blue"} />
       </mesh>
-    </MeshHint>
+    </MeshMenu>
   );
 }

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type { Door, Wall } from "../../api/entities";
-import { CM } from "../lib";
+import { CM, M } from "../lib";
+import { MeshMenu } from "../../../shared/components";
 
 export function DoorMesh({ door, wall }: { door: Door; wall: Wall }) {
   const wallStart = new THREE.Vector3(wall.x1, 0, wall.y1);
@@ -18,9 +19,24 @@ export function DoorMesh({ door, wall }: { door: Door; wall: Wall }) {
   const angle = Math.atan2(direction.z, direction.x);
 
   return (
-    <mesh position={[center.x, door.h / 2, center.z]} rotation={[0, -angle, 0]}>
-      <boxGeometry args={[length, door.h, 24 * CM]} />
-      <meshStandardMaterial color="brown" />
-    </mesh>
+    <MeshMenu
+      hint={
+        <>
+          Door
+          <br />
+          <br />
+          <b>Width:</b> {door.w / M} m<br />
+          <b>Height:</b> {door.h / M} m
+        </>
+      }
+    >
+      <mesh
+        position={[center.x, door.h / 2, center.z]}
+        rotation={[0, -angle, 0]}
+      >
+        <boxGeometry args={[length, door.h, 24 * CM]} />
+        <meshStandardMaterial color="brown" />
+      </mesh>
+    </MeshMenu>
   );
 }

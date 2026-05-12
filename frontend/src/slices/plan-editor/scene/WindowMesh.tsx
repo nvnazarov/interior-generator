@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type { Wall, Window } from "../../api/entities";
-import { CM } from "../lib";
+import { CM, M } from "../lib";
+import { MeshMenu } from "../../../shared/components";
 
 export function WindowMesh({ window, wall }: { window: Window; wall: Wall }) {
   const wallStart = new THREE.Vector3(wall.x1, 0, wall.y1);
@@ -20,12 +21,24 @@ export function WindowMesh({ window, wall }: { window: Window; wall: Wall }) {
   const angle = Math.atan2(direction.z, direction.x);
 
   return (
-    <mesh
-      position={[center.x, window.y + window.h / 2, center.z]}
-      rotation={[0, -angle, 0]}
+    <MeshMenu
+      hint={
+        <>
+          Window
+          <br />
+          <br />
+          <b>Width:</b> {window.w / M} m<br />
+          <b>Height:</b> {window.h / M} m
+        </>
+      }
     >
-      <boxGeometry args={[length, window.h, 24 * CM]} />
-      <meshStandardMaterial color="blue" />
-    </mesh>
+      <mesh
+        position={[center.x, window.y + window.h / 2, center.z]}
+        rotation={[0, -angle, 0]}
+      >
+        <boxGeometry args={[length, window.h, 24 * CM]} />
+        <meshStandardMaterial color="blue" />
+      </mesh>
+    </MeshMenu>
   );
 }

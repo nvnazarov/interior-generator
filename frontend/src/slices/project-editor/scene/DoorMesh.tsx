@@ -5,11 +5,7 @@ import { useCallback, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import { useAppDispatch } from "../../storeTypes";
 import { projectChanged } from "../slice";
-import { MeshHint } from "../../../shared/components/mesh-hint/MeshHint";
-import {
-  ContextMenuOption,
-  MeshContextMenu,
-} from "../../../shared/components/context-menu";
+import { ContextMenuOption, MeshMenu } from "../../../shared/components";
 
 export function DoorMesh({
   door,
@@ -67,34 +63,31 @@ export function DoorMesh({
   }, []);
 
   return (
-    <MeshContextMenu
-      content={
+    <MeshMenu
+      hint={
+        <>
+          Door
+          <br />
+          <br />
+          <b>Width:</b> {door.w / M} m<br />
+          <b>Height:</b> {door.h / M} m
+        </>
+      }
+      menu={
         <>
           <ContextMenuOption text="Delete door" onClick={handleDelete} />
         </>
       }
     >
-      <MeshHint
-        content={
-          <>
-            Door
-            <br />
-            <br />
-            <b>Width:</b> {door.w / M} m<br />
-            <b>Height:</b> {door.h / M} m
-          </>
-        }
+      <mesh
+        position={[center.x, door.h / 2, center.z]}
+        rotation={[0, -angle, 0]}
+        onPointerEnter={handlePointerEnter}
+        onPointerOut={handlePointerOut}
       >
-        <mesh
-          position={[center.x, door.h / 2, center.z]}
-          rotation={[0, -angle, 0]}
-          onPointerEnter={handlePointerEnter}
-          onPointerOut={handlePointerOut}
-        >
-          <boxGeometry args={[length, door.h, WALL_WIDTH + 4 * CM]} />
-          <meshStandardMaterial color={hovered ? "hotpink" : "brown"} />
-        </mesh>
-      </MeshHint>
-    </MeshContextMenu>
+        <boxGeometry args={[length, door.h, WALL_WIDTH + 4 * CM]} />
+        <meshStandardMaterial color={hovered ? "hotpink" : "brown"} />
+      </mesh>
+    </MeshMenu>
   );
 }

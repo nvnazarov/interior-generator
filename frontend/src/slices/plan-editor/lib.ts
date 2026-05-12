@@ -48,3 +48,12 @@ export function areaColorByType(type: FunctionalArea["type"]): Color {
       return GREY;
   }
 }
+
+export function computePolygonArea(points: { x: number; y: number }[]): number {
+  let area = 0;
+  points.forEach((a, idx) => {
+    const b = points[(idx + 1) % points.length]!;
+    area += ((a.y + b.y) * (a.x - b.x)) / 2;
+  });
+  return Math.abs(area) / M / M;
+}

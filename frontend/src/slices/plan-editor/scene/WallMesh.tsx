@@ -11,6 +11,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLazyGetFurnitureByIdQuery } from "../../api/slice";
 import type { ThreeEvent } from "@react-three/fiber";
+import { MeshMenu } from "../../../shared/components";
 
 export function WallMesh({ wall }: { wall: Wall }) {
   const dispatch = useAppDispatch();
@@ -96,15 +97,25 @@ export function WallMesh({ wall }: { wall: Wall }) {
 
   const mesh = useMemo(
     () => (
-      <mesh
-        position={[center.x, (3 * M) / 2, center.z]}
-        rotation={[0, -angle, 0]}
-        onPointerEnter={handlePointerEnter}
-        onPointerMove={handlePointerMove}
+      <MeshMenu
+        hint={
+          <>
+            Wall
+            <br />
+            <br /> <b>Length:</b> {Math.round(length - 20 * CM) / M}m
+          </>
+        }
       >
-        <boxGeometry args={[length, 3 * M, 20 * CM]} />
-        <meshStandardMaterial color="white" />
-      </mesh>
+        <mesh
+          position={[center.x, (3 * M) / 2, center.z]}
+          rotation={[0, -angle, 0]}
+          onPointerEnter={handlePointerEnter}
+          onPointerMove={handlePointerMove}
+        >
+          <boxGeometry args={[length, 3 * M, 20 * CM]} />
+          <meshStandardMaterial color="white" />
+        </mesh>
+      </MeshMenu>
     ),
     [handlePointerEnter, handlePointerMove],
   );

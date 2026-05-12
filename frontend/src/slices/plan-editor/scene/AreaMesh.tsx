@@ -4,7 +4,8 @@ import { useCallback, useMemo, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import { planChanged } from "../slice";
 import { useAppDispatch } from "../../storeTypes";
-import { areaColorByType } from "../lib";
+import { areaColorByType, computePolygonArea } from "../lib";
+import { ContextMenuOption, MeshMenu } from "../../../shared/components";
 
 export function AreaMesh({ area }: { area: FunctionalArea & { id: string } }) {
   const dispatch = useAppDispatch();
@@ -80,17 +81,50 @@ export function AreaMesh({ area }: { area: FunctionalArea & { id: string } }) {
     e.stopPropagation();
   }, []);
 
+  const areaSqm = Math.round(computePolygonArea(area.points));
+
   return (
-    <mesh
-      rotation={[Math.PI / 2, 0, 0]}
-      onPointerEnter={handlePointerEnter}
-      onPointerOut={handlePointerOut}
+    <MeshMenu
+      hint={
+        <>
+          {area.type}
+          <br />
+          <br /> <b>Area:</b> {areaSqm} sq m
+        </>
+      }
+      menu={
+        <>
+          <ContextMenuOption text="Delete area" onClick={handleDelete} />
+          {(
+            [
+              "kitchen",
+              "livingroom",
+              "bedroom",
+              "bathroom",
+              "hallway",
+            ] as FunctionalArea["type"][]
+          )
+            .filter((v) => v !== area.type)
+            .map((type) => (
+              <ContextMenuOption
+                text={type}
+                onClick={() => handleChangeType(type)}
+              />
+            ))}
+        </>
+      }
     >
-      <shapeGeometry args={[shape]} />
-      <meshStandardMaterial
-        color={hovered ? "hotpink" : areaColorByType(area.type)}
-        side={THREE.DoubleSide}
-      />
-    </mesh>
+      <mesh
+        rotation={[Math.PI / 2, 0, 0]}
+        onPointerEnter={handlePointerEnter}
+        onPointerOut={handlePointerOut}
+      >
+        <shapeGeometry args={[shape]} />
+        <meshStandardMaterial
+          color={hovered ? "hotpink" : areaColorByType(area.type)}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+    </MeshMenu>
   );
 }

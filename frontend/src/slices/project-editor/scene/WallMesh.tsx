@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from "../../storeTypes";
 import { useCallback, useMemo, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import { v4 as uuidv4 } from "uuid";
-import { MeshHint } from "../../../shared/components/mesh-hint/MeshHint";
+import { ContextMenuOption, MeshMenu } from "../../../shared/components";
 
 function WindowPreview({
   startPoint,
@@ -268,12 +268,17 @@ export function WallMesh({ wall }: { wall: Wall & { id: string } }) {
 
   return (
     <>
-      <MeshHint
-        content={
+      <MeshMenu
+        hint={
           <>
             Wall
             <br />
             <br /> <b>Length:</b> {Math.round(length - 20 * CM) / M}m
+          </>
+        }
+        menu={
+          <>
+            <ContextMenuOption text="Delete wall" onClick={handleDelete} />
           </>
         }
       >
@@ -290,7 +295,7 @@ export function WallMesh({ wall }: { wall: Wall & { id: string } }) {
           <boxGeometry args={[length, WALL_HEIGHT, WALL_WIDTH]} />
           <meshStandardMaterial color={hovered ? "hotpink" : "white"} />
         </mesh>
-      </MeshHint>
+      </MeshMenu>
       {isCreatingWindowOrDoor &&
         (tool === "window" ? (
           <WindowPreview
