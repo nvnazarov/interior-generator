@@ -108,6 +108,11 @@ class Project(BaseModel):
     plans_count: int = 0
     plans_limit: int = 0
 
+    def __hash__(self):
+        return hash(
+            (self.id, self.revision, self.published, self.plans_count, self.plans_limit)
+        )
+
     def create_plan(self) -> Plan:
         if self.plans_count >= self.plans_limit:
             raise PlansLimitExceededError

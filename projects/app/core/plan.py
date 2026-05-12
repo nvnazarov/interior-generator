@@ -65,6 +65,9 @@ class Plan(BaseModel):
     created_at: datetime = Field(default_factory=now)
     updated_at: datetime = Field(default_factory=now)
 
+    def __hash__(self):
+        return hash((self.id, self.revision))
+
     @staticmethod
     def empty(project_id: str) -> "Plan":
         dt = now()

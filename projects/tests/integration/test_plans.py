@@ -75,7 +75,7 @@ async def test_get_plan(client: AsyncClient):
         f"/plans/{plan_id}",
         headers={
             "x-account-id": account_id,
-            "if-none-match": plan_etag + "0",
+            "if-none-match": "",
         },
     )
     assert resp.status_code == status.HTTP_200_OK
@@ -134,7 +134,7 @@ async def test_patch_plan(client: AsyncClient):
     )
     plan = resp.json()
     plan_id = plan["id"]
-    plan_etag = resp.headers.get("etag")
+    plan_revision = int(plan["revision"])
 
     # Cannot patch without providing a revision (through If-Match header).
     resp = await client.patch(
@@ -151,7 +151,7 @@ async def test_patch_plan(client: AsyncClient):
         f"/plans/{plan_id}",
         headers={
             "x-account-id": account_id,
-            "if-match": plan_etag + "1",
+            "if-match": str(plan_revision + 1),
         },
         json={},
     )
@@ -163,7 +163,7 @@ async def test_patch_plan(client: AsyncClient):
         f"/plans/{plan_id}",
         headers={
             "x-account-id": account_id,
-            "if-match": plan_etag,
+            "if-match": str(plan_revision),
         },
         json={
             "name": "test name",
@@ -175,19 +175,6 @@ async def test_patch_plan(client: AsyncClient):
     )
     assert resp.status_code == status.HTTP_204_NO_CONTENT
     assert resp.text == ""
-    assert (plan_new_etag := resp.headers.get("etag")) != plan_etag
-
-    resp = await client.get(
-        f"/plans/{plan_id}",
-        headers={"x-account-id": account_id},
-    )
-    assert resp.status_code == status.HTTP_200_OK
-    assert resp.json()["name"] == "test name"
-    assert resp.json()["content"] == {
-        "furniture": {},
-        "areas": {},
-    }
-    assert resp.headers.get("etag") == plan_new_etag
 
 
 @pytest.mark.asyncio

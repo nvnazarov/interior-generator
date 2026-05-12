@@ -29,29 +29,20 @@ from app.core.service import (
 logger = logging.getLogger(__name__)
 
 
+def get_project_etag(project: Project) -> str:
+    return f"project-{hash(project)}"
+
+
 def attach_project_etag(response: Response, project: Project) -> None:
-    response.headers["ETag"] = f"project-{project.id}-{project.revision}"
-
-
-def parse_project_etag(etag: str) -> int:
-    return int(etag.split("-")[-1])
+    response.headers["ETag"] = get_project_etag(project)
 
 
 def attach_plan_etag(response: Response, plan: Plan) -> None:
     response.headers["ETag"] = get_plan_etag(plan)
 
 
-def parse_plan_etag(etag: str) -> int:
-    if not etag.startswith("plan-"):
-        raise ValueError
-    revision = int(etag[5:])
-    if revision == 0 and len(etag) > 6:
-        raise ValueError
-    return revision
-
-
 def get_plan_etag(plan: Plan):
-    return f"plan-{plan.revision}"
+    return f"plan-{hash(plan)}"
 
 
 class Server(FastAPI):
@@ -96,13 +87,11 @@ class Server(FastAPI):
             response: Response,
             project_id: str,
             account_id: Annotated[str, Depends(get_account_id)],
-            revision: Annotated[str | None, Header(alias="if-none-match")] = None,
+            etag: Annotated[str | None, Header(alias="if-none-match")] = None,
         ):
             try:
                 project = await self._service.get_project(account_id, project_id)
-                if revision is not None and project.revision == parse_project_etag(
-                    revision
-                ):
+                if etag and etag == get_project_etag(project):
                     return PlainTextResponse("", status.HTTP_304_NOT_MODIFIED)
                 attach_project_etag(response, project)
                 return project
@@ -152,16 +141,16 @@ class Server(FastAPI):
             project_id: str,
             account_id: Annotated[str, Depends(get_account_id)],
             patch: Project.Patch,
-            revision: Annotated[str, Header(alias="if-match")],
+            revision: Annotated[int, Header(alias="if-match")],
         ) -> None:
             try:
                 project = await self._service.patch_project(
                     account_id,
                     project_id,
                     patch=patch,
-                    revision=parse_project_etag(revision),
+                    revision=revision,
                 )
-                attach_project_etag(response, project)
+                response.headers["ETag"] = str(project.revision)
             except (ProjectNotFoundError, AccessDeniedError):
                 raise HTTPProjectNotFound
             except ProjectPatchError:
@@ -209,7 +198,7 @@ class Server(FastAPI):
         ):
             try:
                 plan = await self._service.get_plan(account_id, plan_id)
-                if etag is not None and etag == get_plan_etag(plan):
+                if etag and etag == get_plan_etag(plan):
                     return PlainTextResponse("", status.HTTP_304_NOT_MODIFIED)
                 attach_plan_etag(response, plan)
                 return plan
@@ -254,16 +243,16 @@ class Server(FastAPI):
             plan_id: str,
             account_id: Annotated[str, Depends(get_account_id)],
             patch: Plan.Patch,
-            etag: Annotated[str, Header(alias="if-match")],
+            revision: Annotated[int, Header(alias="if-match")],
         ) -> None:
             try:
                 plan = await self._service.patch_plan(
                     account_id,
                     plan_id,
                     patch=patch,
-                    revision=parse_plan_etag(etag),
+                    revision=revision,
                 )
-                attach_plan_etag(response, plan)
+                response.headers["ETag"] = str(plan.revision)
             except (PlanNotFoundError, AccessDeniedError):
                 raise HTTPPlanNotFound
             except PlanPatchError as e:

@@ -38,7 +38,6 @@ async def test_create_project(client: AsyncClient):
     assert project["updated_at"] == project["created_at"]
     assert not project["published"]
     assert project["published_at"] is None
-    assert resp.headers.get("etag") == f"project-{resp.json()['id']}-0"
 
 
 @pytest.mark.asyncio
@@ -62,13 +61,13 @@ async def test_get_project(client: AsyncClient):
     )
     assert resp.status_code == status.HTTP_200_OK
     assert resp.json() == project
-    assert resp.headers.get("etag") == f"project-{project['id']}-0"
+    etag = str(resp.headers.get("etag"))
 
     resp = await client.get(
         f"/projects/{project['id']}",
         headers={
             "x-account-id": account_id,
-            "if-none-match": f"project-{project['id']}-0",
+            "if-none-match": etag,
         },
     )
     assert resp.status_code == status.HTTP_304_NOT_MODIFIED
@@ -78,12 +77,12 @@ async def test_get_project(client: AsyncClient):
         f"/projects/{project['id']}",
         headers={
             "x-account-id": account_id,
-            "if-none-match": f"project-{project['id']}-1",
+            "if-none-match": "",
         },
     )
     assert resp.status_code == status.HTTP_200_OK
     assert resp.json() == project
-    assert resp.headers.get("etag") == f"project-{project['id']}-0"
+    assert resp.headers.get("etag") == etag
 
 
 @pytest.mark.asyncio
@@ -130,6 +129,7 @@ async def test_patch_project(client: AsyncClient):
     resp = await client.post("/projects", headers={"x-account-id": account_id})
     project = resp.json()
     project_id = project["id"]
+    project_revision = int(project["revision"])
 
     # Cannot patch without providing a revision (through If-Match header).
     resp = await client.patch(
@@ -146,7 +146,7 @@ async def test_patch_project(client: AsyncClient):
         f"/projects/{project_id}",
         headers={
             "x-account-id": account_id,
-            "if-match": f"project-{project_id}-1",  # server expects 0
+            "if-match": str(project_revision + 1),
         },
         json={},
     )
@@ -158,7 +158,7 @@ async def test_patch_project(client: AsyncClient):
         f"/projects/{project_id}",
         headers={
             "x-account-id": account_id,
-            "if-match": f"project-{project_id}-0",
+            "if-match": str(project_revision),
         },
         json={
             "name": "test name",
@@ -172,7 +172,7 @@ async def test_patch_project(client: AsyncClient):
     )
     assert resp.status_code == status.HTTP_204_NO_CONTENT
     assert resp.text == ""
-    assert resp.headers.get("etag") == f"project-{project_id}-1"
+    project_revision = int(resp.headers.get("etag"))
 
     resp = await client.get(
         f"/projects/{project_id}",
@@ -186,7 +186,7 @@ async def test_patch_project(client: AsyncClient):
         "doors": {},
         "wet_areas": {},
     }
-    assert resp.headers.get("etag") == f"project-{project_id}-1"
+    assert resp.json()["revision"] == project_revision
 
 
 @pytest.mark.asyncio
