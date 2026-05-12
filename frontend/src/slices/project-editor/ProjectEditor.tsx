@@ -131,7 +131,7 @@ export function ProjectEditor({ projectId }: { projectId: string }) {
     if (project) {
       dispatch(projectOpened(project));
     }
-  }, [project]);
+  }, [project?.id]);
 
   if (isLoading) {
     return <>Loading</>;

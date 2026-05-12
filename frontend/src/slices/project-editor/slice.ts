@@ -15,7 +15,7 @@ type ProjectChange = {
   inversePatch: ProjectPatch;
 };
 
-type ProjectEditorState = {
+export type ProjectEditorState = {
   project: Project | null;
   unsavedAccumulatedPatch: ProjectPatch;
   undoableChanges: ProjectChange[];
@@ -125,7 +125,7 @@ const projectEditorSlice = createSlice({
       );
       state.undoableChanges.push(change);
     },
-    projectSaved: (state, action: PayloadAction<string>) => {
+    projectSaved: (state, action: PayloadAction<number>) => {
       if (state.project) {
         state.project.revision = action.payload;
       } else {

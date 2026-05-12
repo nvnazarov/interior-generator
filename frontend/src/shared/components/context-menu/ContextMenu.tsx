@@ -1,5 +1,6 @@
 import {
   cloneElement,
+  useEffect,
   useRef,
   useState,
   type HTMLAttributes,
@@ -7,7 +8,6 @@ import {
   type ReactNode,
 } from "react";
 import { motion } from "motion/react";
-import { createPortal } from "react-dom";
 
 import "./ContextMenu.scss";
 
@@ -31,24 +31,31 @@ export function ContextMenu({
   });
   const menuRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (!visible) {
+      return;
+    }
+    const handleMouseDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as any)) {
+        setVisible(false);
+      }
+    };
+    window.addEventListener("mousedown", handleMouseDown);
+    return () => {
+      window.removeEventListener("mousedown", handleMouseDown);
+    };
+  }, [visible]);
+
   const child = cloneElement(children, {
-    onFocus: (e) => {
-      children.props.onFocus?.(e);
-      const rect = e.currentTarget.getBoundingClientRect();
+    onClick: (e) => {
+      children.props.onClick?.(e);
       setAnchor({
-        top: rect.top,
-        left: rect.left,
+        top: e.currentTarget.offsetTop,
+        left: e.currentTarget.offsetLeft,
         width: e.currentTarget.clientWidth,
         height: e.currentTarget.clientHeight,
       });
       setVisible(true);
-    },
-    onBlur: (e) => {
-      children.props.onBlur?.(e);
-      if (menuRef.current && menuRef.current.contains(e.relatedTarget)) {
-        return;
-      }
-      setVisible(false);
     },
   } as HTMLAttributes<HTMLElement>);
 
@@ -79,24 +86,21 @@ export function ContextMenu({
   return (
     <>
       {child}
-      {visible &&
-        content &&
-        createPortal(
-          <div
-            ref={menuRef}
-            className="context-menu__container"
-            style={{ top: top, left: left, transform: transform }}
+      {visible && content && (
+        <div
+          ref={menuRef}
+          className="context-menu__container"
+          style={{ top: top, left: left, transform: transform }}
+        >
+          <motion.div
+            className="context-menu__menu"
+            initial={{ rotateY: 90 }}
+            animate={{ rotateY: 0 }}
           >
-            <motion.div
-              className="context-menu__menu"
-              initial={{ rotateY: 90 }}
-              animate={{ rotateY: 0 }}
-            >
-              {content}
-            </motion.div>
-          </div>,
-          document.body,
-        )}
+            {content}
+          </motion.div>
+        </div>
+      )}
     </>
   );
 }

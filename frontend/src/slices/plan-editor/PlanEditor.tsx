@@ -38,18 +38,20 @@ function CatalogHelper() {
 }
 
 function PlanEditorHelper({
+  planId,
   projectId,
   accountId,
   projectOwned,
 }: {
+  planId: string;
   projectId: string;
   accountId: string;
   projectOwned: boolean;
 }) {
   return (
     <>
-      <div className="project-editor__menu">
-        <MenuButton projectId={projectId} />
+      <div className="plan-editor__menu">
+        <MenuButton projectId={projectId} planId={planId} />
         <NameInput />
         <PlanSelect projectId={projectId} />
         <span />
@@ -133,7 +135,7 @@ export function PlanEditor({
     if (plan) {
       dispatch(planOpened(plan));
     }
-  }, [plan]);
+  }, [plan?.id]);
 
   if (isPlanLoading || isProjectLoading) {
     return <>Loading</>;
@@ -151,6 +153,7 @@ export function PlanEditor({
 
   return (
     <PlanEditorHelper
+      planId={planId}
       projectId={projectId}
       projectOwned={projectOwned}
       accountId={project.accountId}

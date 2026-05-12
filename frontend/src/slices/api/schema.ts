@@ -11,6 +11,7 @@ export const RawProjectSchema = z.union([
     plans_limit: z.number(),
     created_at: z.string(),
     updated_at: z.string(),
+    revision: z.number(),
     content: z.object({
       walls: z.record(
         z.string(),
@@ -63,6 +64,7 @@ export const RawProjectSchema = z.union([
     plans_limit: z.number(),
     created_at: z.string(),
     updated_at: z.string(),
+    revision: z.number(),
     content: z.object({
       walls: z.record(
         z.string(),
@@ -113,6 +115,7 @@ export const RawPlanSchema = z.object({
   name: z.string(),
   created_at: z.string(),
   updated_at: z.string(),
+  revision: z.number(),
   content: z.object({
     furniture: z.record(
       z.string(),

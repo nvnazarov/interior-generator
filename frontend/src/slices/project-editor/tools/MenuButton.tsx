@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "../../../shared/components/button/Button";
 import { useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "../../storeTypes";
@@ -6,118 +6,250 @@ import {
   useDeleteProjectMutation,
   useGetProjectByIdQuery,
   usePatchProjectMutation,
+  usePublishProjectMutation,
+  useUnpublishProjectMutation,
 } from "../../api/slice";
-import { projectSaved, selectProjectEditor } from "../slice";
+import {
+  projectSaved,
+  selectProjectEditor,
+  type ProjectEditorState,
+} from "../slice";
 import { Config } from "../../../shared/config";
 import { UrlUtil } from "../../../shared/util";
 import { ContextMenu } from "../../../shared/components/context-menu/ContextMenu";
 import { ContextMenuOption } from "../../../shared/components/context-menu/ContextMenuOption";
 
-export function MenuButton({ projectId }: { projectId: string }) {
+function ExportProjectToPDFOption({ editor }: { editor: ProjectEditorState }) {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-  const editor = useAppSelector(selectProjectEditor);
-  const { data: project, isSuccess: projectLoaded } =
-    useGetProjectByIdQuery(projectId);
+  const [exporting, setExporting] = useState(false);
   const [patchProject] = usePatchProjectMutation();
-  const [deleteProject] = useDeleteProjectMutation();
-
-  const handleSaveProjectAndExit = useCallback(async () => {
-    if (editor.project) {
-      const revision = await patchProject({
-        id: editor.project.id,
-        revision: editor.project.revision,
-        patch: editor.unsavedAccumulatedPatch,
-      }).unwrap();
-      dispatch(projectSaved(revision));
-    }
-    navigate("/");
-  }, [editor]);
-
-  const handleSaveProject = useCallback(async () => {
-    if (editor.project) {
-      const revision = await patchProject({
-        id: editor.project.id,
-        revision: editor.project.revision,
-        patch: editor.unsavedAccumulatedPatch,
-      }).unwrap();
-      dispatch(projectSaved(revision));
-    }
-  }, [editor]);
-
-  const handleDeleteProject = useCallback(async () => {
-    await deleteProject(projectId).unwrap();
-    navigate("/");
-  }, [projectId]);
 
   const handleExportProjectToPDF = useCallback(async () => {
     if (!editor.project) {
       return;
     }
-    const revision = await patchProject({
-      id: editor.project.id,
-      revision: editor.project.revision,
-      patch: editor.unsavedAccumulatedPatch,
-    }).unwrap();
-    dispatch(projectSaved(revision));
-    const resp = await fetch(
-      `${UrlUtil.noRightSlash(Config.gateway.baseUrl)}/api/projects/${editor.project.id}/export/pdf`,
-      {
-        method: "POST",
-        body: "{}",
-        headers: { "Content-Type": "application/json" },
-      },
-    );
-    if (!resp.ok) {
-      throw new Error("error: export project pdf: response is not ok");
+    try {
+      setExporting(true);
+      const revision = await patchProject({
+        id: editor.project.id,
+        revision: editor.project.revision,
+        patch: editor.unsavedAccumulatedPatch,
+      }).unwrap();
+      dispatch(projectSaved(revision));
+      const resp = await fetch(
+        `${UrlUtil.noRightSlash(Config.gateway.baseUrl)}/api/projects/${editor.project.id}/export/pdf`,
+        {
+          method: "POST",
+          body: "{}",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+      if (!resp.ok) {
+        throw new Error("error: export project pdf: response is not ok");
+      }
+      const blob = await resp.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${editor.project.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } finally {
+      setExporting(false);
     }
-    const blob = await resp.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${editor.project.id}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
   }, [editor]);
+
+  return (
+    <ContextMenuOption
+      text="Export to PDF"
+      icon="pdf.png"
+      disabled={!editor.project || exporting}
+      loading={exporting}
+      onClick={handleExportProjectToPDF}
+    />
+  );
+}
+
+function DeleteProjectOption({ editor }: { editor: ProjectEditorState }) {
+  const navigate = useNavigate();
+  const [deleteProject] = useDeleteProjectMutation();
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteProject = useCallback(async () => {
+    if (editor.project) {
+      try {
+        setDeleting(true);
+        await deleteProject(editor.project.id).unwrap();
+      } finally {
+        setDeleting(false);
+      }
+      navigate("/");
+    }
+  }, [editor.project?.id]);
+
+  return (
+    <ContextMenuOption
+      text="Delete project"
+      icon="trash.png"
+      disabled={!editor.project || deleting}
+      loading={deleting}
+      onClick={handleDeleteProject}
+    />
+  );
+}
+
+function SaveProjectOption({ editor }: { editor: ProjectEditorState }) {
+  const dispatch = useAppDispatch();
+  const [saving, setSaving] = useState(false);
+  const [patchProject] = usePatchProjectMutation();
+
+  const handleSaveProject = useCallback(async () => {
+    if (editor.project) {
+      try {
+        setSaving(true);
+        const revision = await patchProject({
+          id: editor.project.id,
+          revision: editor.project.revision,
+          patch: editor.unsavedAccumulatedPatch,
+        }).unwrap();
+        dispatch(projectSaved(revision));
+      } finally {
+        setSaving(false);
+      }
+    }
+  }, [editor]);
+
+  return (
+    <ContextMenuOption
+      text="Save"
+      icon="sync.png"
+      disabled={!editor.project || saving}
+      loading={saving}
+      onClick={handleSaveProject}
+    />
+  );
+}
+
+function SaveProjectAndExitOption({ editor }: { editor: ProjectEditorState }) {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const [saving, setSaving] = useState(false);
+  const [patchProject] = usePatchProjectMutation();
+
+  const handleSaveProject = useCallback(async () => {
+    if (editor.project) {
+      try {
+        setSaving(true);
+        const revision = await patchProject({
+          id: editor.project.id,
+          revision: editor.project.revision,
+          patch: editor.unsavedAccumulatedPatch,
+        }).unwrap();
+        dispatch(projectSaved(revision));
+        navigate("/");
+      } finally {
+        setSaving(false);
+      }
+    }
+  }, [editor]);
+
+  return (
+    <ContextMenuOption
+      text="Save and exit"
+      icon="signout.png"
+      disabled={!editor.project || saving}
+      loading={saving}
+      onClick={handleSaveProject}
+    />
+  );
+}
+
+function CopyProjectUrlOption({ projectId }: { projectId: string }) {
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(
+      location.origin + `${Config.proxy.basePath}/editor/project/${projectId}`,
+    );
+  }, [projectId]);
+
+  return (
+    <ContextMenuOption text="Copy link" icon="copy.png" onClick={handleCopy} />
+  );
+}
+
+function ShareProjectOption({ projectId }: { projectId: string }) {
+  const [shareProject] = usePublishProjectMutation();
+  const [sharing, setSharing] = useState(false);
+
+  const handleShareProject = useCallback(async () => {
+    try {
+      setSharing(true);
+      await shareProject(projectId).unwrap();
+    } finally {
+      setSharing(false);
+    }
+  }, [projectId]);
+
+  return (
+    <ContextMenuOption
+      text="Share project"
+      icon="share.png"
+      disabled={sharing}
+      loading={sharing}
+      onClick={handleShareProject}
+    />
+  );
+}
+
+function HideProjectOption({ projectId }: { projectId: string }) {
+  const [hideProject] = useUnpublishProjectMutation();
+  const [hiding, setHiding] = useState(false);
+
+  const handleHideProject = useCallback(async () => {
+    try {
+      setHiding(true);
+      await hideProject(projectId).unwrap();
+    } finally {
+      setHiding(false);
+    }
+  }, [projectId]);
+
+  return (
+    <ContextMenuOption
+      text="Hide project"
+      icon="hide.png"
+      disabled={hiding}
+      loading={hiding}
+      onClick={handleHideProject}
+    />
+  );
+}
+
+export function MenuButton({ projectId }: { projectId: string }) {
+  const editor = useAppSelector(selectProjectEditor);
+  const { data: project, isSuccess: projectLoaded } =
+    useGetProjectByIdQuery(projectId);
 
   return (
     <ContextMenu
       content={
         <>
-          <ContextMenuOption
-            text="Save and exit"
-            icon="signout.png"
-            onClick={handleSaveProjectAndExit}
-          />
-          <ContextMenuOption
-            text="Save"
-            icon="sync.png"
-            onClick={handleSaveProject}
-          />
-          <ContextMenuOption
-            text="Delete project"
-            icon="trash.png"
-            onClick={handleDeleteProject}
-          />
-          <ContextMenuOption
-            text="Export to PDF"
-            icon="pdf.png"
-            onClick={handleExportProjectToPDF}
-          />
+          <SaveProjectAndExitOption editor={editor} />
+          <SaveProjectOption editor={editor} />
+          <DeleteProjectOption editor={editor} />
+          <ExportProjectToPDFOption editor={editor} />
           <ContextMenu
             content={
               projectLoaded &&
               (project.published ? (
                 <>
-                  <ContextMenuOption text="Share" icon="share.png" />
-                  <ContextMenuOption text="Copy link" icon="share.png" />
+                  <HideProjectOption projectId={projectId} />
+                  <CopyProjectUrlOption projectId={projectId} />
                 </>
               ) : (
                 <>
-                  <ContextMenuOption text="Close" icon="share.png" />
-                  <ContextMenuOption text="Copy link" icon="share.png" />
+                  <ShareProjectOption projectId={projectId} />
                 </>
               ))
             }

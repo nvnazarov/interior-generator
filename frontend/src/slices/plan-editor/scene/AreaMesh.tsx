@@ -107,6 +107,7 @@ export function AreaMesh({ area }: { area: FunctionalArea & { id: string } }) {
             .filter((v) => v !== area.type)
             .map((type) => (
               <ContextMenuOption
+                key={type}
                 text={type}
                 onClick={() => handleChangeType(type)}
               />

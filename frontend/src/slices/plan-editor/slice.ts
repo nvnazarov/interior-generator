@@ -177,7 +177,7 @@ const planEditorSlice = createSlice({
       );
       state.undoableChanges.push(change);
     },
-    planSaved: (state, action: PayloadAction<string>) => {
+    planSaved: (state, action: PayloadAction<number>) => {
       if (state.plan) {
         state.plan.revision = action.payload;
       } else {

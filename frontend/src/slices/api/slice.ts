@@ -65,7 +65,7 @@ const api = createApi({
             doors: {},
             wetAreas: {},
           },
-          revision: "",
+          revision: raw.revision,
           dtCreated: raw.created_at,
           dtUpdated: raw.updated_at,
         })),
@@ -80,7 +80,7 @@ const api = createApi({
     getProjectById: builder.query<Project, string>({
       query: (projectId: string) => `projects/${projectId}`,
       rawResponseSchema: RawProjectSchema,
-      transformResponse: (raw: RawProject, meta?: { response?: Response }) => ({
+      transformResponse: (raw: RawProject) => ({
         id: raw.id,
         accountId: raw.account_id,
         name: raw.name,
@@ -105,7 +105,7 @@ const api = createApi({
           })),
           wetAreas: raw.content.wet_areas,
         },
-        revision: meta?.response?.headers.get("etag") || "",
+        revision: raw.revision,
         dtCreated: raw.created_at,
         dtUpdated: raw.updated_at,
       }),
@@ -117,7 +117,7 @@ const api = createApi({
         method: "POST",
       }),
       rawResponseSchema: RawProjectSchema,
-      transformResponse: (raw: RawProject, meta?: { response?: Response }) => ({
+      transformResponse: (raw: RawProject) => ({
         id: raw.id,
         accountId: raw.account_id,
         name: raw.name,
@@ -142,7 +142,7 @@ const api = createApi({
           })),
           wetAreas: raw.content.wet_areas,
         },
-        revision: meta?.response?.headers.get("etag") || "",
+        revision: raw.revision,
         dtCreated: raw.created_at,
         dtUpdated: raw.updated_at,
       }),
@@ -170,8 +170,8 @@ const api = createApi({
       invalidatesTags: (_result, _error, id) => [{ type: "Projects", id }],
     }),
     patchProject: builder.mutation<
-      string,
-      { id: string; revision: string; patch: ProjectPatch }
+      number,
+      { id: string; revision: number; patch: ProjectPatch }
     >({
       query: ({ id, revision, patch }) => {
         const content = patch.content;
@@ -181,7 +181,7 @@ const api = createApi({
           url: `projects/${id}`,
           method: "PATCH",
           headers: {
-            "if-match": revision,
+            "if-match": revision.toString(),
           },
           body: {
             name: patch.name,
@@ -240,12 +240,7 @@ const api = createApi({
         };
       },
       transformResponse: (_, meta) => {
-        const revision = meta?.response?.headers.get("etag");
-        if (!revision) {
-          throw new Error(
-            "error: transform response: server did not return etag header",
-          );
-        }
+        const revision = Number(meta?.response?.headers.get("etag"));
         return revision;
       },
       invalidatesTags: (_result, _error, { id }) => [{ type: "Projects", id }],
@@ -262,7 +257,7 @@ const api = createApi({
             furniture: {},
             areas: {},
           },
-          revision: "",
+          revision: raw.revision,
           dtCreated: raw.created_at,
           dtUpdated: raw.updated_at,
         })),
@@ -277,7 +272,7 @@ const api = createApi({
     getPlanById: builder.query<Plan, string>({
       query: (planId: string) => `plans/${planId}`,
       rawResponseSchema: RawPlanSchema,
-      transformResponse: (raw: RawPlan, meta?: { response?: Response }) => ({
+      transformResponse: (raw: RawPlan) => ({
         id: raw.id,
         projectId: raw.project_id,
         name: raw.name,
@@ -291,7 +286,7 @@ const api = createApi({
             yaw: f.yaw,
           })),
         },
-        revision: meta?.response?.headers.get("etag") || "",
+        revision: raw.revision,
         dtCreated: raw.created_at,
         dtUpdated: raw.updated_at,
       }),
@@ -303,7 +298,7 @@ const api = createApi({
         method: "POST",
       }),
       rawResponseSchema: RawPlanSchema,
-      transformResponse: (raw: RawPlan, meta?: { response?: Response }) => ({
+      transformResponse: (raw: RawPlan) => ({
         id: raw.id,
         projectId: raw.project_id,
         name: raw.name,
@@ -317,7 +312,7 @@ const api = createApi({
             yaw: f.yaw,
           })),
         },
-        revision: meta?.response?.headers.get("etag") || "",
+        revision: raw.revision,
         dtCreated: raw.created_at,
         dtUpdated: raw.updated_at,
       }),
@@ -333,8 +328,8 @@ const api = createApi({
       invalidatesTags: (_result, _error, id) => [{ type: "Plans", id }],
     }),
     patchPlan: builder.mutation<
-      string,
-      { id: string; revision: string; patch: PlanPatch }
+      number,
+      { id: string; revision: number; patch: PlanPatch }
     >({
       query: ({ id, revision, patch }) => {
         const content = patch.content;
@@ -343,7 +338,7 @@ const api = createApi({
           url: `plans/${id}`,
           method: "PATCH",
           headers: {
-            "if-match": revision,
+            "if-match": revision.toString(),
           },
           body: {
             name: patch.name,
@@ -379,12 +374,7 @@ const api = createApi({
         };
       },
       transformResponse: (_, meta) => {
-        const revision = meta?.response?.headers.get("etag");
-        if (!revision) {
-          throw new Error(
-            "error: transform response: server did not return etag header",
-          );
-        }
+        const revision = Number(meta?.response?.headers.get("etag"));
         return revision;
       },
       invalidatesTags: (_result, _error, { id }) => [{ type: "Plans", id }],

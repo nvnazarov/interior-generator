@@ -36,7 +36,7 @@ export function PlanSelect({ projectId }: { projectId: string }) {
             plans.map((plan, idx) => (
               <ContextMenuOption
                 key={plan.id}
-                text={`${idx}. ` + (plan.name || "Untitled plan")}
+                text={`${idx + 1}. ` + (plan.name || "Untitled plan")}
                 onClick={() =>
                   navigate(`/editor/project/${projectId}/plan/${plan.id}`)
                 }

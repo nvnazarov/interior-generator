@@ -36,7 +36,7 @@ export type Project = {
     doors: Record<string, Door>;
     wetAreas: Record<string, WetArea>;
   };
-  revision: string;
+  revision: number;
   plansCount: number;
   plansLimit: number;
   dtCreated: string;
@@ -83,7 +83,7 @@ export interface Plan {
     furniture: Record<string, FurnitureInPlan>;
     areas: Record<string, FunctionalArea>;
   };
-  revision: string;
+  revision: number;
   dtCreated: string;
   dtUpdated: string;
 }
