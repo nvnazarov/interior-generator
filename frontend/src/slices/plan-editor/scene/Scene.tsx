@@ -20,7 +20,6 @@ import {
   selectPlanEditorView,
 } from "../slice";
 import { M } from "../lib";
-import { useContextMenu } from "../../../shared/hooks/contextMenu";
 import { PlanMesh } from "./PlanMesh";
 import { AreaTool } from "./AreaTool";
 import { FurniturePreview } from "./FurniturePreview";
@@ -44,8 +43,8 @@ function DragHelper() {
         if (!preview) {
           return;
         }
+        const id = uuidv4();
         const furniture: FurnitureInPlan = {
-          id: uuidv4(),
           furnitureId: preview.furnitureId,
           x: preview.x,
           y: preview.y,
@@ -57,14 +56,14 @@ function DragHelper() {
             patch: {
               content: {
                 furniture: {
-                  [furniture.id]: furniture,
+                  [id]: furniture,
                 },
               },
             },
             inversePatch: {
               content: {
                 furniture: {
-                  [furniture.id]: null,
+                  [id]: null,
                 },
               },
             },
@@ -84,7 +83,6 @@ function DragHelper() {
 }
 
 export function Scene() {
-  const menu = useContextMenu();
   const view = useAppSelector(selectPlanEditorView);
   const tool = useAppSelector(selectPlanEditorTool);
   const furnitureDrag = useAppSelector(selectFurnitureDrag);
@@ -93,10 +91,7 @@ export function Scene() {
   const toolIsArea = tool === "area" && !furnitureDrag;
 
   return (
-    <Canvas
-      onPointerDown={() => menu.hide()}
-      gl={{ logarithmicDepthBuffer: true }}
-    >
+    <Canvas gl={{ logarithmicDepthBuffer: true }}>
       <ambientLight intensity={0.15} />
       <directionalLight position={[5, 5, 3]} intensity={1} />
       <directionalLight position={[-3, 2, 4]} intensity={0.4} color="#ffaa88" />

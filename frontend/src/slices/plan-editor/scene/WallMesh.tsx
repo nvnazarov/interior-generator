@@ -5,10 +5,8 @@ import { useAppDispatch, useAppSelector } from "../../storeTypes";
 import {
   furniturePreviewUpdated,
   hideFurniturePreview,
-  hideHint,
   selectFurnitureDrag,
   showFurniturePreview,
-  showHint,
 } from "../slice";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLazyGetFurnitureByIdQuery } from "../../api/slice";
@@ -41,14 +39,6 @@ export function WallMesh({ wall }: { wall: Wall }) {
   const handlePointerMove = useCallback(
     (e: ThreeEvent<PointerEvent>) => {
       e.stopPropagation();
-      dispatch(
-        showHint({
-          title: "Несущая стена",
-          length: l,
-          x: e.clientX,
-          y: e.clientY,
-        }),
-      );
       if (furnitureDrag && furniture) {
         const normal = e.normal?.clone();
         if (!normal) {
@@ -85,17 +75,6 @@ export function WallMesh({ wall }: { wall: Wall }) {
     [furnitureDrag, furniture, l],
   );
 
-  const handlePointerOut = useCallback(
-    (e: ThreeEvent<PointerEvent>) => {
-      dispatch(hideHint());
-      if (furnitureDrag) {
-        e.stopPropagation();
-        dispatch(hideFurniturePreview());
-      }
-    },
-    [furnitureDrag],
-  );
-
   const handlePointerEnter = useCallback(
     (e: ThreeEvent<PointerEvent>) => {
       if (furnitureDrag && furniture) {
@@ -122,13 +101,12 @@ export function WallMesh({ wall }: { wall: Wall }) {
         rotation={[0, -angle, 0]}
         onPointerEnter={handlePointerEnter}
         onPointerMove={handlePointerMove}
-        onPointerOut={handlePointerOut}
       >
         <boxGeometry args={[length, 3 * M, 20 * CM]} />
         <meshStandardMaterial color="white" />
       </mesh>
     ),
-    [handlePointerEnter, handlePointerMove, handlePointerOut],
+    [handlePointerEnter, handlePointerMove],
   );
 
   return mesh;

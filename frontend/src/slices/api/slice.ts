@@ -26,9 +26,19 @@ import type {
   RawProject,
   RawPrompt,
 } from "./schema";
-import { mapById } from "./util";
 import { Config } from "../../shared/config";
 import { UrlUtil } from "../../shared/util";
+
+export function mapById<T, U>(
+  obj: Record<string, T>,
+  f: (v: T) => U,
+): Record<string, U> {
+  const result: Record<string, U> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    result[k] = f(v);
+  }
+  return result;
+}
 
 const apiBaseUrl = UrlUtil.noRightSlash(Config.gateway.baseUrl) + "/api";
 

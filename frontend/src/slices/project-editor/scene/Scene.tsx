@@ -16,12 +16,10 @@ import { M } from "../lib";
 import { ProjectMesh } from "./ProjectMesh";
 import { WallTool } from "./WallTool";
 import { WetAreaTool } from "../tools/WetAreaTool";
-import { useContextMenu } from "../../../shared/hooks/contextMenu";
 
 const { ACTION } = CameraControlsImpl;
 
 export function Scene() {
-  const menu = useContextMenu();
   const view = useAppSelector(selectProjectEditorView);
   const tool = useAppSelector(selectProjectEditorTool);
   const toolIsHand = tool === "hand";
@@ -30,10 +28,7 @@ export function Scene() {
   const toolIsDoorOrWindow = ["window", "door"].includes(tool);
 
   return (
-    <Canvas
-      onPointerDown={() => menu.hide()}
-      gl={{ logarithmicDepthBuffer: true }}
-    >
+    <Canvas gl={{ logarithmicDepthBuffer: true }}>
       <color attach="background" args={["#fafafa"]} />
       <ambientLight intensity={0.15} />
       <directionalLight position={[5, 5, 3]} intensity={1} />

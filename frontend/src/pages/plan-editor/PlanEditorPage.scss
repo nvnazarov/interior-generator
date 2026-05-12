@@ -1,0 +1,6 @@
+@use "../../shared/styles/semantic" as s;
+
+.plan-editor-page {
+  height: 100vh;
+  background-color: s.$color-bg-0;
+}

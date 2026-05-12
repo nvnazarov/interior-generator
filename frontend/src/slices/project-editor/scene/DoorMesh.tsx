@@ -1,13 +1,15 @@
 import * as THREE from "three";
 import type { Door, Wall } from "../../api/entities";
-import { CM } from "../lib";
+import { CM, M, WALL_WIDTH } from "../lib";
 import { useCallback, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
-import { useContextMenu } from "../../../shared/hooks/contextMenu";
 import { useAppDispatch } from "../../storeTypes";
 import { projectChanged } from "../slice";
-import { useTranslation } from "react-i18next";
 import { MeshHint } from "../../../shared/components/mesh-hint/MeshHint";
+import {
+  ContextMenuOption,
+  MeshContextMenu,
+} from "../../../shared/components/context-menu";
 
 export function DoorMesh({
   door,
@@ -17,9 +19,7 @@ export function DoorMesh({
   wall: Wall;
 }) {
   const dispatch = useAppDispatch();
-  const menu = useContextMenu();
   const [hovered, setHovered] = useState(false);
-  const { t } = useTranslation();
 
   const wallStart = new THREE.Vector3(wall.x1, 0, wall.y1);
   const wallEnd = new THREE.Vector3(wall.x2, 0, wall.y2);
@@ -35,39 +35,26 @@ export function DoorMesh({
   center.addVectors(start, end).multiplyScalar(0.5);
   const angle = Math.atan2(direction.z, direction.x);
 
-  const handleContextMenu = useCallback((e: ThreeEvent<MouseEvent>) => {
-    e.stopPropagation();
-    menu.show({
-      title: t("ProjectEditor.DoorMesh.Name", "Door"),
-      x: e.clientX,
-      y: e.clientY,
-      items: [
-        {
-          name: t("ProjectEditor.DoorMesh.DeleteOption.Title", "Delete"),
-          onClick: () => {
-            dispatch(
-              projectChanged({
-                patch: {
-                  content: {
-                    doors: {
-                      [door.id]: null,
-                    },
-                  },
-                },
-                inversePatch: {
-                  content: {
-                    doors: {
-                      [door.id]: door,
-                    },
-                  },
-                },
-              }),
-            );
+  const handleDelete = useCallback(() => {
+    dispatch(
+      projectChanged({
+        patch: {
+          content: {
+            doors: {
+              [door.id]: null,
+            },
           },
         },
-      ],
-    });
-  }, []);
+        inversePatch: {
+          content: {
+            doors: {
+              [door.id]: door,
+            },
+          },
+        },
+      }),
+    );
+  }, [door]);
 
   const handlePointerEnter = useCallback((e: ThreeEvent<PointerEvent>) => {
     setHovered(true);
@@ -80,17 +67,34 @@ export function DoorMesh({
   }, []);
 
   return (
-    <MeshHint content="123">
-      <mesh
-        position={[center.x, door.h / 2, center.z]}
-        rotation={[0, -angle, 0]}
-        onContextMenu={handleContextMenu}
-        onPointerEnter={handlePointerEnter}
-        onPointerOut={handlePointerOut}
+    <MeshContextMenu
+      content={
+        <>
+          <ContextMenuOption text="Delete door" onClick={handleDelete} />
+        </>
+      }
+    >
+      <MeshHint
+        content={
+          <>
+            Door
+            <br />
+            <br />
+            <b>Width:</b> {door.w / M} m<br />
+            <b>Height:</b> {door.h / M} m
+          </>
+        }
       >
-        <boxGeometry args={[length, door.h, 24 * CM]} />
-        <meshStandardMaterial color={hovered ? "hotpink" : "brown"} />
-      </mesh>
-    </MeshHint>
+        <mesh
+          position={[center.x, door.h / 2, center.z]}
+          rotation={[0, -angle, 0]}
+          onPointerEnter={handlePointerEnter}
+          onPointerOut={handlePointerOut}
+        >
+          <boxGeometry args={[length, door.h, WALL_WIDTH + 4 * CM]} />
+          <meshStandardMaterial color={hovered ? "hotpink" : "brown"} />
+        </mesh>
+      </MeshHint>
+    </MeshContextMenu>
   );
 }

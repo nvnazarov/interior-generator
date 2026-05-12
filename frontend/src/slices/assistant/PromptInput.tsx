@@ -1,24 +1,16 @@
-import {
-  useCallback,
-  type ChangeEvent,
-  type MouseEvent,
-  type SetStateAction,
-} from "react";
+import { useCallback, type ChangeEvent, type SetStateAction } from "react";
 import "./PromptInput.scss";
-import {
-  useGetAllPlansInProjectQuery,
-  useGetPlanByIdQuery,
-} from "../api/slice";
-import { useContextMenu } from "../../shared/hooks/contextMenu";
+import { useGetAllPlansInProjectQuery } from "../api/slice";
 import { Button } from "../../shared/components/button/Button";
+import { ContextMenu, ContextMenuOption } from "../../shared/components";
 
 export function PromptInput({
+  basePlanId,
   projectId,
   count,
   setCount,
   text,
   setText,
-  basePlanId,
   setBasePlanId,
 }: {
   projectId: string;
@@ -29,7 +21,6 @@ export function PromptInput({
   count: number;
   setCount: (count: SetStateAction<number>) => void;
 }) {
-  const menu = useContextMenu();
   const { data } = useGetAllPlansInProjectQuery(projectId);
 
   const handleTextChange = useCallback(
@@ -43,27 +34,6 @@ export function PromptInput({
     setCount((count) => (count % 5) + 1);
   }, [setCount]);
 
-  const handleBasePlanSelect = useCallback(
-    (e: MouseEvent<HTMLSpanElement>) => {
-      menu.show({
-        x: e.clientX,
-        y: e.clientY,
-        items: [
-          {
-            name: "none",
-            onClick: () => setBasePlanId(null),
-          },
-        ].concat(
-          (data || []).map((plan) => ({
-            name: plan.name,
-            onClick: () => setBasePlanId(plan.id),
-          })),
-        ),
-      });
-    },
-    [data],
-  );
-
   return (
     <div className="prompt-input">
       <textarea
@@ -72,7 +42,25 @@ export function PromptInput({
         onChange={handleTextChange}
       />
       <div>
-        <Button onClick={handleBasePlanSelect} text="Base: none" />
+        <ContextMenu
+          content={
+            <>
+              <ContextMenuOption
+                text="none"
+                onClick={() => setBasePlanId(null)}
+              />
+              {(data || []).map((plan) => (
+                <ContextMenuOption
+                  key={plan.id}
+                  text={plan.name || plan.id.slice(0, 6)}
+                  onClick={() => setBasePlanId(plan.id)}
+                />
+              ))}
+            </>
+          }
+        >
+          <Button text={`Base: ${0}`} />
+        </ContextMenu>
         <Button onClick={handleCountChange} text={`Count: ${count}`} />
       </div>
     </div>

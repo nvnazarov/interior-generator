@@ -1,4 +1,3 @@
-import "./ContextMenu.scss";
 import {
   cloneElement,
   useRef,
@@ -9,6 +8,8 @@ import {
 } from "react";
 import { motion } from "motion/react";
 import { createPortal } from "react-dom";
+
+import "./ContextMenu.scss";
 
 type ContextMenuAttributes = {
   children: ReactElement<HTMLAttributes<HTMLElement>>;

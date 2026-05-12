@@ -1,0 +1,1 @@
+export { DeleteMyAccountButton } from "./DeleteMyAccountButton";

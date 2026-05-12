@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
-import { useCreateProjectMutation } from "../api/slice";
 import { useNavigate } from "react-router";
+
+import { useCreateProjectMutation } from "../api/slice";
 import { Button } from "../../shared/components/button/Button";
 
 export function CreateProjectButton() {

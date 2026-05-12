@@ -14,7 +14,7 @@ import { NameInput } from "./tools/NameInput";
 import { ChatButton } from "./tools/ChatButton";
 import { Chat } from "../assistant/Chat";
 import { Button } from "../../shared/components/button/Button";
-import { AccountAvatar } from "../account";
+import { AccountAvatar } from "../account/components";
 import { PlanSelect } from "./tools/PlanSelect";
 import { selectMyAccount } from "../account/slice";
 import { AnimatePresence } from "motion/react";

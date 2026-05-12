@@ -1,0 +1,11 @@
+@use "../../shared/styles/semantic" as s;
+
+.sign-up-page {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: s.$color-bg-0;
+}

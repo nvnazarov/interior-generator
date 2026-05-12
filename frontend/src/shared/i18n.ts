@@ -3,7 +3,7 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
 import Backend from "i18next-http-backend";
 
-export const LANGUAGES = ["en", "ru"]
+export const LANGUAGES = ["en", "ru"];
 
 i18next
   .use(LanguageDetector)
@@ -14,4 +14,3 @@ i18next
     fallbackLng: LANGUAGES[0],
     supportedLngs: LANGUAGES,
   });
-

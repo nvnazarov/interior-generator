@@ -2,16 +2,14 @@ import type { WetArea } from "../../api/entities";
 import * as THREE from "three";
 import { useCallback, useMemo, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
-import { useContextMenu } from "../../../shared/hooks/contextMenu";
 import { projectChanged } from "../slice";
 import { useAppDispatch } from "../../storeTypes";
-import { useTranslation } from "react-i18next";
+import { MeshHint } from "../../../shared/components/mesh-hint/MeshHint";
+import { computePolygonArea } from "../lib";
 
 export function WetAreaMesh({ area }: { area: WetArea & { id: string } }) {
   const dispatch = useAppDispatch();
-  const menu = useContextMenu();
   const [hovered, setHovered] = useState(false);
-  const { t } = useTranslation();
 
   const shape = useMemo(() => {
     const points = area.points;
@@ -24,42 +22,26 @@ export function WetAreaMesh({ area }: { area: WetArea & { id: string } }) {
     return shape;
   }, [area.points]);
 
-  const handleContextMenu = useCallback(
-    (e: ThreeEvent<MouseEvent>) => {
-      e.stopPropagation();
-      menu.show({
-        title: "Wet Area",
-        x: e.clientX,
-        y: e.clientY,
-        items: [
-          {
-            name: t("ProjectEditor.WetAreaMesh.DeleteOption.Title", "Delete"),
-            onClick: () => {
-              dispatch(
-                projectChanged({
-                  patch: {
-                    content: {
-                      wetAreas: {
-                        [area.id]: null,
-                      },
-                    },
-                  },
-                  inversePatch: {
-                    content: {
-                      wetAreas: {
-                        [area.id]: area,
-                      },
-                    },
-                  },
-                }),
-              );
+  const handleDelete = useCallback(() => {
+    dispatch(
+      projectChanged({
+        patch: {
+          content: {
+            wetAreas: {
+              [area.id]: null,
             },
           },
-        ],
-      });
-    },
-    [area],
-  );
+        },
+        inversePatch: {
+          content: {
+            wetAreas: {
+              [area.id]: area,
+            },
+          },
+        },
+      }),
+    );
+  }, [area]);
 
   const handlePointerEnter = useCallback((e: ThreeEvent<PointerEvent>) => {
     setHovered(true);
@@ -71,18 +53,29 @@ export function WetAreaMesh({ area }: { area: WetArea & { id: string } }) {
     e.stopPropagation();
   }, []);
 
+  const areaSqm = Math.round(computePolygonArea(area.points));
+
   return (
-    <mesh
-      rotation={[Math.PI / 2, 0, 0]}
-      onContextMenu={handleContextMenu}
-      onPointerEnter={handlePointerEnter}
-      onPointerOut={handlePointerOut}
+    <MeshHint
+      content={
+        <>
+          Wet area
+          <br />
+          <br /> <b>Area:</b> {areaSqm} sq m
+        </>
+      }
     >
-      <shapeGeometry args={[shape]} />
-      <meshStandardMaterial
-        color={hovered ? "hotpink" : "lightblue"}
-        side={THREE.DoubleSide}
-      />
-    </mesh>
+      <mesh
+        rotation={[Math.PI / 2, 0, 0]}
+        onPointerEnter={handlePointerEnter}
+        onPointerOut={handlePointerOut}
+      >
+        <shapeGeometry args={[shape]} />
+        <meshStandardMaterial
+          color={hovered ? "hotpink" : "lightblue"}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+    </MeshHint>
   );
 }

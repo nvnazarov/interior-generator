@@ -24,5 +24,5 @@ export function human(ms: number): string {
       return prev;
     }
     return prev + v;
-  })
+  });
 }

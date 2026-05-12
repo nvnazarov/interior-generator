@@ -1,5 +1,5 @@
-export { SignInPage } from "./SignInPage";
-export { SignUpPage } from "./SignUpPage";
-export { HomePage } from "./HomePage";
-export { ProjectEditorPage } from "./ProjectEditorPage";
-export { PlanEditorPage } from "./PlanEditorPage";
+export { SignInPage } from "./sign-in";
+export { SignUpPage } from "./sign-up";
+export { HomePage } from "./home";
+export { ProjectEditorPage } from "./project-editor";
+export { PlanEditorPage } from "./plan-editor";

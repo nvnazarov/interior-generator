@@ -47,10 +47,10 @@ export function PlanMesh() {
         }
       })}
       {Object.entries(plan.content.areas).map(([id, area]) => (
-        <AreaMesh key={id} area={area} />
+        <AreaMesh key={id} area={{ id, ...area }} />
       ))}
       {Object.entries(plan.content.furniture).map(([id, furniture]) => (
-        <FurnitureMesh key={id} furniture={furniture} />
+        <FurnitureMesh key={id} furniture={{ id, ...furniture }} />
       ))}
     </>
   );

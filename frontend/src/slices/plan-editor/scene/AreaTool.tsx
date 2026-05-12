@@ -105,45 +105,19 @@ export function AreaTool() {
   );
 
   const handleStartPointClick = useCallback(() => {
+    const id = uuidv4();
     const area: FunctionalArea = {
-      id: uuidv4(),
       type: "kitchen",
       points: points,
     };
     dispatch(
       planChanged({
-        patch: { content: { areas: { [area.id]: area } } },
-        inversePatch: { content: { areas: { [area.id]: null } } },
+        patch: { content: { areas: { [id]: area } } },
+        inversePatch: { content: { areas: { [id]: null } } },
       }),
     );
     setPoints([]);
   }, [points]);
-
-  // const handleMouseUp = useCallback(() => {
-  //   try {
-  //     const isValidArea =
-  //       Math.abs(areaEndPosition[0] - areaStartPosition[0]) > 0 &&
-  //       Math.abs(areaEndPosition[1] - areaStartPosition[1]) > 0;
-  //     if (isCreatingArea && isValidArea) {
-  //       const area: FunctionalArea = {
-  //         id: uuidv4(),
-  //         type: "",
-  //         x: Math.min(areaStartPosition[0], areaEndPosition[0]),
-  //         y: Math.min(areaStartPosition[1], areaEndPosition[1]),
-  //         w: Math.abs(areaEndPosition[0] - areaStartPosition[0]),
-  //         h: Math.abs(areaEndPosition[1] - areaStartPosition[1]),
-  //       };
-  //       dispatch(
-  //         planChanged({
-  //           patch: { content: { areas: { [area.id]: area } } },
-  //           inversePatch: { content: { areas: { [area.id]: null } } },
-  //         }),
-  //       );
-  //     }
-  //   } finally {
-  //     setIsCreatingArea(false);
-  //   }
-  // }, [isCreatingArea, areaStartPosition, areaEndPosition]);
 
   return (
     <>
@@ -152,7 +126,6 @@ export function AreaTool() {
         rotation={[-Math.PI / 2, 0, 0]}
         onPointerDown={handleMouseDown}
         onPointerMove={handleMouseMove}
-        // onPointerUp={handleMouseUp}
       >
         <planeGeometry args={[1000 * M, 1000 * M]} />
         <meshBasicMaterial transparent opacity={0} />

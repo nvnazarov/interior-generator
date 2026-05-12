@@ -1,13 +1,12 @@
 import type { Door, Wall, Window } from "../../api/entities";
-import { CM, M, snapToGrid } from "../lib";
+import { CM, M, snapToGrid, WALL_HEIGHT, WALL_WIDTH } from "../lib";
 import * as THREE from "three";
 import { projectChanged, selectProjectEditorTool } from "../slice";
 import { useAppDispatch, useAppSelector } from "../../storeTypes";
 import { useCallback, useMemo, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import { v4 as uuidv4 } from "uuid";
-import { useContextMenu } from "../../../shared/hooks/contextMenu";
-import { useTranslation } from "react-i18next";
+import { MeshHint } from "../../../shared/components/mesh-hint/MeshHint";
 
 function WindowPreview({
   startPoint,
@@ -45,7 +44,11 @@ function WindowPreview({
       rotation={[0, -angle, 0]}
     >
       <boxGeometry
-        args={[length, Math.abs(endPoint[1] - startPoint[1]), 24 * CM]}
+        args={[
+          length,
+          Math.abs(endPoint[1] - startPoint[1]),
+          WALL_WIDTH + 4 * CM,
+        ]}
       />
       <meshStandardMaterial color="hotpink" />
     </mesh>
@@ -83,7 +86,11 @@ function DoorPreview({
       rotation={[0, -angle, 0]}
     >
       <boxGeometry
-        args={[length, Math.max(endPoint[1], startPoint[1]), 24 * CM]}
+        args={[
+          length,
+          Math.max(endPoint[1], startPoint[1]),
+          WALL_WIDTH + 4 * CM,
+        ]}
       />
       <meshStandardMaterial color="hotpink" />
     </mesh>
@@ -97,8 +104,6 @@ export function WallMesh({ wall }: { wall: Wall & { id: string } }) {
   const [startPoint, setStartPoint] = useState<[number, number]>([0, 0]);
   const [endPoint, setEndPoint] = useState<[number, number]>([0, 0]);
   const [isCreatingWindowOrDoor, setIsCreatingWindowOrDoor] = useState(false);
-  const menu = useContextMenu();
-  const { t } = useTranslation();
 
   const start = new THREE.Vector3(wall.x1, 0, wall.y1);
   const end = new THREE.Vector3(wall.x2, 0, wall.y2);
@@ -230,39 +235,26 @@ export function WallMesh({ wall }: { wall: Wall & { id: string } }) {
     setIsCreatingWindowOrDoor(false);
   }, []);
 
-  const handleContextMenu = useCallback((e: ThreeEvent<MouseEvent>) => {
-    e.stopPropagation();
-    menu.show({
-      title: t("ProjectEditor.WallMesh.Name", "Wall"),
-      x: e.clientX,
-      y: e.clientY,
-      items: [
-        {
-          name: t("ProjectEditor.WallMesh.DeleteOption.Title", "Delete"),
-          onClick: () => {
-            dispatch(
-              projectChanged({
-                patch: {
-                  content: {
-                    walls: {
-                      [wall.id]: null,
-                    },
-                  },
-                },
-                inversePatch: {
-                  content: {
-                    walls: {
-                      [wall.id]: wall,
-                    },
-                  },
-                },
-              }),
-            );
+  const handleDelete = useCallback(() => {
+    dispatch(
+      projectChanged({
+        patch: {
+          content: {
+            walls: {
+              [wall.id]: null,
+            },
           },
         },
-      ],
-    });
-  }, []);
+        inversePatch: {
+          content: {
+            walls: {
+              [wall.id]: wall,
+            },
+          },
+        },
+      }),
+    );
+  }, [wall]);
 
   const handlePointerEnter = useCallback((e: ThreeEvent<PointerEvent>) => {
     setHovered(true);
@@ -276,20 +268,29 @@ export function WallMesh({ wall }: { wall: Wall & { id: string } }) {
 
   return (
     <>
-      <mesh
-        position={[center.x, (3 * M) / 2, center.z]}
-        rotation={[0, -angle, 0]}
-        onPointerEnter={handlePointerEnter}
-        onPointerOut={handlePointerOut}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerLeave}
-        onContextMenu={handleContextMenu}
+      <MeshHint
+        content={
+          <>
+            Wall
+            <br />
+            <br /> <b>Length:</b> {Math.round(length - 20 * CM) / M}m
+          </>
+        }
       >
-        <boxGeometry args={[length, 3 * M, 20 * CM]} />
-        <meshStandardMaterial color={hovered ? "hotpink" : "white"} />
-      </mesh>
+        <mesh
+          position={[center.x, WALL_HEIGHT / 2, center.z]}
+          rotation={[0, -angle, 0]}
+          onPointerEnter={handlePointerEnter}
+          onPointerOut={handlePointerOut}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerLeave}
+        >
+          <boxGeometry args={[length, WALL_HEIGHT, WALL_WIDTH]} />
+          <meshStandardMaterial color={hovered ? "hotpink" : "white"} />
+        </mesh>
+      </MeshHint>
       {isCreatingWindowOrDoor &&
         (tool === "window" ? (
           <WindowPreview
