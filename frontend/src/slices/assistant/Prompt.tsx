@@ -1,9 +1,10 @@
+import moment from "moment";
+import { useCallback, useState } from "react";
+
 import "./Prompt.scss";
 import type { PlanPatch, Prompt } from "../api/entities";
-import moment from "moment";
 import { human } from "./lib";
-import { Spinner } from "../../shared/components";
-import { useCallback, useState } from "react";
+import { Button, Spinner, Tooltip } from "../../shared/components";
 import { useDeletePromptMutation } from "../api/slice";
 import { useAppDispatch } from "../storeTypes";
 import { planChangedTo } from "../plan-editor/slice";
@@ -58,31 +59,45 @@ export function Prompt({
   }, []);
 
   return (
-    <div className="prompts__prompt">
-      <div>
+    <div className="prompt">
+      <div className="prompt__body">
         <p>{prompt.text}</p>
-        <button
-          onClick={handleDeletion}
-          disabled={isDeleting || prompt.status === "pending"}
-        >
-          <img src="/app/icons/trash.png" />
-        </button>
+        <Tooltip content={<p style={{ fontWeight: 400 }}>Delete prompt</p>}>
+          <Button
+            onClick={handleDeletion}
+            icon="trash.png"
+            disabled={isDeleting || prompt.status === "pending"}
+            style={{ width: "28px", height: "28px" }}
+          />
+        </Tooltip>
       </div>
       <div>
         {prompt.base !== null && (
-          <span onClick={() => handleShowBase()}>Base</span>
+          <Tooltip
+            content={
+              <p style={{ fontWeight: 400 }}>
+                Change current plan to the base plan selected before the
+                generation
+              </p>
+            }
+          >
+            <Button text="Base" onClick={() => handleShowBase()} />
+          </Tooltip>
         )}
         {prompt.status === "success" && (
           <div>
             {prompt.patches.map((patch, idx) => (
-              <span key={idx} onClick={() => handleShowPlan(patch)}>
-                P{idx + 1}
-              </span>
+              <Button
+                text={`P${idx + 1}`}
+                key={idx}
+                primary
+                onClick={() => handleShowPlan(patch)}
+              />
             ))}
           </div>
         )}
       </div>
-      <div>
+      <div className="prompt__status-bar">
         <div>{moment(prompt.dtCreated).fromNow()}</div>
         {prompt.status === "success" ? (
           <div>{human(moment(prompt.dtDone!).diff(prompt.dtCreated))}</div>

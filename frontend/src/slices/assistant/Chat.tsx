@@ -3,6 +3,8 @@ import type { Prompt as PromptEntity } from "../api/entities";
 import {
   useGeneratePlansMutation,
   useLazyGetPromptsForProjectQuery,
+  usePatchPlanMutation,
+  usePatchProjectMutation,
 } from "../api/slice";
 import "./Chat.scss";
 import { useCallback, useEffect, useState } from "react";
@@ -10,16 +12,22 @@ import { v4 } from "uuid";
 import { PromptInput } from "./PromptInput";
 import { Spinner } from "../../shared/components";
 import { Prompt } from "./Prompt";
-import { useAppDispatch } from "../storeTypes";
+import { useAppDispatch, useAppSelector } from "../storeTypes";
 import { notify } from "../notifications/slice";
 import { Button } from "../../shared/components/button/Button";
 import { motion } from "motion/react";
+import { planSaved, selectPlanEditor } from "../plan-editor/slice";
+import { projectSaved, selectProjectEditor } from "../project-editor/slice";
 
 export function Chat({ projectId }: { projectId: string }) {
   const dispatch = useAppDispatch();
   const [count, setCount] = useState(1);
   const [text, setText] = useState("");
   const [basePlanId, setBasePlanId] = useState<string | null>(null);
+  const [patchPlan] = usePatchPlanMutation();
+  const [patchProject] = usePatchProjectMutation();
+  const planEditor = useAppSelector(selectPlanEditor);
+  const projectEditor = useAppSelector(selectProjectEditor);
 
   const [getPromptsForProject, { isLoading, isSuccess }] =
     useLazyGetPromptsForProjectQuery();
@@ -38,7 +46,25 @@ export function Chat({ projectId }: { projectId: string }) {
     const placeholderId = v4();
     try {
       setIsBusy(true);
-      // TODO: sync plan
+
+      if (projectEditor.project) {
+        const revision = await patchProject({
+          id: projectEditor.project.id,
+          revision: projectEditor.project.revision,
+          patch: projectEditor.unsavedAccumulatedPatch,
+        }).unwrap();
+        dispatch(projectSaved(revision));
+      }
+
+      if (planEditor.plan) {
+        const revision = await patchPlan({
+          id: planEditor.plan.id,
+          revision: planEditor.plan.revision,
+          patch: planEditor.unsavedAccumulatedPatch,
+        }).unwrap();
+        dispatch(planSaved(revision));
+      }
+
       setText("");
       setPrompts((prompts) => [
         ...prompts,
@@ -92,10 +118,12 @@ export function Chat({ projectId }: { projectId: string }) {
       className="chat"
       initial={{ rotateY: 90 }}
       animate={{ rotateY: 0 }}
-      exit={{ rotateY: 90, transition: { ease: "easeIn" } }}
+      exit={{ rotateY: 90, transition: { ease: "easeIn", duration: 0.125 } }}
     >
       {isLoading ? (
-        <Spinner />
+        <div className="chat__loading">
+          <Spinner />
+        </div>
       ) : isSuccess ? (
         <div className="chat__history">
           {prompts.map((prompt) => (

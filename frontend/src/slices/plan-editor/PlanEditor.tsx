@@ -17,24 +17,17 @@ import { Button } from "../../shared/components/button/Button";
 import { AccountAvatar } from "../account/components";
 import { PlanSelect } from "./tools/PlanSelect";
 import { selectMyAccount } from "../account/slice";
-import { AnimatePresence } from "motion/react";
 import { FurnitureCatalogSwitch } from "./tools/FurnitureCatalogSwitch";
 import { FurnitureCatalog } from "./tools/FurnitureCatalog";
 
 function ChatHelper({ projectId }: { projectId: string }) {
   const isChatOpen = useAppSelector(selectIsChatOpen);
-  return (
-    <AnimatePresence>
-      {isChatOpen && <Chat projectId={projectId} />}
-    </AnimatePresence>
-  );
+  return <>{isChatOpen && <Chat projectId={projectId} />}</>;
 }
 
 function CatalogHelper() {
   const isCatalogOpen = useAppSelector(selectIsCatalogOpen);
-  return (
-    <AnimatePresence>{isCatalogOpen && <FurnitureCatalog />}</AnimatePresence>
-  );
+  return <>{isCatalogOpen && <FurnitureCatalog />}</>;
 }
 
 function PlanEditorHelper({

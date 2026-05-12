@@ -2,7 +2,11 @@ import { useCallback, type ChangeEvent, type SetStateAction } from "react";
 import "./PromptInput.scss";
 import { useGetAllPlansInProjectQuery } from "../api/slice";
 import { Button } from "../../shared/components/button/Button";
-import { ContextMenu, ContextMenuOption } from "../../shared/components";
+import {
+  ContextMenu,
+  ContextMenuOption,
+  Tooltip,
+} from "../../shared/components";
 
 export function PromptInput({
   basePlanId,
@@ -34,6 +38,8 @@ export function PromptInput({
     setCount((count) => (count % 5) + 1);
   }, [setCount]);
 
+  const plan = data?.find((p) => p.id === basePlanId);
+
   return (
     <div className="prompt-input">
       <textarea
@@ -41,7 +47,7 @@ export function PromptInput({
         value={text}
         onChange={handleTextChange}
       />
-      <div>
+      <div className="prompt-input__options">
         <ContextMenu
           content={
             <>
@@ -49,19 +55,29 @@ export function PromptInput({
                 text="none"
                 onClick={() => setBasePlanId(null)}
               />
-              {(data || []).map((plan) => (
+              {(data || []).map((plan, idx) => (
                 <ContextMenuOption
                   key={plan.id}
-                  text={plan.name || plan.id.slice(0, 6)}
+                  text={`${idx}. ` + (plan.name || "Untitled plan")}
                   onClick={() => setBasePlanId(plan.id)}
                 />
               ))}
             </>
           }
         >
-          <Button text={`Base: ${0}`} />
+          <Button
+            text={`Base: ${plan ? plan.name || "Untitled plan" : "..."}`}
+          />
         </ContextMenu>
-        <Button onClick={handleCountChange} text={`Count: ${count}`} />
+        <Tooltip
+          content={
+            <p style={{ fontWeight: 400 }}>
+              Select number of plans to generate
+            </p>
+          }
+        >
+          <Button onClick={handleCountChange} text={`Count: ${count}`} />
+        </Tooltip>
       </div>
     </div>
   );

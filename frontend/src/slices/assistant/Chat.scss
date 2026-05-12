@@ -36,10 +36,17 @@
   }
 
   &__input {
-    border-top: 1px solid s.$color-bg-100;
+    border-top: 1px solid s.$color-bg-300;
     padding: 10px;
     display: flex;
     flex-direction: column;
     gap: 10px;
+  }
+
+  &__loading {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 50px;
   }
 }
