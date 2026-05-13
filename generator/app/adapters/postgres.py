@@ -3,8 +3,8 @@ from sqlalchemy import bindparam, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from app.core.db import PromptsRepository
 from app.core.models import Plan, Prompt
+from app.core.repository import PromptsRepository
 
 STMT_GET_PROMPTS_FOR_PROJECT = text(
     "SELECT "
@@ -77,7 +77,7 @@ class PostgresPromptsRepository(PromptsRepository):
     def __init__(self, engine: AsyncEngine):
         self.engine = engine
 
-    async def get_for_project(self, project_id: str) -> list[Prompt]:
+    async def in_project(self, project_id: str) -> list[Prompt]:
         async with self.engine.connect() as conn:
             cursor = await conn.execute(
                 STMT_GET_PROMPTS_FOR_PROJECT, {"project_id": project_id}
@@ -105,7 +105,7 @@ class PostgresPromptsRepository(PromptsRepository):
             )
             await conn.commit()
 
-    async def get(self, prompt_id: str) -> Prompt | None:
+    async def find(self, prompt_id: str) -> Prompt | None:
         async with self.engine.connect() as conn:
             cursor = await conn.execute(STMT_GET_PROMPT, {"prompt_id": prompt_id})
             row = cursor.one_or_none()

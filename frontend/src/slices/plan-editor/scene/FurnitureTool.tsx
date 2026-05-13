@@ -7,6 +7,7 @@ import { M } from "../lib";
 import {
   finishedDraggingFurniture,
   planChanged,
+  planUndoablyChanged,
   selectFurnitureDrag,
 } from "../slice";
 import { useLazyGetFurnitureByIdQuery } from "../../api/slice";
@@ -60,6 +61,21 @@ export function FurnitureTool() {
   useEffect(() => {
     if (furnitureDrag) {
       getFurnitureById(furnitureDrag.furnitureId);
+    }
+  }, [furnitureDrag]);
+
+  useEffect(() => {
+    if (furnitureDrag?.furnitureInPlan) {
+      setPosition(furnitureDrag.furnitureInPlan);
+      dispatch(
+        planUndoablyChanged({
+          content: {
+            furniture: {
+              [furnitureDrag.furnitureInPlan.id]: null,
+            },
+          },
+        }),
+      );
     }
   }, [furnitureDrag]);
 
@@ -189,7 +205,7 @@ export function FurnitureTool() {
     };
 
     const handleClick = () => {
-      const id = uuidv4();
+      const id = furnitureDrag.furnitureInPlan?.id || uuidv4();
       dispatch(
         planChanged({
           patch: {
@@ -208,7 +224,12 @@ export function FurnitureTool() {
           inversePatch: {
             content: {
               furniture: {
-                [id]: null,
+                [id]: furnitureDrag.furnitureInPlan
+                  ? (() => {
+                      const { id, ...rest } = furnitureDrag.furnitureInPlan;
+                      return rest;
+                    })()
+                  : null,
               },
             },
           },

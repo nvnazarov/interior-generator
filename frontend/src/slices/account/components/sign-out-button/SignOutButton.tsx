@@ -5,6 +5,7 @@ import { useAppDispatch } from "../../../storeTypes";
 import { authClient } from "../../../../shared/betterAuth";
 import { userSignedOut } from "../../slice";
 import { Button } from "../../../../shared/components/button/Button";
+import api from "../../../api/slice";
 
 export function SignOutButton() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export function SignOutButton() {
       if (result.error) {
         // Ignore the error.
       }
+      dispatch(api.util.resetApiState());
       dispatch(userSignedOut());
       navigate("/sign-in");
     } finally {

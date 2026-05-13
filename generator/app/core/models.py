@@ -4,20 +4,18 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
-from app.utils.datetime import current_time
+from app.core.util import current_time
 
 
 class Project(BaseModel):
     class Content(BaseModel):
         class Door(BaseModel):
-            id: str
             wall_id: str
             x: int = Field(ge=0)
             w: int = Field(ge=0)
             h: int = Field(ge=0)
 
         class Window(BaseModel):
-            id: str
             wall_id: str
             x: int = Field(ge=0)
             y: int = Field(ge=0)
@@ -25,7 +23,6 @@ class Project(BaseModel):
             h: int = Field(ge=0)
 
         class Wall(BaseModel):
-            id: str
             x1: int
             y1: int
             x2: int
@@ -36,7 +33,6 @@ class Project(BaseModel):
                 x: int
                 y: int
 
-            id: str
             points: list[Point]
 
         walls: dict[str, Wall] = Field(default_factory=dict)
@@ -47,14 +43,12 @@ class Project(BaseModel):
     id: str
     account_id: str
     name: str = Field(max_length=256)
-    description: str = Field(max_length=2048)
     content: Content = Field(default_factory=Content)
 
 
 class Plan(BaseModel):
     class Content(BaseModel):
         class Furniture(BaseModel):
-            id: str
             furniture_id: str
             x: int
             y: int
@@ -66,7 +60,6 @@ class Plan(BaseModel):
                 x: int
                 y: int
 
-            id: str
             type: str
             points: list[Point]
 

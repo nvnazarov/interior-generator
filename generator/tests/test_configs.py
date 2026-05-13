@@ -16,6 +16,17 @@ def test_default_root_config():
             "port": 8080,
             "account_header": "x-account-id",
         },
+        "gateway": {
+            "base_url": "",
+        },
+        "postgres": {
+            "db": "postgres",
+            "host": "127.0.0.1",
+            "port": 5432,
+            "user": "postgres",
+            "password": "",
+            "password_file": None,
+        },
         "openai": {
             "api_key": "",
             "api_key_file": None,
@@ -37,6 +48,12 @@ def test_root_config():
             "GENERATOR__API__ACCOUNT_HEADER": "test",
             "GENERATOR__OPENAI__API_KEY": "test",
             "GENERATOR__OPENAI__BASE_URL": "test",
+            "GENERATOR__POSTGRES__HOST": "test",
+            "GENERATOR__POSTGRES__PORT": "5433",
+            "GENERATOR__POSTGRES__USER": "test",
+            "GENERATOR__POSTGRES__PASSWORD": "test",
+            "GENERATOR__POSTGRES__DB": "test",
+            "GENERATOR__GATEWAY__BASE_URL": "http://private-gateway/api",
             "GENERATOR__LOGGING__LEVEL": "ERROR",
         }
     )
@@ -46,6 +63,17 @@ def test_root_config():
             "host": "0.0.0.0",
             "port": 80,
             "account_header": "test",
+        },
+        "gateway": {
+            "base_url": "http://private-gateway/api",
+        },
+        "postgres": {
+            "db": "test",
+            "host": "test",
+            "port": 5433,
+            "user": "test",
+            "password": "test",
+            "password_file": None,
         },
         "openai": {
             "api_key": "test",

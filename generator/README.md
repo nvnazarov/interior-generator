@@ -20,7 +20,7 @@ textual description.
 
 ## Setup
 
-Install uv, make and Docker. Create a .env file (see .env.example).
+Install uv, make and Docker. Create a `.env` file (see `.env.example`).
 Use the following commands:
 
 ```bash

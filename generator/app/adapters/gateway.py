@@ -37,7 +37,7 @@ class GatewayFacade(SystemFacade):
 
     async def match_furniture(self, description: str, count: int) -> list[Furniture]:
         resp = await self.client.get(
-            f"/catalog/like?description={quote(description)}&k={count}",
+            f"/catalog/search/description?description={quote(description)}&limit={count}",
         )
         resp.raise_for_status()
         model = RootModel[list[Furniture]].model_validate(resp.json())

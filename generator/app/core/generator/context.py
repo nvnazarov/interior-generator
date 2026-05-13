@@ -75,16 +75,14 @@ class GenerationContext:
         # Add existing furniture to the scene graph.
         if self.base_plan:
             name_counts = dict[str, int]()
-            for plan_furniture in self.base_plan.content.furniture.values():
+            for id, plan_furniture in self.base_plan.content.furniture.items():
                 furniture = await self.facade.find_furniture(
                     plan_furniture.furniture_id
                 )
                 if not furniture:
-                    logger.warning(
-                        {"msg": "furniture not found", "id": plan_furniture.id}
-                    )
+                    logger.warning({"msg": "furniture not found", "id": id})
                     continue
-                object = self.scene.get_or_create_object(plan_furniture.id)
+                object = self.scene.get_or_create_object(id)
                 object.add_choice(furniture)
                 object.location = Location(
                     x=plan_furniture.x,
@@ -227,18 +225,21 @@ class GenerationContext:
                 # TODO
                 logger.warning({"msg": "no furniture choices", "object": object.id})
                 continue
-            furniture_choices = await self.facade.match_furniture(
-                object.semantic_name, 3
-            )
-            if len(furniture_choices) == 0:
-                logger.warning(
-                    {
-                        "msg": "no furniture choices",
-                        "semantic_name": object.semantic_name,
-                    }
+            try:
+                furniture_choices = await self.facade.match_furniture(
+                    object.semantic_name, 3
                 )
-                continue
-            object.add_choices(furniture_choices)
+                if len(furniture_choices) == 0:
+                    logger.warning(
+                        {
+                            "msg": "no furniture choices",
+                            "semantic_name": object.semantic_name,
+                        }
+                    )
+                    continue
+                object.add_choices(furniture_choices)
+            except Exception as e:
+                logger.error({"error": repr(e)})
 
     async def _describe_spatial_relations(
         self, scene_description: str, user_instruction: str

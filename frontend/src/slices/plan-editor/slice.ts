@@ -4,7 +4,7 @@ import {
   original,
   type PayloadAction,
 } from "@reduxjs/toolkit";
-import type { Plan, PlanPatch } from "../api/entities";
+import type { FurnitureInPlan, Plan, PlanPatch } from "../api/entities";
 import {
   applyJsonMergePatch,
   combineJsonMergePatches,
@@ -23,7 +23,7 @@ type PlanChange = {
 
 type FurnitureDrag = {
   furnitureId: string;
-  furnitureOnPlanId?: string;
+  furnitureInPlan: FurnitureInPlan & { id: string };
 };
 
 export type PlanEditorState = {

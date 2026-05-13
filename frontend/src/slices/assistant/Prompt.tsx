@@ -71,7 +71,7 @@ export function Prompt({
           />
         </Tooltip>
       </div>
-      <div>
+      <div className="prompt__result">
         {prompt.base !== null && (
           <Tooltip
             content={
@@ -85,16 +85,17 @@ export function Prompt({
           </Tooltip>
         )}
         {prompt.status === "success" && (
-          <div>
+          <>
             {prompt.patches.map((patch, idx) => (
               <Button
                 text={`P${idx + 1}`}
                 key={idx}
                 primary
                 onClick={() => handleShowPlan(patch)}
+                style={{ width: "34px" }}
               />
             ))}
-          </div>
+          </>
         )}
       </div>
       <div className="prompt__status-bar">

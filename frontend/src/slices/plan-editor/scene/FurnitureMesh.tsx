@@ -6,7 +6,6 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { useAppDispatch, useAppSelector } from "../../storeTypes";
 import {
   planChanged,
-  planUndoablyChanged,
   selectFurnitureDrag,
   selectPlanEditorTool,
   startedDraggingFurniture,
@@ -60,17 +59,16 @@ export function FurnitureMesh({
       if (e.button === 0 && tool === "furniture" && !furnitureDrag) {
         e.stopPropagation();
         dispatch(
-          planUndoablyChanged({
-            content: {
-              furniture: {
-                [furniture.id]: null,
-              },
-            },
-          }),
-        );
-        dispatch(
           startedDraggingFurniture({
             furnitureId: furniture.furnitureId,
+            furnitureInPlan: {
+              id: furniture.id,
+              furnitureId: furniture.furnitureId,
+              x: furniture.x,
+              y: furniture.y,
+              z: furniture.z,
+              yaw: furniture.yaw,
+            },
           }),
         );
       }
