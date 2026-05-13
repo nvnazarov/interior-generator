@@ -3,10 +3,12 @@ import type { FurnitureInPlan } from "../../api/entities";
 import { useGetFurnitureByIdQuery } from "../../api/slice";
 import { CM } from "../lib";
 import type { ThreeEvent } from "@react-three/fiber";
-import { useAppDispatch } from "../../storeTypes";
+import { useAppDispatch, useAppSelector } from "../../storeTypes";
 import {
   planChanged,
   planUndoablyChanged,
+  selectFurnitureDrag,
+  selectPlanEditorTool,
   startedDraggingFurniture,
 } from "../slice";
 import { ContextMenuOption, MeshMenu } from "../../../shared/components";
@@ -19,6 +21,8 @@ export function FurnitureMesh({
   const dispatch = useAppDispatch();
   const { data, isSuccess } = useGetFurnitureByIdQuery(furniture.furnitureId);
   const [hovered, setHovered] = useState(false);
+  const tool = useAppSelector(selectPlanEditorTool);
+  const furnitureDrag = useAppSelector(selectFurnitureDrag);
 
   const handleDelete = useCallback(() => {
     dispatch(
@@ -53,7 +57,8 @@ export function FurnitureMesh({
 
   const handlePointerDown = useCallback(
     (e: ThreeEvent<PointerEvent>) => {
-      if (e.button === 0) {
+      if (e.button === 0 && tool === "furniture" && !furnitureDrag) {
+        e.stopPropagation();
         dispatch(
           planUndoablyChanged({
             content: {
@@ -70,7 +75,7 @@ export function FurnitureMesh({
         );
       }
     },
-    [furniture],
+    [furniture, furnitureDrag, tool],
   );
 
   return isSuccess ? (

@@ -26,14 +26,6 @@ type FurnitureDrag = {
   furnitureOnPlanId?: string;
 };
 
-type FurniturePreview = {
-  furnitureId: string;
-  x: number;
-  y: number;
-  z: number;
-  yaw: number;
-};
-
 export type PlanEditorState = {
   plan: Plan | null;
   unsavedAccumulatedPatch: PlanPatch;
@@ -44,7 +36,6 @@ export type PlanEditorState = {
   isCatalogOpen: boolean;
   isChatOpen: boolean;
   furnitureDrag: FurnitureDrag | null;
-  furniturePreview: FurniturePreview | null;
 };
 
 const planEditorSlice = createSlice({
@@ -59,7 +50,6 @@ const planEditorSlice = createSlice({
     isCatalogOpen: false,
     isChatOpen: false,
     furnitureDrag: null,
-    furniturePreview: null,
   } as PlanEditorState,
   reducers: {
     planOpened: (state, action: PayloadAction<Plan>) => {
@@ -202,26 +192,6 @@ const planEditorSlice = createSlice({
     },
     finishedDraggingFurniture: (state) => {
       state.furnitureDrag = null;
-      state.furniturePreview = null;
-    },
-    furniturePreviewUpdated: (
-      state,
-      action: PayloadAction<Partial<FurniturePreview>>,
-    ) => {
-      if (state.furniturePreview) {
-        state.furniturePreview = {
-          ...state.furniturePreview,
-          ...action.payload,
-        };
-      } else {
-        // throw new Error("error: furniture preview update: preview is not enabled")
-      }
-    },
-    showFurniturePreview: (state, action: PayloadAction<FurniturePreview>) => {
-      state.furniturePreview = action.payload;
-    },
-    hideFurniturePreview: (state) => {
-      state.furniturePreview = null;
     },
   },
 });
@@ -257,8 +227,5 @@ export const {
   chatSwitched,
   startedDraggingFurniture,
   finishedDraggingFurniture,
-  furniturePreviewUpdated,
-  showFurniturePreview,
-  hideFurniturePreview,
   planUndoablyChanged,
 } = planEditorSlice.actions;

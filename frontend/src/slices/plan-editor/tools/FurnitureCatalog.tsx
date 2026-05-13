@@ -12,13 +12,7 @@ import type { Furniture } from "../../api/entities";
 import { useGetFurnitureInfiniteQuery } from "../../api/slice";
 import { useDebounce } from "../../../shared/hooks/debounce";
 import { useAppDispatch } from "../../storeTypes";
-import {
-  finishedDraggingFurniture,
-  hideFurniturePreview,
-  showFurniturePreview,
-  startedDraggingFurniture,
-  toolSelected,
-} from "../slice";
+import { startedDraggingFurniture, toolSelected } from "../slice";
 import { Select, TextInput } from "../../../shared/components";
 
 function Item({ furniture }: { furniture: Furniture }) {
@@ -28,28 +22,10 @@ function Item({ furniture }: { furniture: Furniture }) {
     e.stopPropagation();
     dispatch(toolSelected("furniture"));
     dispatch(startedDraggingFurniture({ furnitureId: furniture.id }));
-    dispatch(
-      showFurniturePreview({
-        furnitureId: furniture.id,
-        x: 0,
-        y: 0,
-        z: 0,
-        yaw: 0,
-      }),
-    );
-  }, []);
-
-  const handleDragEnd = useCallback(() => {
-    dispatch(finishedDraggingFurniture());
-    dispatch(hideFurniturePreview());
   }, []);
 
   return (
-    <div
-      className="furniture-catalog__item"
-      onMouseDown={handleDragStart}
-      onMouseUp={handleDragEnd}
-    >
+    <div className="furniture-catalog__item" onClick={handleDragStart}>
       <p>{furniture.name}</p>
       <span>
         {furniture.width}x{furniture.depth}x{furniture.height} cm3

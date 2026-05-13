@@ -15,6 +15,7 @@
     background: transparent;
     resize: vertical;
     min-height: calc(2 * s.$font-size-default);
+    max-height: calc(20 * s.$font-size-default);
   }
 
   &__options {

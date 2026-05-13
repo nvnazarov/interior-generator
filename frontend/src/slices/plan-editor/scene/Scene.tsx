@@ -10,85 +10,21 @@ import {
 } from "@react-three/drei";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
-import { useAppDispatch, useAppSelector } from "../../storeTypes";
-import {
-  finishedDraggingFurniture,
-  planChanged,
-  selectFurnitureDrag,
-  selectPlanEditor,
-  selectPlanEditorTool,
-  selectPlanEditorView,
-} from "../slice";
+import { useAppSelector } from "../../storeTypes";
+import { selectPlanEditorTool, selectPlanEditorView } from "../slice";
 import { M } from "../lib";
 import { PlanMesh } from "./PlanMesh";
 import { AreaTool } from "./AreaTool";
-import { FurniturePreview } from "./FurniturePreview";
-import { useEffect } from "react";
-import type { FurnitureInPlan } from "../../api/entities";
-import { v4 as uuidv4 } from "uuid";
 import { FurnitureTool } from "./FurnitureTool";
 
 const { ACTION } = CameraControlsImpl;
 
-function DragHelper() {
-  const dispatch = useAppDispatch();
-  const furnitureDrag = useAppSelector(selectFurnitureDrag);
-  const preview = useAppSelector(
-    (state) => selectPlanEditor(state).furniturePreview,
-  );
-
-  useEffect(() => {
-    if (furnitureDrag) {
-      function handleMouseUp() {
-        if (!preview) {
-          return;
-        }
-        const id = uuidv4();
-        const furniture: FurnitureInPlan = {
-          furnitureId: preview.furnitureId,
-          x: preview.x,
-          y: preview.y,
-          z: preview.z,
-          yaw: preview.yaw,
-        };
-        dispatch(
-          planChanged({
-            patch: {
-              content: {
-                furniture: {
-                  [id]: furniture,
-                },
-              },
-            },
-            inversePatch: {
-              content: {
-                furniture: {
-                  [id]: null,
-                },
-              },
-            },
-          }),
-        );
-        dispatch(finishedDraggingFurniture());
-      }
-
-      window.addEventListener("mouseup", handleMouseUp);
-      return () => {
-        window.removeEventListener("mouseup", handleMouseUp);
-      };
-    }
-  }, [furnitureDrag, preview]);
-
-  return <></>;
-}
-
 export function Scene() {
   const view = useAppSelector(selectPlanEditorView);
   const tool = useAppSelector(selectPlanEditorTool);
-  const furnitureDrag = useAppSelector(selectFurnitureDrag);
   const toolIsHand = tool === "hand";
-  const toolIsFurinture = tool === "furniture" || furnitureDrag;
-  const toolIsArea = tool === "area" && !furnitureDrag;
+  const toolIsFurinture = tool === "furniture";
+  const toolIsArea = tool === "area";
 
   return (
     <Canvas gl={{ logarithmicDepthBuffer: true }}>
@@ -150,8 +86,6 @@ export function Scene() {
         infiniteGrid
       />
       <PlanMesh />
-      <FurniturePreview />
-      <DragHelper />
       {view === "3D" && (
         <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
           <GizmoViewport

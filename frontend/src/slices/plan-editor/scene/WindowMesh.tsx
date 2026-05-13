@@ -1,4 +1,5 @@
 import * as THREE from "three";
+
 import type { Wall, Window } from "../../api/entities";
 import { CM, M } from "../lib";
 import { MeshMenu } from "../../../shared/components";

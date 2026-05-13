@@ -23,4 +23,8 @@
   &:enabled:hover {
     box-shadow: s.$color-bg-300 0px 0px 0px 3px;
   }
+
+  &:enabled:focus {
+    box-shadow: s.$color-border-primary-500 0px 0px 0px 3px;
+  }
 }

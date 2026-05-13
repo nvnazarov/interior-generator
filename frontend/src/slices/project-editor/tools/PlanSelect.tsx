@@ -5,9 +5,11 @@ import { ContextMenuOption } from "../../../shared/components/context-menu/Conte
 import {
   useCreatePlanMutation,
   useGetAllPlansInProjectQuery,
+  usePatchProjectMutation,
 } from "../../api/slice";
-import { useAppDispatch } from "../../storeTypes";
+import { useAppDispatch, useAppSelector } from "../../storeTypes";
 import { notify } from "../../notifications/slice";
+import { projectSaved, selectProjectEditor } from "../slice";
 
 export function PlanSelect({
   projectId,
@@ -18,11 +20,21 @@ export function PlanSelect({
 }) {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const editor = useAppSelector(selectProjectEditor);
   const { data: plans } = useGetAllPlansInProjectQuery(projectId);
+  const [patchProject] = usePatchProjectMutation();
   const [createPlan, { isLoading: isCreatingPlan }] = useCreatePlanMutation();
 
   async function handleAddPlan() {
     try {
+      if (editor.project) {
+        const revision = await patchProject({
+          id: editor.project.id,
+          revision: editor.project.revision,
+          patch: editor.unsavedAccumulatedPatch,
+        }).unwrap();
+        dispatch(projectSaved(revision));
+      }
       const plan = await createPlan(projectId).unwrap();
       navigate(`/editor/project/${projectId}/plan/${plan.id}`);
     } catch {
