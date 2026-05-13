@@ -23,41 +23,36 @@
   &__feed {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 10px;
     overflow-y: scroll;
+    padding: 10px;
+  }
 
-    &__item {
-      width: 160px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      padding: 10px;
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 10px;
+    background-color: s.$color-bg-50;
+    border-radius: 5px;
+    border: 3px solid transparent;
+    box-shadow: s.$color-bg-200 0px 0px 0px 1px;
+    transition-duration: 0.125s;
 
-      img {
-        aspect-ratio: 1;
-      }
+    &:hover {
+      box-shadow: s.$color-bg-300 0px 0px 0px 3px;
+    }
 
-      span {
-        opacity: 0.5;
-      }
+    span {
+      color: s.$color-fg-600;
     }
   }
 
   &__filters {
     padding: 10px;
     display: flex;
-    flex-direction: column;
-    gap: 5px;
+    gap: 10px;
     border-bottom: 1px solid #ddd;
     width: 100%;
-
-    div {
-      display: flex;
-      gap: 5px;
-
-      :nth-child(1) {
-        flex: 50px;
-      }
-    }
   }
 }

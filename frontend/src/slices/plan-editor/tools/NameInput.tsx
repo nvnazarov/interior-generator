@@ -5,7 +5,7 @@ import { planUndoablyChanged, selectPlanEditor } from "../slice";
 import { TextInput } from "../../../shared/components/input/TextInput";
 import { Tooltip } from "../../../shared/components/tooltip/Tooltip";
 
-export function NameInput() {
+export function NameInput({ projectOwned }: { projectOwned: boolean }) {
   const dispatch = useAppDispatch();
   const name = useAppSelector((state) => selectPlanEditor(state).plan?.name);
 
@@ -17,11 +17,12 @@ export function NameInput() {
     <Tooltip
       content={
         <p style={{ fontWeight: 400 }}>
-          <b>Project title:</b> {name ? `${name}` : "untitled"}
+          <b>Plan title:</b> {name ? `${name}` : "untitled"}
         </p>
       }
     >
       <TextInput
+        disabled={!projectOwned}
         onChange={handleChange}
         value={name}
         placeholder="Untitled plan"

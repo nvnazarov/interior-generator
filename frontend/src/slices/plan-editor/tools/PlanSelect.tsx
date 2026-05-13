@@ -7,7 +7,13 @@ import {
   useGetAllPlansInProjectQuery,
 } from "../../api/slice";
 
-export function PlanSelect({ projectId }: { projectId: string }) {
+export function PlanSelect({
+  projectId,
+  projectOwned,
+}: {
+  projectId: string;
+  projectOwned: boolean;
+}) {
   const navigate = useNavigate();
   const { data: plans } = useGetAllPlansInProjectQuery(projectId);
   const [createPlan, { isLoading: isCreatingPlan }] = useCreatePlanMutation();
@@ -21,12 +27,14 @@ export function PlanSelect({ projectId }: { projectId: string }) {
     <ContextMenu
       content={
         <>
-          <ContextMenuOption
-            text="Add plan"
-            icon="plus.png"
-            onClick={handleAddPlan}
-            loading={isCreatingPlan}
-          />
+          {projectOwned && (
+            <ContextMenuOption
+              text="Add plan"
+              icon="plus.png"
+              onClick={handleAddPlan}
+              loading={isCreatingPlan}
+            />
+          )}
           <ContextMenuOption
             text="Project"
             onClick={() => navigate(`/editor/project/${projectId}`)}
@@ -45,7 +53,7 @@ export function PlanSelect({ projectId }: { projectId: string }) {
         </>
       }
     >
-      <Button text="\/" />
+      <Button icon="room.png" />
     </ContextMenu>
   );
 }

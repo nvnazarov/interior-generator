@@ -1,6 +1,8 @@
 import type { EventHandlers } from "@react-three/fiber";
 import {
   cloneElement,
+  useEffect,
+  useRef,
   useState,
   type ReactElement,
   type ReactNode,
@@ -21,6 +23,22 @@ export function MeshMenu({ children, menu, hint }: CustomAttributes) {
   const [hintVisible, setHintVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [position, setPosition] = useState<Vector3>(new Vector3(0, 0, 0));
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuVisible) {
+      return;
+    }
+    const handleMouseDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as any)) {
+        setMenuVisible(false);
+      }
+    };
+    window.addEventListener("mousedown", handleMouseDown);
+    return () => {
+      window.removeEventListener("mousedown", handleMouseDown);
+    };
+  }, [menuVisible]);
 
   const child = cloneElement(children, {
     onPointerEnter: (e) => {
@@ -52,11 +70,6 @@ export function MeshMenu({ children, menu, hint }: CustomAttributes) {
       }
       e.stopPropagation();
     },
-    onPointerMissed: (e) => {
-      children.props.onPointerMissed?.(e);
-      setMenuVisible(false);
-      e.stopPropagation();
-    },
   });
 
   return (
@@ -78,6 +91,7 @@ export function MeshMenu({ children, menu, hint }: CustomAttributes) {
         <Html position={position} center style={{ pointerEvents: "none" }}>
           {
             <motion.div
+              ref={menuRef}
               className="mesh-menu__menu"
               initial={{ rotateY: 90 }}
               animate={{ rotateY: 0 }}

@@ -40,9 +40,9 @@ function ProjectEditorHelper({
   return (
     <>
       <div className="project-editor__menu">
-        <MenuButton projectId={projectId} />
-        <NameInput />
-        <PlanSelect projectId={projectId} />
+        <MenuButton projectId={projectId} projectOwned={projectOwned} />
+        <NameInput projectOwned={projectOwned} />
+        <PlanSelect projectId={projectId} projectOwned={projectOwned} />
         <span />
         <AccountAvatar accountId={accountId} small />
         {projectOwned && (

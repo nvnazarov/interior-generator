@@ -5,3 +5,4 @@ export { TextInput } from "./input";
 export { Toggle } from "./toggle";
 export { Tooltip } from "./tooltip";
 export { MeshMenu } from "./mesh-menu";
+export { Select } from "./select";

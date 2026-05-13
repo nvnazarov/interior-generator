@@ -5,7 +5,11 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { planChanged } from "../slice";
 import { useAppDispatch } from "../../storeTypes";
 import { areaColorByType, computePolygonArea } from "../lib";
-import { ContextMenuOption, MeshMenu } from "../../../shared/components";
+import {
+  ContextMenu,
+  ContextMenuOption,
+  MeshMenu,
+} from "../../../shared/components";
 
 export function AreaMesh({ area }: { area: FunctionalArea & { id: string } }) {
   const dispatch = useAppDispatch();
@@ -95,23 +99,30 @@ export function AreaMesh({ area }: { area: FunctionalArea & { id: string } }) {
       menu={
         <>
           <ContextMenuOption text="Delete area" onClick={handleDelete} />
-          {(
-            [
-              "kitchen",
-              "livingroom",
-              "bedroom",
-              "bathroom",
-              "hallway",
-            ] as FunctionalArea["type"][]
-          )
-            .filter((v) => v !== area.type)
-            .map((type) => (
-              <ContextMenuOption
-                key={type}
-                text={type}
-                onClick={() => handleChangeType(type)}
-              />
-            ))}
+          <ContextMenu
+            content={
+              <>
+                {(
+                  [
+                    "kitchen",
+                    "livingroom",
+                    "bedroom",
+                    "bathroom",
+                    "hallway",
+                  ] as FunctionalArea["type"][]
+                ).map((type) => (
+                  <ContextMenuOption
+                    key={type}
+                    text={type}
+                    onClick={() => handleChangeType(type)}
+                  />
+                ))}
+              </>
+            }
+            position="right"
+          >
+            <ContextMenuOption text="Change type" />
+          </ContextMenu>
         </>
       }
     >

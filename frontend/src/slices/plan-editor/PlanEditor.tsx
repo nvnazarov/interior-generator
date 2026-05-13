@@ -44,9 +44,13 @@ function PlanEditorHelper({
   return (
     <>
       <div className="plan-editor__menu">
-        <MenuButton projectId={projectId} planId={planId} />
-        <NameInput />
-        <PlanSelect projectId={projectId} />
+        <MenuButton
+          projectId={projectId}
+          planId={planId}
+          projectOwned={projectOwned}
+        />
+        <NameInput projectOwned={projectOwned} />
+        <PlanSelect projectId={projectId} projectOwned={projectOwned} />
         <span />
         <AccountAvatar accountId={accountId} small />
         {projectOwned && (

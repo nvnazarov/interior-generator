@@ -9,6 +9,7 @@ import {
   planUndoablyChanged,
   startedDraggingFurniture,
 } from "../slice";
+import { ContextMenuOption, MeshMenu } from "../../../shared/components";
 
 export function FurnitureMesh({
   furniture,
@@ -73,23 +74,48 @@ export function FurnitureMesh({
   );
 
   return isSuccess ? (
-    <mesh
-      position={[furniture.x, furniture.y, furniture.z]}
-      rotation={[0, furniture.yaw, 0]}
-      onPointerEnter={handlePointerEnter}
-      onPointerLeave={handlePointerLeave}
-      onPointerDown={handlePointerDown}
+    <MeshMenu
+      hint={
+        <p style={{ fontWeight: 400 }}>
+          {data.name}
+          <br />
+          <br />
+          <b>Size:</b> {data.width}x{data.height}x{data.depth} cm3
+        </p>
+      }
+      menu={
+        <>
+          <ContextMenuOption text="Delete furniture" onClick={handleDelete} />
+        </>
+      }
     >
-      <boxGeometry args={[data.width, data.height, data.depth]} />
-      <meshStandardMaterial color={hovered ? "hotpink" : "green"} />
-    </mesh>
+      <mesh
+        position={[furniture.x, furniture.y, furniture.z]}
+        rotation={[0, furniture.yaw, 0]}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+        onPointerDown={handlePointerDown}
+      >
+        <boxGeometry args={[data.width, data.height, data.depth]} />
+        <meshStandardMaterial color={hovered ? "hotpink" : "green"} />
+      </mesh>
+    </MeshMenu>
   ) : (
-    <mesh
-      position={[furniture.x, furniture.y, furniture.z]}
-      rotation={[0, furniture.yaw, 0]}
+    <MeshMenu
+      hint={<>Unable to load this furniture's model</>}
+      menu={
+        <>
+          <ContextMenuOption text="Delete furniture" onClick={handleDelete} />
+        </>
+      }
     >
-      <boxGeometry args={[CM, CM, CM]} />
-      <meshStandardMaterial color="black" />
-    </mesh>
+      <mesh
+        position={[furniture.x, furniture.y, furniture.z]}
+        rotation={[0, furniture.yaw, 0]}
+      >
+        <boxGeometry args={[CM, CM, CM]} />
+        <meshStandardMaterial color="black" />
+      </mesh>
+    </MeshMenu>
   );
 }

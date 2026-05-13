@@ -1,10 +1,14 @@
 @use "../../styles/semantic" as s;
 
-.text-input {
-  &:disabled {
+.select {
+  &[disabled] {
     opacity: 0.5;
   }
 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   background-color: s.$color-bg-100;
   border-radius: 5px;
   padding: s.$padding-xs s.$padding-sm;
@@ -13,13 +17,10 @@
   box-shadow: s.$color-bg-200 0px 0px 0px 1px;
   transition-duration: 0.125s;
   color: s.$color-fg-900;
+  user-select: none;
   outline: none;
 
   &:enabled:hover {
-    box-shadow: s.$color-bg-200 0px 0px 0px 3px;
-  }
-
-  &:focus {
-    box-shadow: s.$color-border-primary-500 0px 0px 0px 3px;
+    box-shadow: s.$color-bg-300 0px 0px 0px 3px;
   }
 }

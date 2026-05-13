@@ -19,7 +19,13 @@ import { UrlUtil } from "../../../shared/util";
 import { ContextMenu } from "../../../shared/components/context-menu/ContextMenu";
 import { ContextMenuOption } from "../../../shared/components/context-menu/ContextMenuOption";
 
-function ExportProjectToPDFOption({ editor }: { editor: ProjectEditorState }) {
+function ExportProjectToPDFOption({
+  editor,
+  projectOwned,
+}: {
+  editor: ProjectEditorState;
+  projectOwned: boolean;
+}) {
   const dispatch = useAppDispatch();
   const [exporting, setExporting] = useState(false);
   const [patchProject] = usePatchProjectMutation();
@@ -30,12 +36,14 @@ function ExportProjectToPDFOption({ editor }: { editor: ProjectEditorState }) {
     }
     try {
       setExporting(true);
-      const revision = await patchProject({
-        id: editor.project.id,
-        revision: editor.project.revision,
-        patch: editor.unsavedAccumulatedPatch,
-      }).unwrap();
-      dispatch(projectSaved(revision));
+      if (projectOwned) {
+        const revision = await patchProject({
+          id: editor.project.id,
+          revision: editor.project.revision,
+          patch: editor.unsavedAccumulatedPatch,
+        }).unwrap();
+        dispatch(projectSaved(revision));
+      }
       const resp = await fetch(
         `${UrlUtil.noRightSlash(Config.gateway.baseUrl)}/api/projects/${editor.project.id}/export/pdf`,
         {
@@ -226,7 +234,29 @@ function HideProjectOption({ projectId }: { projectId: string }) {
   );
 }
 
-export function MenuButton({ projectId }: { projectId: string }) {
+function ExitOption() {
+  const navigate = useNavigate();
+
+  const handleExitProject = useCallback(async () => {
+    navigate("/");
+  }, []);
+
+  return (
+    <ContextMenuOption
+      text="Exit"
+      icon="signout.png"
+      onClick={handleExitProject}
+    />
+  );
+}
+
+export function MenuButton({
+  projectId,
+  projectOwned,
+}: {
+  projectId: string;
+  projectOwned: boolean;
+}) {
   const editor = useAppSelector(selectProjectEditor);
   const { data: project, isSuccess: projectLoaded } =
     useGetProjectByIdQuery(projectId);
@@ -235,28 +265,36 @@ export function MenuButton({ projectId }: { projectId: string }) {
     <ContextMenu
       content={
         <>
-          <SaveProjectAndExitOption editor={editor} />
-          <SaveProjectOption editor={editor} />
-          <DeleteProjectOption editor={editor} />
-          <ExportProjectToPDFOption editor={editor} />
-          <ContextMenu
-            content={
-              projectLoaded &&
-              (project.published ? (
-                <>
-                  <HideProjectOption projectId={projectId} />
-                  <CopyProjectUrlOption projectId={projectId} />
-                </>
-              ) : (
-                <>
-                  <ShareProjectOption projectId={projectId} />
-                </>
-              ))
-            }
-            position="right"
-          >
-            <ContextMenuOption text="Share" icon="share.png" />
-          </ContextMenu>
+          {projectOwned && (
+            <>
+              <SaveProjectAndExitOption editor={editor} />
+              <SaveProjectOption editor={editor} />
+              <DeleteProjectOption editor={editor} />
+              <ContextMenu
+                content={
+                  projectLoaded &&
+                  (project.published ? (
+                    <>
+                      <HideProjectOption projectId={projectId} />
+                      <CopyProjectUrlOption projectId={projectId} />
+                    </>
+                  ) : (
+                    <>
+                      <ShareProjectOption projectId={projectId} />
+                    </>
+                  ))
+                }
+                position="right"
+              >
+                <ContextMenuOption text="Share" icon="share.png" />
+              </ContextMenu>
+            </>
+          )}
+          {!projectOwned && <ExitOption />}
+          <ExportProjectToPDFOption
+            editor={editor}
+            projectOwned={projectOwned}
+          />
         </>
       }
     >

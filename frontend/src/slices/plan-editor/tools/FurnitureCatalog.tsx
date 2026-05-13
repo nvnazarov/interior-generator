@@ -3,6 +3,7 @@ import {
   useState,
   type ChangeEvent,
   type MouseEvent,
+  type UIEvent,
 } from "react";
 import { motion } from "motion/react";
 
@@ -16,17 +17,16 @@ import {
   hideFurniturePreview,
   showFurniturePreview,
   startedDraggingFurniture,
+  toolSelected,
 } from "../slice";
+import { Select, TextInput } from "../../../shared/components";
 
 function Item({ furniture }: { furniture: Furniture }) {
   const dispatch = useAppDispatch();
 
   const handleDragStart = useCallback((e: MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
-
-    document.body.style.userSelect = "none";
-    document.body.style.pointerEvents = "auto";
-
+    dispatch(toolSelected("furniture"));
     dispatch(startedDraggingFurniture({ furnitureId: furniture.id }));
     dispatch(
       showFurniturePreview({
@@ -40,21 +40,19 @@ function Item({ furniture }: { furniture: Furniture }) {
   }, []);
 
   const handleDragEnd = useCallback(() => {
-    document.body.style.userSelect = "";
     dispatch(finishedDraggingFurniture());
     dispatch(hideFurniturePreview());
   }, []);
 
   return (
     <div
-      className="furniture-catalog__feed__item"
+      className="furniture-catalog__item"
       onMouseDown={handleDragStart}
       onMouseUp={handleDragEnd}
     >
-      <img src={furniture.thumbnailPath || undefined} />
       <p>{furniture.name}</p>
       <span>
-        {furniture.width}x{furniture.depth}x{furniture.height} cm<sup>3</sup>
+        {furniture.width}x{furniture.depth}x{furniture.height} cm3
       </span>
     </div>
   );
@@ -78,8 +76,11 @@ export function FurnitureCatalog() {
     setArea(e.target.value);
   }, []);
 
-  const handleFeedScroll = useCallback(() => {
-    if (true) {
+  const handleFeedScroll = useCallback((e: UIEvent<HTMLDivElement>) => {
+    const scrolledToBottom =
+      e.currentTarget.scrollTop + e.currentTarget.clientHeight + 1 >=
+      e.currentTarget.scrollHeight;
+    if (scrolledToBottom) {
       fetchNextPage();
     }
   }, []);
@@ -92,23 +93,21 @@ export function FurnitureCatalog() {
       exit={{ rotateY: 90, transition: { ease: "easeIn" } }}
     >
       <div className="furniture-catalog__filters">
-        <div>
-          <p>Name</p>
-          <input value={name} onChange={handleNameChange} />
-        </div>
-        <div>
-          <p>Area</p>
-          <select value={area || undefined} onChange={handleAreaChange}>
-            <option value="">Any</option>
-            <option value="kitchen">Kitchen</option>
-            <option value="bedroom">Bedroom</option>
-          </select>
-        </div>
+        <TextInput
+          placeholder="Name"
+          value={name}
+          onChange={handleNameChange}
+        />
+        <Select value={area || undefined} onChange={handleAreaChange}>
+          <option value="">Any</option>
+          <option value="bedroom">Bedroom</option>
+          <option value="bathroom">Bathroom</option>
+          <option value="kitchen">Kitchen</option>
+          <option value="living_room">Living room</option>
+          <option value="hallway">Hallway</option>
+        </Select>
       </div>
-      <div
-        className="plan-editor__furniture-catalog__feed"
-        onScroll={handleFeedScroll}
-      >
+      <div className="furniture-catalog__feed" onScroll={handleFeedScroll}>
         {data?.pages
           .map((page) => page.furniture)
           .flat()

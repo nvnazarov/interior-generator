@@ -15,7 +15,13 @@ import { UrlUtil } from "../../../shared/util";
 import { ContextMenu } from "../../../shared/components/context-menu/ContextMenu";
 import { ContextMenuOption } from "../../../shared/components/context-menu/ContextMenuOption";
 
-function ExportProjectToPDFOption({ editor }: { editor: PlanEditorState }) {
+function ExportProjectToPDFOption({
+  editor,
+  projectOwned,
+}: {
+  editor: PlanEditorState;
+  projectOwned: boolean;
+}) {
   const dispatch = useAppDispatch();
   const [exporting, setExporting] = useState(false);
   const [patchPlan] = usePatchPlanMutation();
@@ -26,12 +32,14 @@ function ExportProjectToPDFOption({ editor }: { editor: PlanEditorState }) {
     }
     try {
       setExporting(true);
-      const revision = await patchPlan({
-        id: editor.plan.id,
-        revision: editor.plan.revision,
-        patch: editor.unsavedAccumulatedPatch,
-      }).unwrap();
-      dispatch(planSaved(revision));
+      if (projectOwned) {
+        const revision = await patchPlan({
+          id: editor.plan.id,
+          revision: editor.plan.revision,
+          patch: editor.unsavedAccumulatedPatch,
+        }).unwrap();
+        dispatch(planSaved(revision));
+      }
       const resp = await fetch(
         `${UrlUtil.noRightSlash(Config.gateway.baseUrl)}/api/projects/${editor.plan.projectId}/export/pdf`,
         {
@@ -227,12 +235,30 @@ function HideProjectOption({ projectId }: { projectId: string }) {
   );
 }
 
+function ExitOption() {
+  const navigate = useNavigate();
+
+  const handleExitProject = useCallback(async () => {
+    navigate("/");
+  }, []);
+
+  return (
+    <ContextMenuOption
+      text="Exit"
+      icon="signout.png"
+      onClick={handleExitProject}
+    />
+  );
+}
+
 export function MenuButton({
   projectId,
   planId,
+  projectOwned,
 }: {
   projectId: string;
   planId: string;
+  projectOwned: boolean;
 }) {
   const editor = useAppSelector(selectPlanEditor);
   const { data: project, isSuccess: projectLoaded } =
@@ -242,28 +268,39 @@ export function MenuButton({
     <ContextMenu
       content={
         <>
-          <SavePlanAndExitOption editor={editor} />
-          <SavePlanOption editor={editor} />
-          <DeletePlanOption planId={planId} />
-          <ExportProjectToPDFOption editor={editor} />
-          <ContextMenu
-            content={
-              projectLoaded &&
-              (project.published ? (
-                <>
-                  <HideProjectOption projectId={projectId} />
-                  <CopyPlanUrlOption projectId={projectId} planId={planId} />
-                </>
-              ) : (
-                <>
-                  <ShareProjectOption projectId={projectId} />
-                </>
-              ))
-            }
-            position="right"
-          >
-            <ContextMenuOption text="Share" icon="share.png" />
-          </ContextMenu>
+          {projectOwned && (
+            <>
+              <SavePlanAndExitOption editor={editor} />
+              <SavePlanOption editor={editor} />
+              <DeletePlanOption planId={planId} />
+              <ContextMenu
+                content={
+                  projectLoaded &&
+                  (project.published ? (
+                    <>
+                      <HideProjectOption projectId={projectId} />
+                      <CopyPlanUrlOption
+                        projectId={projectId}
+                        planId={planId}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <ShareProjectOption projectId={projectId} />
+                    </>
+                  ))
+                }
+                position="right"
+              >
+                <ContextMenuOption text="Share" icon="share.png" />
+              </ContextMenu>
+            </>
+          )}
+          {!projectOwned && <ExitOption />}
+          <ExportProjectToPDFOption
+            editor={editor}
+            projectOwned={projectOwned}
+          />
         </>
       }
     >
