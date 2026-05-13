@@ -56,8 +56,8 @@ export function SignUpForm() {
           }),
         );
         navigate("/profile");
-      } catch (e) {
-        dispatch(notify({ text: "Something wrong", severity: "error" }));
+      } catch {
+        dispatch(notify({ text: "Unable to sign you up", severity: "error" }));
       } finally {
         setIsSigningUp(false);
       }

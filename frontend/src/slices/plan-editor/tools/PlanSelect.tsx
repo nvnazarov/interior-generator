@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router";
+
 import { Button } from "../../../shared/components/button/Button";
 import { ContextMenu } from "../../../shared/components/context-menu/ContextMenu";
 import { ContextMenuOption } from "../../../shared/components/context-menu/ContextMenuOption";
@@ -6,6 +7,8 @@ import {
   useCreatePlanMutation,
   useGetAllPlansInProjectQuery,
 } from "../../api/slice";
+import { useAppDispatch } from "../../storeTypes";
+import { notify } from "../../notifications/slice";
 
 export function PlanSelect({
   projectId,
@@ -14,13 +17,18 @@ export function PlanSelect({
   projectId: string;
   projectOwned: boolean;
 }) {
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { data: plans } = useGetAllPlansInProjectQuery(projectId);
   const [createPlan, { isLoading: isCreatingPlan }] = useCreatePlanMutation();
 
   async function handleAddPlan() {
-    const plan = await createPlan(projectId).unwrap();
-    navigate(`/editor/project/${projectId}/plan/${plan.id}`);
+    try {
+      const plan = await createPlan(projectId).unwrap();
+      navigate(`/editor/project/${projectId}/plan/${plan.id}`);
+    } catch {
+      dispatch(notify({ text: "Unable to create a plan", severity: "error" }));
+    }
   }
 
   return (

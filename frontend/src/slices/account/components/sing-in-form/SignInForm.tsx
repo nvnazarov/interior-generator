@@ -51,8 +51,8 @@ export function SignInForm() {
           }),
         );
         navigate("/profile");
-      } catch (e) {
-        dispatch(notify({ text: "Something wrong", severity: "error" }));
+      } catch {
+        dispatch(notify({ text: "Unable to sign you in", severity: "error" }));
       } finally {
         setIsSigningIn(false);
       }

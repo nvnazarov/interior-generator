@@ -58,7 +58,7 @@ export function Profile() {
     }
     setAvatarPreviewUrl(null);
     setAvatarFile(null);
-  }, [account]);
+  }, [account, avatarPreviewUrl]);
 
   const handleNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setEditedName(e.target.value);
@@ -72,7 +72,7 @@ export function Profile() {
     }
     setAvatarPreviewUrl(null);
     setAvatarFile(null);
-  }, [account]);
+  }, [account, avatarPreviewUrl]);
 
   const handleAvatarFileChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {

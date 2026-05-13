@@ -14,6 +14,7 @@ import { Config } from "../../../shared/config";
 import { UrlUtil } from "../../../shared/util";
 import { ContextMenu } from "../../../shared/components/context-menu/ContextMenu";
 import { ContextMenuOption } from "../../../shared/components/context-menu/ContextMenuOption";
+import { notify } from "../../notifications/slice";
 
 function ExportProjectToPDFOption({
   editor,
@@ -60,6 +61,13 @@ function ExportProjectToPDFOption({
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
+    } catch {
+      dispatch(
+        notify({
+          text: "Unable to export the project to PDF",
+          severity: "error",
+        }),
+      );
     } finally {
       setExporting(false);
     }
@@ -78,6 +86,7 @@ function ExportProjectToPDFOption({
 
 function DeletePlanOption({ planId }: { planId: string }) {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [deletePlan] = useDeletePlanMutation();
   const [deleting, setDeleting] = useState(false);
 
@@ -85,10 +94,17 @@ function DeletePlanOption({ planId }: { planId: string }) {
     try {
       setDeleting(true);
       await deletePlan(planId).unwrap();
+      navigate("/");
+    } catch {
+      dispatch(
+        notify({
+          text: "Unable to delete the plan",
+          severity: "error",
+        }),
+      );
     } finally {
       setDeleting(false);
     }
-    navigate("/");
   }, [planId]);
 
   return (
@@ -117,6 +133,13 @@ function SavePlanOption({ editor }: { editor: PlanEditorState }) {
           patch: editor.unsavedAccumulatedPatch,
         }).unwrap();
         dispatch(planSaved(revision));
+      } catch {
+        dispatch(
+          notify({
+            text: "Unable to save the plan",
+            severity: "error",
+          }),
+        );
       } finally {
         setSaving(false);
       }
@@ -151,6 +174,13 @@ function SavePlanAndExitOption({ editor }: { editor: PlanEditorState }) {
         }).unwrap();
         dispatch(planSaved(revision));
         navigate("/");
+      } catch {
+        dispatch(
+          notify({
+            text: "Unable to save the plan",
+            severity: "error",
+          }),
+        );
       } finally {
         setSaving(false);
       }
@@ -175,10 +205,18 @@ function CopyPlanUrlOption({
   projectId: string;
   planId: string;
 }) {
+  const dispatch = useAppDispatch();
+
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(
       location.origin +
         `${Config.proxy.basePath}/editor/project/${projectId}/plan/${planId}`,
+    );
+    dispatch(
+      notify({
+        text: "Copied plan URL to clipboard",
+        severity: "info",
+      }),
     );
   }, [projectId]);
 
@@ -188,6 +226,7 @@ function CopyPlanUrlOption({
 }
 
 function ShareProjectOption({ projectId }: { projectId: string }) {
+  const dispatch = useAppDispatch();
   const [shareProject] = usePublishProjectMutation();
   const [sharing, setSharing] = useState(false);
 
@@ -195,6 +234,13 @@ function ShareProjectOption({ projectId }: { projectId: string }) {
     try {
       setSharing(true);
       await shareProject(projectId).unwrap();
+    } catch {
+      dispatch(
+        notify({
+          text: "Unable to share the project",
+          severity: "error",
+        }),
+      );
     } finally {
       setSharing(false);
     }
@@ -212,6 +258,7 @@ function ShareProjectOption({ projectId }: { projectId: string }) {
 }
 
 function HideProjectOption({ projectId }: { projectId: string }) {
+  const dispatch = useAppDispatch();
   const [hideProject] = useUnpublishProjectMutation();
   const [hiding, setHiding] = useState(false);
 
@@ -219,6 +266,13 @@ function HideProjectOption({ projectId }: { projectId: string }) {
     try {
       setHiding(true);
       await hideProject(projectId).unwrap();
+    } catch {
+      dispatch(
+        notify({
+          text: "Unable to hide the project",
+          severity: "error",
+        }),
+      );
     } finally {
       setHiding(false);
     }

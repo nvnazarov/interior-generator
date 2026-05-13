@@ -19,7 +19,7 @@
     box-shadow: s.$color-bg-200 0px 0px 0px 3px;
   }
 
-  &:focus {
+  &:enabled:focus {
     box-shadow: s.$color-border-primary-500 0px 0px 0px 3px;
   }
 }

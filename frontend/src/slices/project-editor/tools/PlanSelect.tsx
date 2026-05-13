@@ -6,6 +6,8 @@ import {
   useCreatePlanMutation,
   useGetAllPlansInProjectQuery,
 } from "../../api/slice";
+import { useAppDispatch } from "../../storeTypes";
+import { notify } from "../../notifications/slice";
 
 export function PlanSelect({
   projectId,
@@ -15,12 +17,22 @@ export function PlanSelect({
   projectOwned: boolean;
 }) {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { data: plans } = useGetAllPlansInProjectQuery(projectId);
   const [createPlan, { isLoading: isCreatingPlan }] = useCreatePlanMutation();
 
   async function handleAddPlan() {
-    const plan = await createPlan(projectId).unwrap();
-    navigate(`/editor/project/${projectId}/plan/${plan.id}`);
+    try {
+      const plan = await createPlan(projectId).unwrap();
+      navigate(`/editor/project/${projectId}/plan/${plan.id}`);
+    } catch {
+      dispatch(
+        notify({
+          text: "Failed to create a plan",
+          severity: "error",
+        }),
+      );
+    }
   }
 
   return (

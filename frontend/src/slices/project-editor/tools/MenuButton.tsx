@@ -18,6 +18,7 @@ import { Config } from "../../../shared/config";
 import { UrlUtil } from "../../../shared/util";
 import { ContextMenu } from "../../../shared/components/context-menu/ContextMenu";
 import { ContextMenuOption } from "../../../shared/components/context-menu/ContextMenuOption";
+import { notify } from "../../notifications/slice";
 
 function ExportProjectToPDFOption({
   editor,
@@ -64,6 +65,14 @@ function ExportProjectToPDFOption({
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
+    } catch {
+      dispatch(
+        notify({
+          text: "Failed to export the project to PDF",
+          severity: "error",
+        }),
+      );
+      return;
     } finally {
       setExporting(false);
     }
@@ -82,6 +91,7 @@ function ExportProjectToPDFOption({
 
 function DeleteProjectOption({ editor }: { editor: ProjectEditorState }) {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [deleteProject] = useDeleteProjectMutation();
   const [deleting, setDeleting] = useState(false);
 
@@ -90,10 +100,17 @@ function DeleteProjectOption({ editor }: { editor: ProjectEditorState }) {
       try {
         setDeleting(true);
         await deleteProject(editor.project.id).unwrap();
+        navigate("/");
+      } catch {
+        dispatch(
+          notify({
+            text: "Failed to delete the project",
+            severity: "error",
+          }),
+        );
       } finally {
         setDeleting(false);
       }
-      navigate("/");
     }
   }, [editor.project?.id]);
 
@@ -123,6 +140,13 @@ function SaveProjectOption({ editor }: { editor: ProjectEditorState }) {
           patch: editor.unsavedAccumulatedPatch,
         }).unwrap();
         dispatch(projectSaved(revision));
+      } catch {
+        dispatch(
+          notify({
+            text: "Failed to save the project",
+            severity: "error",
+          }),
+        );
       } finally {
         setSaving(false);
       }
@@ -157,6 +181,13 @@ function SaveProjectAndExitOption({ editor }: { editor: ProjectEditorState }) {
         }).unwrap();
         dispatch(projectSaved(revision));
         navigate("/");
+      } catch {
+        dispatch(
+          notify({
+            text: "Failed to save the project",
+            severity: "error",
+          }),
+        );
       } finally {
         setSaving(false);
       }
@@ -175,9 +206,17 @@ function SaveProjectAndExitOption({ editor }: { editor: ProjectEditorState }) {
 }
 
 function CopyProjectUrlOption({ projectId }: { projectId: string }) {
+  const dispatch = useAppDispatch();
+
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(
       location.origin + `${Config.proxy.basePath}/editor/project/${projectId}`,
+    );
+    dispatch(
+      notify({
+        text: "Copied project URL to clipboard",
+        severity: "info",
+      }),
     );
   }, [projectId]);
 
@@ -187,6 +226,7 @@ function CopyProjectUrlOption({ projectId }: { projectId: string }) {
 }
 
 function ShareProjectOption({ projectId }: { projectId: string }) {
+  const dispatch = useAppDispatch();
   const [shareProject] = usePublishProjectMutation();
   const [sharing, setSharing] = useState(false);
 
@@ -194,6 +234,13 @@ function ShareProjectOption({ projectId }: { projectId: string }) {
     try {
       setSharing(true);
       await shareProject(projectId).unwrap();
+    } catch {
+      dispatch(
+        notify({
+          text: "Failed to share the project",
+          severity: "error",
+        }),
+      );
     } finally {
       setSharing(false);
     }
@@ -211,6 +258,7 @@ function ShareProjectOption({ projectId }: { projectId: string }) {
 }
 
 function HideProjectOption({ projectId }: { projectId: string }) {
+  const dispatch = useAppDispatch();
   const [hideProject] = useUnpublishProjectMutation();
   const [hiding, setHiding] = useState(false);
 
@@ -218,6 +266,13 @@ function HideProjectOption({ projectId }: { projectId: string }) {
     try {
       setHiding(true);
       await hideProject(projectId).unwrap();
+    } catch {
+      dispatch(
+        notify({
+          text: "Failed to hide the project",
+          severity: "error",
+        }),
+      );
     } finally {
       setHiding(false);
     }

@@ -1,5 +1,26 @@
-.notifications__notification-popup {
-  &__error {
+@use "../../shared/styles/semantic" as s;
+
+.notification-popup {
+  &__item {
+    padding: 10px;
+    background-color: s.$color-bg-100;
+    border: 1px solid s.$color-bg-300;
+    border-radius: 5px;
+
+    > span {
+      color: s.$color-fg-500;
+    }
+  }
+
+  &__item--error {
+    padding: 10px;
+    background-color: s.$color-bg-100;
+    border: 1px solid s.$color-border-danger-500;
+    border-radius: 5px;
+
+    > span {
+      color: s.$color-fg-500;
+    }
   }
 
   &__container {

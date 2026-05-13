@@ -1,10 +1,11 @@
-import "./NotificationPopup.scss";
 import moment from "moment";
 import { AnimatePresence, motion } from "motion/react";
-import { useAppSelector } from "../storeTypes";
-import { selectLastNotification, type Notification } from "./slice";
 import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
+
+import "./NotificationPopup.scss";
+import { useAppSelector } from "../storeTypes";
+import { selectLastNotification, type Notification } from "./slice";
 
 export function NotificationPopup() {
   const notification = useAppSelector(selectLastNotification);
@@ -23,14 +24,15 @@ export function NotificationPopup() {
   }, [notification]);
 
   return (
-    <div className="notifications__notification-popup__container">
+    <div className="notification-popup__container">
       <AnimatePresence mode="popLayout">
         {notifications.map((notification) => (
           <motion.div
             key={notification.id}
             className={
-              "notifications__notification-popup" +
-              (notification.severity === "error" && "__error")
+              notification.severity === "error"
+                ? "notification-popup__item--error"
+                : "notification-popup__item"
             }
             initial={{ opacity: 0, y: -50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

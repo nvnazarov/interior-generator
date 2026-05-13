@@ -22,14 +22,16 @@ export function DeleteMyAccountButton() {
       .deleteUser()
       .then((res) => {
         if (res.error) {
-          dispatch(notify({ text: res.error.message, severity: "error" }));
+          throw new Error(res.error.message);
         } else {
           dispatch(accountDeleted());
           navigate("/sign-in", { replace: true });
         }
       })
       .catch(() => {
-        dispatch(notify({ text: "Something wrong", severity: "error" }));
+        dispatch(
+          notify({ text: "Unable to delete the account", severity: "error" }),
+        );
       })
       .finally(() => setDeleting(false));
   }, []);
