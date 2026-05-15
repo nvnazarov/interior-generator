@@ -4,7 +4,7 @@ import uvicorn
 from fastapi import Body, Depends, FastAPI, Header, HTTPException
 
 from app.core.models import Prompt
-from app.core.service import PromptNotFoundError, Service
+from app.core.service import ProjectNotFoundError, PromptNotFoundError, Service
 
 
 class Server(FastAPI):
@@ -45,10 +45,14 @@ class Server(FastAPI):
         async def get_prompts_in_project(
             project_id: str, account_id: Annotated[str, Depends(get_account_id)]
         ) -> list[Prompt]:
-            prompts = await service.get_prompts_in_project(
-                account_id=account_id, project_id=project_id
-            )
-            return prompts
+            try:
+                prompts = await service.get_prompts_in_project(
+                    account_id=account_id, project_id=project_id
+                )
+            except ProjectNotFoundError:
+                raise HTTPException(status_code=404, detail="project not found")
+            else:
+                return prompts
 
         @self.delete("/prompts/{prompt_id}", status_code=204)
         async def delete_prompt(
