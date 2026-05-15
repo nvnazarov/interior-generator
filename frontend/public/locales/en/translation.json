@@ -1,68 +1,21 @@
 {
   "Projects": {
-    "ProjectsGrid": {
-      "Item": {
-        "Name": {
-          "Default": "Untitled Project"
-        },
-        "Description": {
-          "Default": "No description"
-        },
-        "Date": {
-          "Format": "DD.MM.YYYY \\a\\t hh:mm"
-        }
-      }
-    },
     "CreateProjectButton": {
-      "Title": "New Project"
+      "Text": "Create project"
+    },
+    "ProjectsList": {
+      "DefaultProjectName": "Untitled project"
     }
   },
   "Account": {
-    "Profile": {
-      "Name": {
-        "Title": "Name"
-      },
-      "Date": {
-        "Title": "Date",
-        "Format": "DD.MM.YYYY"
-      },
-      "Lang": {
-        "Title": "Lang"
-      },
-      "Edit": {
-        "CancelButton": {
-          "Title": "Cancel"
-        },
-        "SaveButton": {
-          "Title": "Save"
-        }
-      }
-    }
-  },
-  "ProjectEditor": {
-    "WallMesh": {
-      "Name": "Wall",
-      "DeleteOption": {
-        "Title": "Delete"
-      }
-    },
-    "WindowMesh": {
-      "Name": "Window",
-      "DeleteOption": {
-        "Title": "Delete"
-      }
-    },
-    "DoorMesh": {
-      "Name": "Door",
-      "DeleteOption": {
-        "Title": "Delete"
-      }
-    },
-    "WetAreaMesh": {
-      "Name": "Wet area",
-      "DeleteOption": {
-        "Title": "Delete"
-      }
+    "Registered": "Registered",
+    "Cancel": "Cancel",
+    "Edit": "Edit",
+    "Save": "Save",
+    "SignOut": "Sign out",
+    "DeleteAccount": "Delete account",
+    "Name": {
+      "Placeholder": "Name"
     }
   }
 }

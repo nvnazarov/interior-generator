@@ -71,6 +71,7 @@ export function SignInForm() {
         placeholder="Email"
       />
       <TextInput
+        type="password"
         value={password}
         onChange={handlePasswordChange}
         placeholder="Password"

@@ -6,6 +6,10 @@
   align-items: center;
   gap: 10px;
 
+  > p {
+    text-align: center;
+  }
+
   &__static-data {
     display: flex;
     flex-direction: column;

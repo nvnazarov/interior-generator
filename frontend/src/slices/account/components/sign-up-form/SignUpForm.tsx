@@ -77,6 +77,7 @@ export function SignUpForm() {
         placeholder="Email"
       />
       <TextInput
+        type="password"
         value={password}
         onChange={handlePasswordChange}
         placeholder="Password"

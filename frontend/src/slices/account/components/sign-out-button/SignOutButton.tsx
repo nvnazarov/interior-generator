@@ -6,8 +6,10 @@ import { authClient } from "../../../../shared/betterAuth";
 import { userSignedOut } from "../../slice";
 import { Button } from "../../../../shared/components/button/Button";
 import api from "../../../api/slice";
+import { useTranslation } from "react-i18next";
 
 export function SignOutButton() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -30,5 +32,7 @@ export function SignOutButton() {
     }
   }, [isSigningOut]);
 
-  return <Button onClick={handleSignOut} text="Sign out" />;
+  return (
+    <Button onClick={handleSignOut} text={t("Account.SignOut", "Sign out")} />
+  );
 }

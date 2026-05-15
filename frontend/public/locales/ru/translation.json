@@ -1,68 +1,21 @@
 {
   "Projects": {
-    "ProjectsGrid": {
-      "Item": {
-        "Name": {
-          "Default": "Проект без названия"
-        },
-        "Description": {
-          "Default": "Нет описания"
-        },
-        "Date": {
-          "Format": "DD.MM.YYYY в hh:mm"
-        }
-      }
-    },
     "CreateProjectButton": {
-      "Title": "Новый проект"
+      "Text": "Создать проект"
+    },
+    "ProjectsList": {
+      "DefaultProjectName": "Проект без названия"
     }
   },
   "Account": {
-    "Profile": {
-      "Name": {
-        "Title": "Имя"
-      },
-      "Date": {
-        "Title": "Дата",
-        "Format": "DD.MM.YYYY"
-      },
-      "Lang": {
-        "Title": "Язык"
-      },
-      "Edit": {
-        "CancelButton": {
-          "Title": "Отмена"
-        },
-        "SaveButton": {
-          "Title": "Сохранить"
-        }
-      }
-    }
-  },
-  "ProjectEditor": {
-    "WallMesh": {
-      "Name": "Несущая стена",
-      "DeleteOption": {
-        "Title": "Удалить"
-      }
-    },
-    "WindowMesh": {
-      "Name": "Окно",
-      "DeleteOption": {
-        "Title": "Удалить"
-      }
-    },
-    "DoorMesh": {
-      "Name": "Дверь",
-      "DeleteOption": {
-        "Title": "Удалить"
-      }
-    },
-    "WetAreaMesh": {
-      "Name": "Мокрая зона",
-      "DeleteOption": {
-        "Title": "Удалить"
-      }
+    "Registered": "Зарегистрирован",
+    "Cancel": "Отмена",
+    "Edit": "Редактировать",
+    "Save": "Сохранить",
+    "SignOut": "Выйти",
+    "DeleteAccount": "Удалить аккаунт",
+    "Name": {
+      "Placeholder": "Имя"
     }
   }
 }

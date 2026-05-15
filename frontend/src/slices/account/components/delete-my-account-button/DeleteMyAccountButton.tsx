@@ -7,8 +7,10 @@ import { useAppDispatch } from "../../../storeTypes";
 import { accountDeleted } from "../../slice";
 import { notify } from "../../../notifications/slice";
 import { Button } from "../../../../shared/components/button/Button";
+import { useTranslation } from "react-i18next";
 
 export function DeleteMyAccountButton() {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
@@ -41,7 +43,7 @@ export function DeleteMyAccountButton() {
       onClick={handleClick}
       loading={deleting}
       danger
-      text="Delete account"
+      text={t("Account.DeleteAccount", "Delete account")}
     />
   );
 }

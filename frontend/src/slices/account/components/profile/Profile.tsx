@@ -11,8 +11,10 @@ import { Button } from "../../../../shared/components/button/Button";
 import { notify } from "../../../notifications/slice";
 import { MAX_AVATAR_FILE_SIZE_BYTES } from "../../lib";
 import { TextInput } from "../../../../shared/components/input/TextInput";
+import { useTranslation } from "react-i18next";
 
 export function Profile() {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const [mode, setMode] = useState<"view" | "edit">("view");
   const account = useAppSelector(selectMyAccount);
@@ -28,16 +30,16 @@ export function Profile() {
     if (isSaving) {
       return;
     }
-    const userUpdate = {
-      name: editedName,
-    } as any;
-    if (avatarFile) {
-      const avatarId = await Client.createAvatar(avatarFile);
-      userUpdate["image"] = `/assets/avatars/${avatarId}`;
-    }
-    await authClient
-      .updateUser(userUpdate)
-      .then((data) => {
+    setIsSaving(true);
+    try {
+      const userUpdate = {
+        name: editedName,
+      } as any;
+      if (avatarFile) {
+        const avatarId = await Client.createAvatar(avatarFile);
+        userUpdate["image"] = `/assets/avatars/${avatarId}`;
+      }
+      await authClient.updateUser(userUpdate).then((data) => {
         if (data.error) {
           dispatch(notify({ text: data.error.message, severity: "error" }));
         } else {
@@ -46,8 +48,10 @@ export function Profile() {
           );
           setMode("view");
         }
-      })
-      .finally(() => setIsSaving(false));
+      });
+    } finally {
+      setIsSaving(false);
+    }
   }, [editedName, isSaving, avatarFile]);
 
   const handleSwitchToEditMode = useCallback(() => {
@@ -129,7 +133,7 @@ export function Profile() {
       )}
       {mode === "edit" ? (
         <TextInput
-          placeholder="Name"
+          placeholder={t("Account.Name.Placeholder", "Name")}
           value={editedName}
           onChange={handleNameChange}
         />
@@ -139,23 +143,27 @@ export function Profile() {
       <div className="profile__static-data">
         <p className="profile__email">{account?.email}</p>
         <p className="profile__register-date">
-          Registered {dtCreated.format("DD.MM.YYYY")}
+          {t("Account.Registered", "Registered")}{" "}
+          {dtCreated.format("DD.MM.YYYY")}
         </p>
       </div>
       <div className="profile__actions">
         {mode === "view" ? (
           <>
-            <Button onClick={handleSwitchToEditMode} text="Edit" />
+            <Button
+              onClick={handleSwitchToEditMode}
+              text={t("Account.Edit", "Edit")}
+            />
           </>
         ) : (
           <>
-            <Button onClick={handleCancel} text="Cancel" />
+            <Button onClick={handleCancel} text={t("Account.Cancel", "Save")} />
             <Button
               onClick={handleSave}
               disabled={!isDirty}
-              loading={isSaving && isDirty}
+              loading={isSaving}
               primary
-              text="Save"
+              text={t("Account.Save", "Save")}
             />
           </>
         )}
