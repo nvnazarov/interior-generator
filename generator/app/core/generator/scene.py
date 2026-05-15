@@ -14,6 +14,7 @@ from app.core.generator.geometry import (
     left,
     norm,
     opposite_yaw,
+    par_intersection_volume,
     random_yaw,
     right,
     scale,
@@ -585,35 +586,30 @@ class SceneGraph:
         for object in self.objects.values():
             if object.removed():
                 continue
-            for other in self.objects.values():
-                if other.removed() or other.id == object.id:
-                    continue
-                object_center = vec2(object.location.x, object.location.z)
-                object_forward = direction(object.location.yaw) * object.depth / 2
-                object_left = left(direction(object.location.yaw)) * object.width / 2
-                # object_up = vec2()
-                other_center = vec2(other.location.x, other.location.z)
-                other_forward = direction(other.location.yaw) * other.depth / 2
-                other_left = left(direction(other.location.yaw)) * other.width / 2
-                object_vertices = [
-                    object_center + a + b
-                    for a in [object_forward, -object_forward]
-                    for b in [object_left, -object_left]
-                    for c in []
-                ]
-                other_vertices = [
-                    other_center + a + b
-                    for a in [other_forward, -other_forward]
-                    for b in [other_left, -other_left]
-                ]
             object_pivot = vec3(object.location.x, object.location.y, object.location.z)
             object_size = vec3(object.width, object.height, object.depth)
             object_dir = direction(object.location.yaw)
+            for other in self.objects.values():
+                if other.removed() or other.id == object.id:
+                    continue
+                other_pivot = vec3(other.location.x, other.location.y, other.location.z)
+                other_size = vec3(other.width, other.height, other.depth)
+                other_dir = direction(other.location.yaw)
+                total += par_intersection_volume(
+                    object_pivot,
+                    object_size,
+                    object_dir,
+                    other_pivot,
+                    other_size,
+                    other_dir,
+                )
+            object_pivot_2d = vec2(object.location.x, object.location.z)
             for wall in self.project.content.walls.values():
                 a = vec2(wall.x1, wall.y1)
                 b = vec2(wall.x2, wall.y2)
                 if intersect_par_seg(object_pivot, object_size, object_dir, a, b):
-                    total += 1
+                    d = distance_point_to_segment(object_pivot_2d, a, b)
+                    total += 10 / min(1, d)
             for door in self.project.content.doors.values():
                 wall = self.project.content.walls.get(door.wall_id)
                 if wall:
@@ -628,10 +624,11 @@ class SceneGraph:
                             object_pivot,
                             object_size,
                             object_dir,
-                            u,
+                            u,  # type: ignore
                             v,  # type: ignore
                         ):
-                            total += 1
+                            d = distance_point_to_segment(object_pivot_2d, a, b)
+                            total += 10 / min(1, d)
                             break
                 else:
                     logger.warning({"msg": "door is attached to the non-existing wall"})
@@ -787,7 +784,11 @@ class NoLocation(LocationsCollection):
 
 class SampleLocationsCollection(LocationsCollection):
     def __init__(self, locations: list[Location], any_yaw: bool = False):
-        self.locations = locations
+        if len(locations) > 5000:
+            random.shuffle(locations)
+            self.locations = locations[:5000]
+        else:
+            self.locations = locations
         self.any_yaw = any_yaw
 
     def pick(self) -> Location | None:
@@ -821,6 +822,8 @@ class SampleLocationsCollection(LocationsCollection):
             return locations
         if isinstance(locations, AnyLocation):
             return self
+        if isinstance(locations, LocationsGroup):
+            return locations.intersect(self, eps)
         return self
 
     def empty(self):
@@ -846,11 +849,15 @@ class LocationsGroup(LocationsCollection):
     def intersect(
         self, locations: LocationsCollection, eps: float
     ) -> LocationsCollection:
-        # TODO
-        return self
+        intersected = list[LocationsCollection]()
+        for c in self.collections:
+            c_intersected = c.intersect(locations, eps)
+            if not c_intersected.empty():
+                intersected.append(c_intersected)
+        return LocationsGroup(intersected)
 
     def empty(self):
         return all([c.empty() for c in self.collections])
 
     def __str__(self):
-        return "[group(...)]"
+        return f"[group({','.join([str(c) for c in self.collections])})]"
