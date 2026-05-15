@@ -9,6 +9,7 @@ import { useDeletePromptMutation } from "../api/slice";
 import { useAppDispatch } from "../storeTypes";
 import { planChangedTo } from "../plan-editor/slice";
 import { applyJsonMergePatch } from "../../shared/lib/jsonMergePatch";
+import { useLocation } from "react-router";
 
 export function Prompt({
   prompt,
@@ -17,6 +18,7 @@ export function Prompt({
   prompt: Prompt;
   onAfterDeleted: (id: string) => void;
 }) {
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const [deletePrompt] = useDeletePromptMutation();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -58,6 +60,8 @@ export function Prompt({
     );
   }, []);
 
+  const isPlanEditorOpened = location.pathname.includes("/plan/");
+
   return (
     <div className="prompt">
       <div className="prompt__body">
@@ -87,13 +91,24 @@ export function Prompt({
         {prompt.status === "success" && (
           <>
             {prompt.patches.map((patch, idx) => (
-              <Button
-                text={`P${idx + 1}`}
-                key={idx}
-                primary
-                onClick={() => handleShowPlan(patch)}
-                style={{ width: "34px" }}
-              />
+              <Tooltip
+                content={
+                  <p style={{ fontWeight: 400 }}>
+                    {isPlanEditorOpened
+                      ? `Show variant ${idx + 1}`
+                      : "Please, create a plan to show the result!"}
+                  </p>
+                }
+              >
+                <Button
+                  text={`P${idx + 1}`}
+                  key={idx}
+                  primary
+                  onClick={() => handleShowPlan(patch)}
+                  style={{ width: "34px" }}
+                  disabled={!isPlanEditorOpened}
+                />
+              </Tooltip>
             ))}
           </>
         )}
