@@ -27,11 +27,9 @@ export function Profile() {
   const isDirty = editedName !== account?.name || Boolean(avatarFile);
 
   const handleSave = useCallback(async () => {
-    if (isSaving) {
-      return;
-    }
-    setIsSaving(true);
+    if (isSaving) return;
     try {
+      setIsSaving(true);
       const userUpdate = {
         name: editedName,
       } as any;
@@ -44,7 +42,10 @@ export function Profile() {
           dispatch(notify({ text: data.error.message, severity: "error" }));
         } else {
           dispatch(
-            accountUpdated({ name: editedName, avatarUrl: userUpdate.image }),
+            accountUpdated({
+              name: editedName,
+              avatarUrl: userUpdate.image ?? account?.avatarUrl,
+            }),
           );
           setMode("view");
         }
