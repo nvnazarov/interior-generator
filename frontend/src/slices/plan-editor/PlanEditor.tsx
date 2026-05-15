@@ -13,12 +13,12 @@ import { MenuButton } from "./tools/MenuButton";
 import { NameInput } from "./tools/NameInput";
 import { ChatButton } from "./tools/ChatButton";
 import { Chat } from "../assistant/Chat";
-import { Button } from "../../shared/components/button/Button";
 import { AccountAvatar } from "../account/components";
 import { PlanSelect } from "./tools/PlanSelect";
 import { selectMyAccount } from "../account/slice";
 import { FurnitureCatalogSwitch } from "./tools/FurnitureCatalogSwitch";
 import { FurnitureCatalog } from "./tools/FurnitureCatalog";
+import { Spinner } from "../../shared/components";
 
 function ChatHelper({ projectId }: { projectId: string }) {
   const isChatOpen = useAppSelector(selectIsChatOpen);
@@ -135,14 +135,22 @@ export function PlanEditor({
   }, [plan?.id]);
 
   if (isPlanLoading || isProjectLoading) {
-    return <>Loading</>;
+    return (
+      <div className="plan-editor__message">
+        <Spinner />
+      </div>
+    );
   }
 
   if (planLoadingError || projectLoadingError || !plan || !project) {
     return (
-      <>
-        <Button text="Refresh" />
-      </>
+      <div className="plan-editor__message">
+        <p>
+          Can't load the plan or the plan does not exist.
+          <br />
+          Plese, try refreshing the page
+        </p>
+      </div>
     );
   }
 

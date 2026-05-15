@@ -1,6 +1,15 @@
 @use "../../shared/styles/semantic" as s;
 
 .plan-editor {
+  &__message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: s.$color-fg-600;
+    text-align: center;
+    height: 100%;
+  }
+
   &__menu {
     display: flex;
     justify-content: center;

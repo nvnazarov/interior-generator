@@ -13,11 +13,11 @@ import { MenuButton } from "./tools/MenuButton";
 import { NameInput } from "./tools/NameInput";
 import { ChatButton } from "./tools/ChatButton";
 import { Chat } from "../assistant/Chat";
-import { Button } from "../../shared/components/button/Button";
 import { AccountAvatar } from "../account/components";
 import { PlanSelect } from "./tools/PlanSelect";
 import { selectMyAccount } from "../account/slice";
 import { AnimatePresence } from "motion/react";
+import { Spinner } from "../../shared/components";
 
 function ChatHelper({ projectId }: { projectId: string }) {
   const isChatOpen = useAppSelector(selectIsChatOpen);
@@ -134,14 +134,22 @@ export function ProjectEditor({ projectId }: { projectId: string }) {
   }, [project?.id]);
 
   if (isLoading) {
-    return <>Loading</>;
+    return (
+      <div className="project-editor__message">
+        <Spinner />
+      </div>
+    );
   }
 
   if (error || !project) {
     return (
-      <>
-        <Button text="Refresh" />
-      </>
+      <div className="project-editor__message">
+        <p>
+          Can't load the project or the project does not exist.
+          <br />
+          Plese, try refreshing the page
+        </p>
+      </div>
     );
   }
 
